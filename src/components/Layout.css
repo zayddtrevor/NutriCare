@@ -1,0 +1,27 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--page-bg, #f6f8f9);
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 220px;
+  background: var(--sidebar-bg, #1f2a33);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px;
+  gap: 18px;
+  overflow-y: auto;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 220px; /* prevents overlap */
+  padding: 24px;
+  overflow-y: auto;
+}

@@ -1,0 +1,13 @@
+/* Basic resets + global fonts & colors */
+:root {
+  --sidebar-bg: #123846;
+  --accent: #5cd9a6;
+  --muted-bg: #f4f8fb;
+  --card-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --text-dark: #0f2540;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html,body,#root { height: 100%; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color: var(--text-dark); }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; }

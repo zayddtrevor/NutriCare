@@ -1,0 +1,124 @@
+/* ------------ WRAPPER ------------ */
+.reports-wrapper {
+  padding: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-family: "Inter", sans-serif;
+}
+
+/* ------------ PAGE HEADER ------------ */
+.reports-header h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.reports-header p {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ------------ FILTER BAR ------------ */
+.reports-filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.reports-filters select,
+.reports-filters input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
+.export-btn {
+  background: #2563eb;
+  border: none;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.export-btn:hover {
+  background: #1e4fcc;
+}
+
+/* ------------ SUMMARY CARDS ------------ */
+.reports-summary {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.summary-card {
+  background: #f9fafb;
+  padding: 16px 20px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  flex: 1;
+  min-width: 200px;
+}
+
+.summary-card h3 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.summary-card p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+/* ------------ TABLE ------------ */
+.reports-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.reports-table thead tr {
+  background: #fefce8;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.reports-table th,
+.reports-table td {
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.reports-table tr {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.reports-table tr:hover {
+  background: #f9f9f9;
+}
+
+.reports-charts {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 10px 0 15px;
+}
+
+.chart-card {
+  flex: 1;
+  min-width: 300px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}

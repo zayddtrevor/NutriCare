@@ -1,0 +1,625 @@
+// src/pages/FeedingNutrition.jsx
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { Upload, CalendarDays, Filter, X } from "lucide-react";
+import { format } from "date-fns";
+import "./FeedingNutrition.css";
+
+import { db } from "../firebaseConfig";
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+} from "firebase/firestore";
+
+/* ------------------ FEEDING_MAPPING ------------------ */
+/* full mapping you provided (kept intact) */
+const FEEDING_MAPPING = {
+  K1: [
+    "MASAYAHIN & MAPAGBIGAY",
+    "AKTIBO & BAYANIHAN",
+    "MASUNURIN & MAPAG-ALAGA",
+    "MAGITING & MARIKIT",
+    "MAHINHIN & MAKATAO",
+    "MATIPID & MASIPAG",
+    "MALAMBING & MAUNAWAIN",
+    "MASIGLA & PAGKAKAISA",
+    "KATAPATAN & MAPAGKAWANGGAWA",
+    "KARANGALAN & MAALALAHANIN",
+    "MATULUNGIN & KAAYA-AYA",
+    "MAHUSAY & TAGUMPAY",
+    "MASINOP & MATALINO",
+    "MAYUMI & MAKISIG",
+  ],
+  K2: [
+    "MAGALANG & MAGILIW",
+    "MAKA-DIYOS & MAPAGMAHAL",
+    "PAG-ASA & MABAIT",
+    "MAPAGKUMBABA & KAGALAKAN",
+    "MAPAGKAKATIWALAAN & MASIGASIG",
+    "MATIYAGA & MATAPAT",
+    "RESPONSABLE & MALIKHAIN",
+    "PAKAKAIBIGAN & MAPARAAN",
+    "MASIKAP & MAAGAP",
+    "KAALAMAN & KARUNUNGAN",
+    "MAKABAYAN",
+  ],
+  "1": [
+    "FL AM","PAKWAN","SUHA","SAMPALOK","LANGKA","MANGGA","PERAS","DALANDAN","KAIMITO",
+    "MANGOSTEEN","RAMBUTAN","DUHAT","LANZONES","POMELO","BLUEBERRY","KIWI","FL PM",
+    "MELON","MACOPA","BAYABAS","CHERRY","SAGING","DURIAN","KAHEL","KASOY","GUYABANO"
+  ],
+  "2": [
+    "FL NARRA","ACACIA","ALIBANGBANG","AMUGIS","APITONG","BANABA","KAMATSILE","KAMUNING",
+    "LANETE","MAHOGANY","PINO","TALISAY","TANGUILE","TIBIG","TOOG","MAYAPIS","NIPA",
+    "FL IGOS","KAMAGONG","ANONANG","CABALLERO","DAPDAP","GEMELINA","IPIL-IPIL","KALUMPIT",
+    "LAWAAN","MALUGAI","MULAWIN","MALABULAK","MOLAVE","OLIVA","TINDALO","YAKAL","ALMACIGA",
+    "BANI","AROMA"
+  ],
+  "3": [
+    "ST. MARY","ST. JOHN","ST. DOMINIC","ST. SEBASTIAN","ST. VINCENT","ST. AGNES","ST. MICHAEL",
+    "ST. CLEMENT","ST. RAPHAEL","ST. MARTIN","ST. HELENA","ST. MARK","ST. CLARE","ST. JOSEPH",
+    "ST. THOMAS","ST. EMMANUEL","ST. LUKE","ST. GABRIEL","ST. PAUL","ST. MATTHEW","ST. DAVID",
+    "ST. ANNE","ST. ROSE","ST. PATRICK","ST. CATHERINE","ST. THERESE","ST. ELIZABETH","ST. CASSIAN",
+    "ST. PHILOMENA","ST. FRANCIS","ST. BENEDICT"
+  ],
+  "4": [
+    "FL - AM","FL - PM","ROSE","ANTHURIUM","ASTER","BOUGAINVILLEA","LILAC","CARNATION","GLADIOLA",
+    "JASMINE","ILANG - ILANG","MARIGOLD","DAFFODIL","SUNFLOWER","YELLOWBELL","STARGAZER",
+    "HYACINTH","DAISY","EVERLASTING","WILDZINNIA","TULIPS","LAVENDER"
+  ],
+  "5": [
+    "FL AM","HOMO","CORAL","EMERALD","GOSHENITE","IDOCRASE","JASPER","MOONSTONE","PERIDOT",
+    "SAPPHIRE","YELLOW TOPAZ","TOURMALINE","FL PM","APATITE","BLUE TOPAZ","CITRINE","DIAMOND",
+    "PEARL","RUBY","SARDONYX"
+  ],
+  "6": [
+    "FL AM JOSE RIZAL","E. JACINTO","E. AGUINALDO","F. DAGOHOY","MH. DEL PILAR","S. KUDARAT",
+    "M. PONCE","F. BALTAZAR","G. SILANG","FL PM - ANDRES BONIFACIO","P. URDUJA","G. DEL PILAR",
+    "D. SILANG","M. SAKAY","J. LUNA","JL. ESCODA","A. LUNA","M. GOMEZ","GL. JAENA","A. MABINI","V. LUCBAN"
+  ]
+};
+
+const FEEDING_GRADES = ["K1", "K2", "1", "2", "3", "4", "5", "6"];
+
+/* ------------------ Helpers ------------------ */
+function normalizeGradeSection(raw) {
+  if (!raw) return "Unknown";
+  const s = String(raw).trim();
+  // K, K1, K2, or "1 - ABC"
+  if (/^K[12]?\b/i.test(s)) {
+    const match = s.match(/^K(?:1|2)?\s*[-]?\s*(.*)$/i);
+    const rest = match && match[1] ? match[1].trim() : s.replace(/^K(?:1|2)?\s*[-]?\s*/i, "").trim();
+    const gradePart = /^K1/i.test(s) ? "K1" : /^K2/i.test(s) ? "K2" : (s.toUpperCase().startsWith("K1") ? "K1" : s.toUpperCase().startsWith("K2") ? "K2" : "K");
+    return `${gradePart} - ${rest}`.toUpperCase();
+  }
+  const m = s.match(/^(\d+)\s*[-]?\s*(.*)$/);
+  if (m) return `${m[1]} - ${m[2]}`.toUpperCase();
+  return s.toUpperCase();
+}
+
+function tokenizeName(n) {
+  if (!n) return [];
+  const cleaned = n.replace(/,/g, " ").replace(/[^\w\s'-]/g, "").replace(/\s+/g, " ").trim();
+  return cleaned.toLowerCase().split(" ").filter(Boolean);
+}
+
+function canonicalNameVariants(n) {
+  const tokens = tokenizeName(n);
+  if (tokens.length === 0) return [""];
+  const full = tokens.join(" ");
+  const last = tokens[tokens.length - 1];
+  const first = tokens[0];
+  const firstTwo = tokens.slice(0, 2).join(" ");
+  const lastFirst = `${last} ${first}`;
+  const lastFirstTwo = `${last} ${firstTwo}`;
+  const firstLast = `${first} ${last}`;
+  return [...new Set([full, lastFirst, lastFirstTwo, firstLast])];
+}
+
+function namesLooseMatch(a, b) {
+  if (!a || !b) return false;
+  const av = canonicalNameVariants(a);
+  const bv = canonicalNameVariants(b);
+  for (const x of av) {
+    for (const y of bv) {
+      if (!x || !y) continue;
+      if (x === y) return true;
+      if (x.includes(y) || y.includes(x)) return true;
+      const atoks = x.split(" ");
+      const btoks = y.split(" ");
+      const common = atoks.filter(t => btoks.includes(t));
+      if (common.length >= 1) return true;
+    }
+  }
+  return false;
+}
+
+/* ------------------ Component ------------------ */
+export default function FeedingNutrition() {
+  // data
+  const [studentsList, setStudentsList] = useState([]);
+  const [studentsMap, setStudentsMap] = useState({});
+  const [attendanceIndex, setAttendanceIndex] = useState({});
+  const [bmiIndex, setBmiIndex] = useState({});
+  const [sbfpList, setSbfpList] = useState([]);
+  const [sbfpOnlyList, setSbfpOnlyList] = useState([]);
+
+  // UI
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeGrade, setActiveGrade] = useState("K1");
+  const [search, setSearch] = useState("");
+  const [selectedSection, setSelectedSection] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [showDetails, setShowDetails] = useState(null);
+  const [feedView, setFeedView] = useState("all"); // "all" | "sbfp"
+  const [forceFetchToggle, setForceFetchToggle] = useState(0);
+
+  const todayKey = format(new Date(), "yyyy-MM-dd");
+  const CACHE_KEY = "feeding_cache_v1";
+
+  const clearCache = () => sessionStorage.removeItem(CACHE_KEY);
+
+  const cacheSet = (payload) => {
+    try {
+      const toStore = { ts: Date.now(), payload };
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify(toStore));
+    } catch (e) { /* ignore cache errors */ }
+  };
+
+  const cacheGet = (maxAgeMs = 1000 * 60 * 5) => {
+    try {
+      const s = sessionStorage.getItem(CACHE_KEY);
+      if (!s) return null;
+      const parsed = JSON.parse(s);
+      if (!parsed || !parsed.ts || !parsed.payload) return null;
+      if ((Date.now() - parsed.ts) > maxAgeMs) return null;
+      return parsed.payload;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const fetchAll = useCallback(async () => {
+    console.log("STEP A: starting feeding fetch...");
+    setLoading(true);
+    setError(null);
+
+    // try cache
+    const cached = cacheGet();
+    if (cached) {
+      console.log("Using cached feeding payload");
+      setStudentsList(cached.studentsList || []);
+      setStudentsMap(cached.studentsMap || {});
+      setSbfpList(cached.sbfpList || []);
+      setSbfpOnlyList(cached.sbfpOnlyList || []);
+      setBmiIndex(cached.bmiIndex || {});
+      setAttendanceIndex(cached.attendanceIndex || {});
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // 1) Students
+      const studentsCol = collection(db, "students");
+      const studentsSnap = await getDocs(studentsCol);
+      const sList = [];
+      const sMap = {};
+      studentsSnap.forEach((d) => {
+        const data = d.data() || {};
+        const normalized = {
+          id: d.id,
+          name: (data.name || data.fullName || data["Name"] || "").toString().trim(),
+          sex: data.sex || data.Sex || "",
+          rawGradeSection: data.gradeSection || data["Grade/ Section"] || "",
+          gradeSection: normalizeGradeSection(data.gradeSection || data["Grade/ Section"] || ""),
+          dob: data.birthDate || data["Date of Birth"] || null,
+          weight: data.weight ?? data["Weight (Kg)"] ?? null,
+          height: data.height ?? data["Height (cm)"] ?? null,
+          bmi: data.bmi ?? null,
+          nutritionStatus: data.nutritionStatus || data["Nutritional Status"] || "Unknown",
+          ...data,
+        };
+        sList.push(normalized);
+        sMap[d.id] = normalized;
+      });
+      console.log("STEP B: students loaded =>", sList.length);
+
+      // 2) SBFP beneficiaries
+      const sbfpCol = collection(db, "sbfpBeneficiaries");
+      const sbfpSnap = await getDocs(sbfpCol);
+      const sbfpDocs = [];
+      sbfpSnap.forEach((d) => {
+        const dd = { id: d.id, ...d.data() };
+        dd.gradeSection = normalizeGradeSection(dd.gradeSection || dd["Grade/ Section"] || dd.rawGradeSection || "");
+        dd.name = (dd.name || dd.Name || "").toString().trim();
+        dd.weightKg = dd.weightKg ?? dd.weight ?? dd["Weight (Kg)"] ?? null;
+        dd.height = dd.height ?? dd["Height (cm)"] ?? null;
+        dd.bmi = dd.bmi ?? null;
+        dd.nutritionStatus = dd.nutritionStatus || dd["Nutritional Status (NS)"] || "Unknown";
+        sbfpDocs.push(dd);
+      });
+      console.log("STEP C: sbfpBeneficiaries loaded =>", sbfpDocs.length);
+
+      // 3) Build loose matching and map students -> sbfp
+      const sbfpById = new Map(sbfpDocs.map(s => [s.id, s]));
+      const sbfpMatchedIds = new Set();
+      const studentMatches = {};
+      for (const s of sList) {
+        for (const b of sbfpDocs) {
+          if (namesLooseMatch(s.name, b.name)) {
+            studentMatches[s.id] = b;
+            sbfpMatchedIds.add(b.id);
+            break;
+          }
+        }
+      }
+      const sbfpOnly = sbfpDocs.filter((b) => !sbfpMatchedIds.has(b.id));
+      console.log("STEP D: SBFP matching done; sbfp-only =>", sbfpOnly.length);
+
+      // 4) BMI sampling DISABLED for performance
+      // Feeding page doesn't need BMI readings for 1800 students.
+      // SBFP already provides BMI when needed.
+      const bmiIdx = {};
+      console.log("STEP E: BMI skipped (performance mode)");
+
+      // 5) Attendance index (safe)
+      const attRoot = collection(db, "attendance");
+      const teacherDocs = await getDocs(attRoot);
+      const attIdx = {};
+      for (const tdoc of teacherDocs.docs) {
+        const teacherId = tdoc.id;
+        try {
+          const datesCol = collection(db, "attendance", teacherId, "dates");
+          console.log("STEP F1: fetching attendance for teacher =", teacherId);
+          const datesSnap = await getDocs(datesCol);
+          console.log("STEP F2: dates fetched for ", teacherId, " => ", datesSnap.size);
+          datesSnap.forEach((d) => {
+            const dateId = d.id;
+            const data = d.data() || {};
+            const records = (data.records && typeof data.records === "object") ? data.records : {};
+            if (!attIdx[dateId]) attIdx[dateId] = {};
+            Object.keys(records).forEach((sid) => {
+              const v = records[sid];
+              if (typeof v === "string") attIdx[dateId][sid] = v;
+            });
+          });
+        } catch (e) {
+          console.warn("Skipping teacher attendance due to error:", teacherId, e);
+        }
+      }
+      console.log("STEP F: attendance indexed");
+
+      // 6) Assemble SBFP-enriched students (merge)
+      const mergedStudents = sList.map((s) => {
+        const b = studentMatches[s.id];
+        if (b) {
+          return {
+            ...s,
+            gradeSection: b.gradeSection || s.gradeSection,
+            sbfpId: b.id,
+            sbfpRaw: b,
+            nutritionStatus: b.nutritionStatus || s.nutritionStatus,
+            bmi: b.bmi ?? s.bmi,
+            weight: b.weightKg ?? s.weight,
+            height: b.height ?? s.height,
+          };
+        }
+        return s;
+      });
+
+      // commit to state
+      setStudentsList(mergedStudents);
+      setStudentsMap(sMap);
+      setSbfpList(sbfpDocs);
+      setSbfpOnlyList(sbfpOnly);
+      setBmiIndex(bmiIdx);
+      setAttendanceIndex(attIdx);
+
+      // cache payload
+      cacheSet({
+        studentsList: mergedStudents,
+        studentsMap: sMap,
+        sbfpList: sbfpDocs,
+        sbfpOnlyList: sbfpOnly,
+        bmiIndex: bmiIdx,
+        attendanceIndex: attIdx,
+      });
+
+      console.log("STEP G: ALL FEEDING DATA FETCHED SUCCESSFULLY");
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching feeding data", err);
+      setError("Failed to fetch feeding data. Try retrying.");
+      setLoading(false);
+    }
+  }, [forceFetchToggle]);
+
+  useEffect(() => {
+    fetchAll();
+    // cleanup not needed since fetchAll writes local state only
+  }, [fetchAll]);
+
+  // force refresh handler
+  const handleRetry = () => {
+    clearCache();
+    setForceFetchToggle((n) => n + 1);
+    fetchAll();
+  };
+
+  /* ------------------ Build active pool ------------------ */
+  const activePool = useMemo(() => {
+    // use merged students state; feedView "sbfp" will include sbfp-only rows
+    const base = studentsList.map((s) => ({ ...s }));
+    if (feedView === "sbfp") {
+      const matchedStudents = base.filter(s => s.sbfpId);
+      const sbfpOnlyRows = sbfpOnlyList.map((b) => ({
+        id: `sbfp-${b.id}`,
+        name: b.name,
+        sex: b.sex || "",
+        gradeSection: b.gradeSection,
+        nutritionStatus: b.nutritionStatus || "Unknown",
+        bmi: b.bmi ?? null,
+        weight: b.weightKg ?? null,
+        height: b.height ?? null,
+        sbfpOnly: true,
+        sbfpRaw: b,
+      }));
+      return [...matchedStudents, ...sbfpOnlyRows];
+    }
+    return base;
+  }, [studentsList, sbfpOnlyList, feedView]);
+
+  /* ------------------ Summary & filters ------------------ */
+  const { summary, filteredStudents } = useMemo(() => {
+    const gradeKey = activeGrade;
+    const rows = activePool.filter((s) => {
+      const gs = (s.gradeSection || "").toUpperCase();
+      const gPart = gs.split(" - ")[0].trim();
+      if (gradeKey.startsWith("K")) {
+        if (gradeKey === "K1") return gPart === "K1" || gPart === "K";
+        if (gradeKey === "K2") return gPart === "K2";
+        return gPart.startsWith("K");
+      } else {
+        return gPart === gradeKey || gPart === `GRADE ${gradeKey}` || gPart === `${gradeKey}`;
+      }
+    });
+
+    const total = rows.length;
+    const presentMap = attendanceIndex[todayKey] || {};
+    let present = 0;
+    rows.forEach((r) => {
+      const presentVal =
+        presentMap[r.id] === "Present" ||
+        (r.sbfpRaw && presentMap[r.sbfpRaw.id] === "Present") ||
+        presentMap[r.id?.toString?.()] === "Present";
+      if (presentVal) present++;
+    });
+    const absent = Math.max(0, total - present);
+
+    const statusCounts = {};
+    rows.forEach((r) => {
+      const st = r.nutritionStatus || "Unknown";
+      statusCounts[st] = (statusCounts[st] || 0) + 1;
+    });
+
+    // apply UI filters
+    const filtered = rows.filter((r) => {
+      if (selectedSection !== "All") {
+        const sec = (r.gradeSection || "").split(" - ")[1] || "";
+        if (sec.toUpperCase() !== selectedSection.toUpperCase()) return false;
+      }
+      if (statusFilter !== "All") {
+        if ((r.nutritionStatus || "Unknown").toUpperCase() !== statusFilter.toUpperCase()) return false;
+      }
+      if (search && search.trim().length > 0) {
+        const q = search.trim().toLowerCase();
+        const nameMatches = (r.name || "").toLowerCase().includes(q);
+        const gradeMatches = (r.gradeSection || "").toLowerCase().includes(q);
+        if (!nameMatches && !gradeMatches) return false;
+      }
+      return true;
+    });
+
+    return {
+      summary: {
+        total,
+        present,
+        absent,
+        pct: total ? ((present / total) * 100).toFixed(1) : "0.0",
+        statusCounts,
+      },
+      filteredStudents: filtered,
+    };
+  }, [activePool, attendanceIndex, todayKey, activeGrade, selectedSection, statusFilter, search]);
+
+  /* ------------------ UI subcomponents ------------------ */
+  function SkeletonList() {
+    const items = new Array(6).fill(0);
+    return (
+      <div className="table-card">
+        <div style={{ padding: 12 }}>
+          {items.map((_, i) => (
+            <div key={i} style={{ display: "flex", gap: 12, marginBottom: 10, alignItems: "center" }}>
+              <div style={{ width: 260, height: 16, background: "#eee", borderRadius: 4 }} />
+              <div style={{ width: 160, height: 16, background: "#eee", borderRadius: 4 }} />
+              <div style={{ width: 120, height: 16, background: "#eee", borderRadius: 4 }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  function SummaryBoxes({ s }) {
+    return (
+      <div className="summary-row">
+        <div className="summary-card"><div className="card-title">Total Students</div><div className="card-value">{s.total}</div></div>
+        <div className="summary-card"><div className="card-title">Present Today</div><div className="card-value">{s.present}</div></div>
+        <div className="summary-card"><div className="card-title">Absent Today</div><div className="card-value">{s.absent}</div></div>
+        <div className="summary-card"><div className="card-title">Attendance %</div><div className="card-value">{s.pct}%</div></div>
+        <div className="summary-card status-chip"><div className="card-title">Nutrition</div>
+          <div className="card-value small">
+            {Object.keys(s.statusCounts).slice(0,5).map(k => <span key={k} className="status-pill">{k}: {s.statusCounts[k]}</span>)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const GRADE_TABS = [
+    { key: "K1", label: "K1", tip: "Kinder 1" },
+    { key: "K2", label: "K2", tip: "Kinder 2" },
+    { key: "1", label: "G1", tip: "Grade 1" },
+    { key: "2", label: "G2", tip: "Grade 2" },
+    { key: "3", label: "G3", tip: "Grade 3" },
+    { key: "4", label: "G4", tip: "Grade 4" },
+    { key: "5", label: "G5", tip: "Grade 5" },
+    { key: "6", label: "G6", tip: "Grade 6" },
+  ];
+
+  function GradeTabs() {
+    return (
+      <div className="tab-row">
+        {GRADE_TABS.map(t => (
+          <button key={t.key} title={t.tip} className={`tab-btn ${activeGrade === t.key ? "active-tab" : ""}`} onClick={() => { setActiveGrade(t.key); setSelectedSection("All"); setStatusFilter("All"); setSearch(""); }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  function StudentTable({ rows }) {
+    return (
+      <div className="table-card">
+        <table className="people-table attendance-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Grade & Section</th>
+              <th>Nutrition Status</th>
+              <th>BMI</th>
+              <th>Present</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr><td colSpan="6" className="py-6 text-center italic">No students found</td></tr>
+            ) : rows.map((r) => {
+              const presentVal = (attendanceIndex[todayKey] || {})[r.id] === "Present";
+              const bmiRecord = (bmiIndex[r.id] && bmiIndex[r.id].Baseline) || null;
+              const bmiVal = bmiRecord?.bmi ?? r.bmi ?? "-";
+              return (
+                <tr key={r.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3">{r.name}</td>
+                  <td className="px-4 py-3">{r.gradeSection}</td>
+                  <td className="px-4 py-3">{r.nutritionStatus || "Unknown"}</td>
+                  <td className="px-4 py-3">{bmiVal}</td>
+                  <td className="px-4 py-3 text-center">{presentVal ? "Present" : "Absent"}</td>
+                  <td className="px-4 py-3 text-center"><button className="btn small" onClick={() => setShowDetails(r.id)}>View</button></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  /* ------------------ Render ------------------ */
+  return (
+    <div className="feeding-nutrition-page">
+      <div className="meal-banner card-fullwidth">
+        <div className="meal-left">
+          <h2 className="meal-title">🍽️ Meal for Today</h2>
+          <h3 className="meal-name">Rotating Menu — Placeholder</h3>
+          <p className="meal-desc">Chicken adobo, brown rice, mixed vegetables (placeholder)</p>
+          <div className="meal-meta">Date: {todayKey}</div>
+        </div>
+        <div className="meal-right">
+          <div className="meal-img-placeholder">Image</div>
+        </div>
+      </div>
+
+      <div className="view-toggle-row">
+        <div className="view-toggle">
+          <button className={`pill ${feedView === "all" ? "active" : ""}`} onClick={() => setFeedView("all")}>All Students</button>
+          <button className={`pill ${feedView === "sbfp" ? "active" : ""}`} onClick={() => setFeedView("sbfp")}>SBFP Only</button>
+        </div>
+      </div>
+
+      <div className="filter-bar">
+        <div className="filter-item"><input placeholder="Search name or section..." value={search} onChange={(e) => setSearch(e.target.value)} className="filter-input" /></div>
+        <div className="filter-item">
+          <select className="filter-select" value={selectedSection} onChange={(e)=>setSelectedSection(e.target.value)}>
+            <option value="All">All Sections</option>
+            {(FEEDING_MAPPING[activeGrade] || []).map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div className="filter-item">
+          <select className="filter-select" value={statusFilter} onChange={(e)=>setStatusFilter(e.target.value)}>
+            <option value="All">All Nutrition Status</option>
+            <option value="Normal">Normal</option>
+            <option value="Stunted">Stunted</option>
+            <option value="Overweight">Overweight</option>
+            <option value="Obese">Obese</option>
+            <option value="Wasted">Wasted</option>
+          </select>
+        </div>
+        <div className="filter-item"><button className="btn-apply-filter" onClick={()=>{/* filters applied via state */}}>Apply</button></div>
+        <div style={{ marginLeft: "auto" }}>
+          <button className="btn small" onClick={() => { clearCache(); handleRetry(); }}>Retry</button>
+        </div>
+      </div>
+
+      <GradeTabs />
+      <div style={{ marginTop: 12 }}>
+        {loading ? (
+          <>
+            <div style={{ padding: 24 }}>Loading feeding data...</div>
+            <SkeletonList />
+          </>
+        ) : error ? (
+          <div style={{ padding: 24 }}>
+            <div style={{ color: "crimson", marginBottom: 10 }}>{error}</div>
+            <button className="btn" onClick={handleRetry}>Retry</button>
+          </div>
+        ) : (
+          <>
+            <SummaryBoxes s={summary} />
+            <StudentTable rows={filteredStudents} />
+          </>
+        )}
+      </div>
+
+      {showDetails && (() => {
+        const s = studentsMap[showDetails] || filteredStudents.find(f => f.id === showDetails) || sbfpOnlyList.find(b => `sbfp-${b.id}` === showDetails) || null;
+        if (!s) return null;
+        const bmiRecord = (bmiIndex[s.id] && bmiIndex[s.id].Baseline) || null;
+        return (
+          <div className="modal-overlay" onClick={() => setShowDetails(null)}>
+            <div className="modal-card" onClick={(e)=>e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>{s.name}</h3>
+                <button className="close-btn" onClick={() => setShowDetails(null)}><X size={18} /></button>
+              </div>
+              <div className="modal-body">
+                <p><strong>Grade & Section:</strong> {s.gradeSection}</p>
+                <p><strong>Nutrition Status:</strong> {s.nutritionStatus}</p>
+                <p><strong>BMI (Baseline):</strong> {bmiRecord?.bmi ?? s.bmi ?? "-"}</p>
+                <p><strong>Weight:</strong> {s.weight ?? "-"} kg</p>
+                <p><strong>Height:</strong> {s.height ?? "-"} m</p>
+                <p><strong>Age:</strong> {s.age ?? "-"}</p>
+                <p><strong>Sex:</strong> {s.sex ?? "-"}</p>
+                {s.sbfpOnly && <p style={{color:'#666', marginTop:8}}>This entry is from SBFP import and has no matched student doc.</p>}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+    </div>
+  );
+}

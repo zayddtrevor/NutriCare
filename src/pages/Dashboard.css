@@ -1,0 +1,100 @@
+:root {
+  --muted-bg: #f4f7f9;
+  --card-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-page {
+  background: var(--muted-bg);
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.dashboard-header h2 {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #1a2e35;
+}
+
+.dashboard-header .subtitle {
+  color: #6b7b84;
+  margin-bottom: 2rem;
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.dashboard-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  color: white;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.icon-area svg {
+  width: 38px;
+  height: 38px;
+  color: white;
+}
+
+.dashboard-card.green {
+  background: linear-gradient(135deg, #5cbd5f, #38b895);
+}
+.dashboard-card.blue {
+  background: linear-gradient(135deg, #349bf0, #3e948b);
+}
+.dashboard-card.orange {
+  background: linear-gradient(135deg, #e4931b, #e6b53a);
+}
+
+.dashboard-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.15);
+  filter: brightness(1.05);
+}
+
+.stat-info {
+  margin-top: -4px;
+  line-height: 0.8;
+}
+
+.stat-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.welcome-section {
+  margin-top: 2.5rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  padding: 1.8rem;
+}
+
+.welcome-section h3 {
+  color: #1a2e35;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.welcome-section p {
+  color: #5a6b75;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
