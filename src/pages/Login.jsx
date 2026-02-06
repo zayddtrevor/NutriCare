@@ -13,14 +13,17 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
+    const trimmedEmail = email.trim();
+    console.log("Attempting login with:", trimmedEmail);
+
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: trimmedEmail,
       password,
     });
 
     if (error) {
       console.error("❌ Admin Login failed:", error.message);
-      setError("Invalid email or password");
+      setError(error.message);
     } else {
       console.log("✅ Admin Login successful");
       navigate("/dashboard");
