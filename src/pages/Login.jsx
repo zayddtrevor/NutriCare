@@ -16,17 +16,28 @@ export default function Login() {
     const trimmedEmail = email.trim();
     console.log("Attempting login with:", trimmedEmail);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: trimmedEmail,
-      password,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password,
+      });
 
-    if (error) {
-      console.error("❌ Admin Login failed:", error.message);
-      setError(error.message);
-    } else {
-      console.log("✅ Admin Login successful");
-      navigate("/dashboard");
+      if (error) {
+        console.error("❌ Admin Login failed:", error);
+
+        // Enhance "Failed to fetch" message with actionable advice
+        if (error.message === "Failed to fetch") {
+          setError("Network Error: Could not reach Supabase. Please check your internet connection and Supabase URL configuration.");
+        } else {
+          setError(error.message);
+        }
+      } else {
+        console.log("✅ Admin Login successful");
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      console.error("❌ Unexpected Login error:", err);
+      setError("An unexpected error occurred. Check console for details.");
     }
   };
 
