@@ -487,9 +487,10 @@ export default function FeedingNutrition() {
       try {
         //const sbfpCol = collection(db, "sbfpBeneficiaries");
         //const sbfpSnap = await getDocs(sbfpCol);
-        const sbfpSnapList = [];
+        // const sbfpSnapList = [];
         const sbfpOnly = [];
         const docs = [];
+        const sbfpSnap = []; // Placeholder to prevent crash
         sbfpSnap.forEach((d) => {
           const dd = { id: d.id, ...(d.data() || {}) };
           // normalize name + gradeSection fields we saw in CSV
