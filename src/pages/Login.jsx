@@ -14,13 +14,15 @@ export default function Login() {
     setError("");
 
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim(),
       password,
     });
 
     if (error) {
       console.error("❌ Admin Login failed:", error.message);
-      setError("Invalid email or password");
+      // Show actual error message instead of generic "Invalid email or password"
+      // to help user diagnose if it's connection issue, email not confirmed, etc.
+      setError(error.message);
     } else {
       console.log("✅ Admin Login successful");
       navigate("/dashboard");

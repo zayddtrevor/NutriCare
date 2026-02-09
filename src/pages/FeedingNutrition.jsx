@@ -485,26 +485,27 @@ export default function FeedingNutrition() {
       // 2) sbfp beneficiaries (imported)
       let sbfpSnapList = [];
       try {
-        //const sbfpCol = collection(db, "sbfpBeneficiaries");
-        //const sbfpSnap = await getDocs(sbfpCol);
-        const sbfpSnapList = [];
-        const sbfpOnly = [];
-        const docs = [];
-        sbfpSnap.forEach((d) => {
-          const dd = { id: d.id, ...(d.data() || {}) };
-          // normalize name + gradeSection fields we saw in CSV
-          dd.name = (dd.name || dd.Name || "").toString().trim();
-          dd.rawGradeSection = dd.gradeSection || dd["Grade/ Section"] || dd.rawGradeSection || dd["Grade/ Section"] || "";
-          dd.gradeSection = normalizeGradeSection(dd.rawGradeSection);
-          dd.weightKg = dd.weightKg ?? dd.weight ?? dd["Weight (Kg)"] ?? null;
-          dd.height = dd.height ?? dd["Height (cm)"] ?? null;
-          dd.bmi = dd.bmi ?? null;
-          dd.nutritionStatus = dd.nutritionStatus || dd["Nutritional Status (NS)"] || dd["Nutritional Status"] || "Unknown";
-          docs.push(dd);
-        });
-        sbfpSnapList = docs;
+        const { data: sbfpData, error: sbfpError } = await supabase
+          .from("sbfp_beneficiaries")
+          .select("*");
+
+        if (!sbfpError && sbfpData) {
+          sbfpSnapList = sbfpData.map((d) => {
+             const dd = { ...d };
+             // normalize name + gradeSection fields we saw in CSV
+             dd.name = (dd.name || dd.Name || "").toString().trim();
+             dd.rawGradeSection = dd.gradeSection || dd["Grade/ Section"] || dd.rawGradeSection || dd["Grade/ Section"] || "";
+             dd.gradeSection = normalizeGradeSection(dd.rawGradeSection);
+             dd.weightKg = dd.weightKg ?? dd.weight ?? dd["Weight (Kg)"] ?? null;
+             dd.height = dd.height ?? dd["Height (cm)"] ?? null;
+             dd.bmi = dd.bmi ?? null;
+             dd.nutritionStatus = dd.nutritionStatus || dd["Nutritional Status (NS)"] || dd["Nutritional Status"] || "Unknown";
+             return dd;
+          });
+        }
       } catch (e) {
         // missing collection or permission; we'll just treat as empty
+        console.warn("SBFP fetch failed", e);
         sbfpSnapList = [];
       }
 
@@ -553,28 +554,14 @@ export default function FeedingNutrition() {
       //const attRoot = collection(db, "attendance");
       //const teacherDocs = await getDocs(attRoot);
       const attIdx = {};
-      for (const tdoc of teacherDocs.docs) {
-        const teacherId = tdoc.id;
-        try {
-          const datesCol = collection(db, "attendance", teacherId, "dates");
-          const datesSnap = await getDocs(datesCol);
-          datesSnap.forEach((d) => {
-            const dateId = d.id;
-            const data = d.data() || {};
-            const records = data.records && typeof data.records === "object" ? data.records : {};
-            if (!attIdx[dateId]) attIdx[dateId] = {};
-            Object.keys(records).forEach((sid) => {
-              const v = records[sid];
-              if (typeof v === "string") {
-                attIdx[dateId][sid] = v;
-              }
-            });
-          });
-        } catch (e) {
-          // skip teacher if permission issue or malformed doc
-          console.warn("Attendance parse error for teacher", teacherId, e);
+      /*
+      // TODO: Migrate attendance to Supabase
+      if (typeof teacherDocs !== 'undefined') {
+        for (const tdoc of teacherDocs.docs) {
+            // logic
         }
       }
+      */
 
       // Persist to cache so next load is faster
       const payload = {
