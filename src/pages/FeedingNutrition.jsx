@@ -554,6 +554,7 @@ export default function FeedingNutrition() {
       //const attRoot = collection(db, "attendance");
       //const teacherDocs = await getDocs(attRoot);
       const attIdx = {};
+      /*
       for (const tdoc of teacherDocs.docs) {
         const teacherId = tdoc.id;
         try {
@@ -576,6 +577,7 @@ export default function FeedingNutrition() {
           console.warn("Attendance parse error for teacher", teacherId, e);
         }
       }
+      */
 
       // Persist to cache so next load is faster
       const payload = {
