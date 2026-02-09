@@ -22,7 +22,7 @@ export default function Login() {
       console.error("❌ Admin Login failed:", error.message);
       let msg = error.message;
       if (msg === "Failed to fetch") {
-        msg = "Network error: Unable to connect to the server. Please check your internet connection.";
+        msg = "Network error: Unable to connect to the server. Please check your internet connection, or the project might be paused.";
       }
       setError(msg);
     } else {
