@@ -7,23 +7,39 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const emailTrimmed = email.trim();
 
-    if (error) {
-      console.error("❌ Admin Login failed:", error.message);
-      setError("Invalid email or password");
-    } else {
-      console.log("✅ Admin Login successful");
-      navigate("/dashboard");
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: emailTrimmed,
+        password,
+      });
+
+      if (error) {
+        console.error("❌ Admin Login failed:", error.message);
+        // Display specific message if it's not a generic "invalid credentials" error
+        if (error.message === "Invalid login credentials") {
+           setError("Invalid email or password");
+        } else {
+           setError(error.message);
+        }
+      } else {
+        console.log("✅ Admin Login successful");
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,6 +66,7 @@ export default function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={loading}
           />
 
           <input
@@ -58,10 +75,11 @@ export default function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={loading}
           />
 
-          <button type="submit" className="login-btn">
-            Login
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
           </button>
 
           {error && <p className="login-error">{error}</p>}

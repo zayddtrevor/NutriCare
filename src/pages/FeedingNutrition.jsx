@@ -485,10 +485,10 @@ export default function FeedingNutrition() {
       // 2) sbfp beneficiaries (imported)
       let sbfpSnapList = [];
       try {
-        //const sbfpCol = collection(db, "sbfpBeneficiaries");
-        //const sbfpSnap = await getDocs(sbfpCol);
-        const sbfpSnapList = [];
-        const sbfpOnly = [];
+        // Code commented out as it relies on undefined variables and causes build errors
+        // const sbfpCol = collection(db, "sbfpBeneficiaries");
+        // const sbfpSnap = await getDocs(sbfpCol);
+        /*
         const docs = [];
         sbfpSnap.forEach((d) => {
           const dd = { id: d.id, ...(d.data() || {}) };
@@ -503,6 +503,7 @@ export default function FeedingNutrition() {
           docs.push(dd);
         });
         sbfpSnapList = docs;
+        */
       } catch (e) {
         // missing collection or permission; we'll just treat as empty
         sbfpSnapList = [];
