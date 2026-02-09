@@ -484,29 +484,8 @@ export default function FeedingNutrition() {
 
       // 2) sbfp beneficiaries (imported)
       let sbfpSnapList = [];
-      try {
-        //const sbfpCol = collection(db, "sbfpBeneficiaries");
-        //const sbfpSnap = await getDocs(sbfpCol);
-        const sbfpSnapList = [];
-        const sbfpOnly = [];
-        const docs = [];
-        sbfpSnap.forEach((d) => {
-          const dd = { id: d.id, ...(d.data() || {}) };
-          // normalize name + gradeSection fields we saw in CSV
-          dd.name = (dd.name || dd.Name || "").toString().trim();
-          dd.rawGradeSection = dd.gradeSection || dd["Grade/ Section"] || dd.rawGradeSection || dd["Grade/ Section"] || "";
-          dd.gradeSection = normalizeGradeSection(dd.rawGradeSection);
-          dd.weightKg = dd.weightKg ?? dd.weight ?? dd["Weight (Kg)"] ?? null;
-          dd.height = dd.height ?? dd["Height (cm)"] ?? null;
-          dd.bmi = dd.bmi ?? null;
-          dd.nutritionStatus = dd.nutritionStatus || dd["Nutritional Status (NS)"] || dd["Nutritional Status"] || "Unknown";
-          docs.push(dd);
-        });
-        sbfpSnapList = docs;
-      } catch (e) {
-        // missing collection or permission; we'll just treat as empty
-        sbfpSnapList = [];
-      }
+      // TODO: Migrate sbfpBeneficiaries fetch to Supabase.
+      // Legacy Firebase code removed.
 
       // 3) match SBFP rows to students by name (loose) and gradeSection if possible
       const sbfpByMatched = new Map();
@@ -550,31 +529,9 @@ export default function FeedingNutrition() {
       const sbfpOnly = sbfpSnapList.filter((b) => !matchedSbfpIds.has(b.id));
 
       // 4) attendance index
-      //const attRoot = collection(db, "attendance");
-      //const teacherDocs = await getDocs(attRoot);
+      // TODO: Migrate attendance fetch to Supabase.
+      // Legacy Firebase code removed.
       const attIdx = {};
-      for (const tdoc of teacherDocs.docs) {
-        const teacherId = tdoc.id;
-        try {
-          const datesCol = collection(db, "attendance", teacherId, "dates");
-          const datesSnap = await getDocs(datesCol);
-          datesSnap.forEach((d) => {
-            const dateId = d.id;
-            const data = d.data() || {};
-            const records = data.records && typeof data.records === "object" ? data.records : {};
-            if (!attIdx[dateId]) attIdx[dateId] = {};
-            Object.keys(records).forEach((sid) => {
-              const v = records[sid];
-              if (typeof v === "string") {
-                attIdx[dateId][sid] = v;
-              }
-            });
-          });
-        } catch (e) {
-          // skip teacher if permission issue or malformed doc
-          console.warn("Attendance parse error for teacher", teacherId, e);
-        }
-      }
 
       // Persist to cache so next load is faster
       const payload = {
