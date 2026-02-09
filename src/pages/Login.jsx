@@ -43,8 +43,8 @@ export default function Login() {
 
         <div className="login-card">
           <div className="login-header">
-            <h2 className="login-title">Admin Portal</h2>
-            <p className="login-subtitle">Sign in to manage student health</p>
+            <h2 className="login-title">NutriCare Admin</h2>
+            <p className="login-subtitle">Monitoring the health of the students</p>
           </div>
 
           <form onSubmit={handleLogin} className="login-form">
