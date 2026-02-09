@@ -20,9 +20,11 @@ export default function Login() {
 
     if (error) {
       console.error("❌ Admin Login failed:", error.message);
-      // Show actual error message instead of generic "Invalid email or password"
-      // to help user diagnose if it's connection issue, email not confirmed, etc.
-      setError(error.message);
+      let msg = error.message;
+      if (msg === "Failed to fetch") {
+        msg = "Network error: Unable to connect to the server. Please check your internet connection.";
+      }
+      setError(msg);
     } else {
       console.log("✅ Admin Login successful");
       navigate("/dashboard");
