@@ -487,10 +487,9 @@ export default function FeedingNutrition() {
       try {
         //const sbfpCol = collection(db, "sbfpBeneficiaries");
         //const sbfpSnap = await getDocs(sbfpCol);
-        // const sbfpSnapList = [];
+        const sbfpSnapList = [];
         const sbfpOnly = [];
         const docs = [];
-        /*
         sbfpSnap.forEach((d) => {
           const dd = { id: d.id, ...(d.data() || {}) };
           // normalize name + gradeSection fields we saw in CSV
@@ -503,7 +502,6 @@ export default function FeedingNutrition() {
           dd.nutritionStatus = dd.nutritionStatus || dd["Nutritional Status (NS)"] || dd["Nutritional Status"] || "Unknown";
           docs.push(dd);
         });
-        */
         sbfpSnapList = docs;
       } catch (e) {
         // missing collection or permission; we'll just treat as empty

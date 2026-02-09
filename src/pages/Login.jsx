@@ -7,13 +7,11 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -23,7 +21,6 @@ export default function Login() {
     if (error) {
       console.error("❌ Admin Login failed:", error.message);
       setError("Invalid email or password");
-      setLoading(false);
     } else {
       console.log("✅ Admin Login successful");
       navigate("/dashboard");
@@ -63,7 +60,7 @@ export default function Login() {
             required
           />
 
-          <button type="submit" className="login-btn" disabled={loading}>
+          <button type="submit" className="login-btn">
             Login
           </button>
 
