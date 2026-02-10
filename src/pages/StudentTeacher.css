@@ -276,3 +276,52 @@
   z-index: 10;
   border-bottom: 2px solid white;
 }
+
+/* Filter Bar */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background-color: #f7f9fc;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  align-items: center;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.filter-select:focus {
+  border-color: #4285F4;
+  box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.3);
+}
+
+/* Button Colors */
+.btn.small.edit {
+  background: #3B82F6; /* Blue */
+  box-shadow: 0 3px #2563EB;
+}
+
+.btn.small.activate {
+  background: #10B981; /* Green */
+  box-shadow: 0 3px #059669;
+}
+
+.btn.small.deactivate {
+  background: #F59E0B; /* Yellowish/Orange */
+  box-shadow: 0 3px #D97706;
+}
