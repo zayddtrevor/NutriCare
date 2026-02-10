@@ -8,8 +8,12 @@ export default function StudentTeacher() {
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
 
-  const [filterSection, setFilterSection] = useState("All");
-  const [filterGender, setFilterGender] = useState("All");
+  const [studentFilterGrade, setStudentFilterGrade] = useState("All");
+  const [studentFilterSection, setStudentFilterSection] = useState("All");
+  const [studentFilterGender, setStudentFilterGender] = useState("All");
+
+  const [teacherFilterSection, setTeacherFilterSection] = useState("All");
+  const [teacherFilterStatus, setTeacherFilterStatus] = useState("All");
 
   const [loading, setLoading] = useState(true);
 
@@ -49,13 +53,23 @@ export default function StudentTeacher() {
         console.error("Error fetching students:", error);
     } else {
         // Map data to handle variations
-        const mapped = data.map(s => ({
+        const mapped = data.map(s => {
+          const grade = s.grade_level || "";
+          const section = s.section || "";
+          const gradeSectionDisplay = (grade && section)
+            ? `Grade ${grade} – ${section}`
+            : (grade || section || "Unknown");
+
+          return {
             id: s.id,
             name: s.name || s.full_name || "Unknown",
-            gradeSection: s.grade_section || s.grade || "Unknown",
+            grade: grade,
+            section: section,
+            gradeSectionDisplay: gradeSectionDisplay,
             sex: s.sex || "-",
             nutritionStatus: s.nutrition_status || s.nutritionStatus || "-",
-        }));
+          };
+        });
 
         // Sort manually to be safe
         mapped.sort((a, b) => a.name.localeCompare(b.name));
@@ -215,19 +229,31 @@ export default function StudentTeacher() {
   // Render
   // =========================
 
-  // Compute unique values for filters
-  const uniqueSections = [...new Set(students.map((s) => s.gradeSection))].sort();
-  const uniqueGenders = [...new Set(students.map((s) => s.sex))].sort();
+  // Compute unique values for filters (Students)
+  const uniqueStudentGrades = [...new Set(students.map((s) => s.grade).filter(Boolean))].sort();
+  const uniqueStudentSections = [...new Set(students.map((s) => s.section).filter(Boolean))].sort();
+  const uniqueStudentGenders = [...new Set(students.map((s) => s.sex).filter(Boolean))].sort();
+
+  // Compute unique values for filters (Teachers)
+  const uniqueTeacherSections = [...new Set(teachers.map((t) => t.section).filter(Boolean))].sort();
 
   // Filter students
   const filteredStudents = students.filter((s) => {
-    const matchSection = filterSection === "All" || s.gradeSection === filterSection;
-    const matchGender = filterGender === "All" || s.sex === filterGender;
-    return matchSection && matchGender;
+    const matchGrade = studentFilterGrade === "All" || s.grade === studentFilterGrade;
+    const matchSection = studentFilterSection === "All" || s.section === studentFilterSection;
+    const matchGender = studentFilterGender === "All" || s.sex === studentFilterGender;
+    return matchGrade && matchSection && matchGender;
   });
 
   // Ensure alphabetical sort (already sorted in fetch, but good to ensure)
   filteredStudents.sort((a, b) => a.name.localeCompare(b.name));
+
+  // Filter teachers
+  const filteredTeachers = teachers.filter((t) => {
+    const matchSection = teacherFilterSection === "All" || t.section === teacherFilterSection;
+    const matchStatus = teacherFilterStatus === "All" || (teacherFilterStatus === "Active" ? t.active : !t.active);
+    return matchSection && matchStatus;
+  });
 
   return (
     <div className="student-page">
@@ -263,13 +289,27 @@ export default function StudentTeacher() {
             <>
               <div className="filter-row">
                 <label>
-                  Filter by Section:
+                  Grade:
                   <select
-                    value={filterSection}
-                    onChange={(e) => setFilterSection(e.target.value)}
+                    value={studentFilterGrade}
+                    onChange={(e) => setStudentFilterGrade(e.target.value)}
                   >
                     <option value="All">All</option>
-                    {uniqueSections.map((sec) => (
+                    {uniqueStudentGrades.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Section:
+                  <select
+                    value={studentFilterSection}
+                    onChange={(e) => setStudentFilterSection(e.target.value)}
+                  >
+                    <option value="All">All</option>
+                    {uniqueStudentSections.map((sec) => (
                       <option key={sec} value={sec}>
                         {sec}
                       </option>
@@ -277,19 +317,29 @@ export default function StudentTeacher() {
                   </select>
                 </label>
                 <label>
-                  Filter by Gender:
+                  Gender:
                   <select
-                    value={filterGender}
-                    onChange={(e) => setFilterGender(e.target.value)}
+                    value={studentFilterGender}
+                    onChange={(e) => setStudentFilterGender(e.target.value)}
                   >
                     <option value="All">All</option>
-                    {uniqueGenders.map((g) => (
+                    {uniqueStudentGenders.map((g) => (
                       <option key={g} value={g}>
                         {g}
                       </option>
                     ))}
                   </select>
                 </label>
+                <button
+                  className="btn small reset"
+                  onClick={() => {
+                    setStudentFilterGrade("All");
+                    setStudentFilterSection("All");
+                    setStudentFilterGender("All");
+                  }}
+                >
+                  Reset Filters
+                </button>
               </div>
 
               <table className="people-table">
@@ -312,7 +362,7 @@ export default function StudentTeacher() {
                   filteredStudents.map((s) => (
                     <tr key={s.id}>
                       <td>{s.name}</td>
-                      <td>{s.gradeSection}</td>
+                      <td>{s.gradeSectionDisplay}</td>
                       <td>{s.sex}</td>
                       <td>{s.nutritionStatus}</td>
                     </tr>
@@ -324,59 +374,97 @@ export default function StudentTeacher() {
           )}
 
           {activeTab === "teachers" && (
-            <table className="people-table">
-              <thead>
-                <tr>
-                  <th>ID No.</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Section</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teachers.length === 0 ? (
+            <>
+              <div className="filter-row">
+                <label>
+                  Section:
+                  <select
+                    value={teacherFilterSection}
+                    onChange={(e) => setTeacherFilterSection(e.target.value)}
+                  >
+                    <option value="All">All</option>
+                    {uniqueTeacherSections.map((sec) => (
+                      <option key={sec} value={sec}>
+                        {sec}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Status:
+                  <select
+                    value={teacherFilterStatus}
+                    onChange={(e) => setTeacherFilterStatus(e.target.value)}
+                  >
+                    <option value="All">All</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </label>
+                <button
+                  className="btn small reset"
+                  onClick={() => {
+                    setTeacherFilterSection("All");
+                    setTeacherFilterStatus("All");
+                  }}
+                >
+                  Reset Filters
+                </button>
+              </div>
+              <table className="people-table">
+                <thead>
                   <tr>
-                    <td colSpan="6" style={{ textAlign: "center" }}>
-                      No teachers found.
-                    </td>
+                    <th>ID No.</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Section</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
-                ) : (
-                  teachers.map((t) => (
-                    <tr key={t.uid} className={!t.active ? "inactive" : ""}>
+                </thead>
+                <tbody>
+                  {filteredTeachers.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" style={{ textAlign: "center" }}>
+                        No teachers found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredTeachers.map((t) => (
+                      <tr key={t.uid} className={!t.active ? "inactive" : ""}>
                       <td>{t.idNumber}</td>
                       <td>{t.firstName} {t.lastName}</td>
                       <td>{t.email}</td>
                       <td>{t.section}</td>
                       <td>{t.active ? "Active" : "Inactive"}</td>
-                      <td className="actions-cell">
-                        <button
-                          className="btn small edit"
-                          onClick={() => openEditModal(t)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className={`btn small ${
-                            t.active ? "deactivate" : "activate"
-                          }`}
-                          onClick={() => toggleActive(t)}
-                        >
-                          {t.active ? "Deactivate" : "Activate"}
-                        </button>
-                        <button
-                          className="btn small delete"
-                          onClick={() => deleteTeacher(t)}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                        <td className="actions-cell">
+                          <button
+                            className="btn small edit"
+                            onClick={() => openEditModal(t)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className={`btn small ${
+                              t.active ? "deactivate" : "activate"
+                            }`}
+                            onClick={() => toggleActive(t)}
+                          >
+                            {t.active ? "Deactivate" : "Activate"}
+                          </button>
+                          <button
+                            className="btn small delete"
+                            onClick={() => deleteTeacher(t)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </>
           )}
         </div>
       )}
