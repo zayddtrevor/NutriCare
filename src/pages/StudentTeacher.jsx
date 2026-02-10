@@ -215,7 +215,8 @@ export default function StudentTeacher() {
       alert(result.message || `Updated ${result.count} students.`);
       fetchStudents(); // Refresh data
     } else {
-      alert("Failed to recalculate status. Check console for details.");
+      console.error("Recalculation failed:", result.error);
+      alert(`Failed to recalculate status: ${result.error?.message || "Unknown error"}`);
     }
   }
 

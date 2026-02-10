@@ -17,9 +17,13 @@ export async function recalculateNutritionStatus() {
     // 1. Fetch all students who need update (nutrition_status is null, 'Unknown', or '-')
     const { data: students, error: studentError } = await supabase
       .from("students")
-      .select("id, nutrition_status");
+      .select("id, nutrition_status")
+      .range(0, 9999);
 
-    if (studentError) throw studentError;
+    if (studentError) {
+      console.error("Error fetching students:", studentError);
+      throw studentError;
+    }
 
     const targetStudents = students.filter(
       (s) => !s.nutrition_status || s.nutrition_status === "Unknown" || s.nutrition_status === "-"
@@ -37,9 +41,13 @@ export async function recalculateNutritionStatus() {
     const { data: allBmiRecords, error: bmiError } = await supabase
       .from("bmi_records")
       .select("student_id, bmi, created_at")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(0, 9999);
 
-    if (bmiError) throw bmiError;
+    if (bmiError) {
+      console.error("Error fetching BMI records:", bmiError);
+      throw bmiError;
+    }
 
     // Map student_id -> latest BMI record
     const latestBmiMap = {};

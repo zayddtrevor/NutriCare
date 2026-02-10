@@ -8,3 +8,5 @@
   ➜  Local:   http://localhost:5173/
   ➜  Network: use --host to expose
 [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+2:55:12 PM [vite] hmr update /src/pages/StudentTeacher.jsx
+2:55:29 PM [vite] hmr update /src/pages/StudentTeacher.jsx
