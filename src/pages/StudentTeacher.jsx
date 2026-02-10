@@ -8,6 +8,9 @@ export default function StudentTeacher() {
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
 
+  const [filterSection, setFilterSection] = useState("All");
+  const [filterGender, setFilterGender] = useState("All");
+
   const [loading, setLoading] = useState(true);
 
   // Modal State (for Teachers only for now)
@@ -211,6 +214,21 @@ export default function StudentTeacher() {
   // =========================
   // Render
   // =========================
+
+  // Compute unique values for filters
+  const uniqueSections = [...new Set(students.map((s) => s.gradeSection))].sort();
+  const uniqueGenders = [...new Set(students.map((s) => s.sex))].sort();
+
+  // Filter students
+  const filteredStudents = students.filter((s) => {
+    const matchSection = filterSection === "All" || s.gradeSection === filterSection;
+    const matchGender = filterGender === "All" || s.sex === filterGender;
+    return matchSection && matchGender;
+  });
+
+  // Ensure alphabetical sort (already sorted in fetch, but good to ensure)
+  filteredStudents.sort((a, b) => a.name.localeCompare(b.name));
+
   return (
     <div className="student-page">
       <div className="header-area">
@@ -242,22 +260,56 @@ export default function StudentTeacher() {
       ) : (
         <div className="table-card">
           {activeTab === "students" && (
-            <table className="people-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
+            <>
+              <div className="filter-row">
+                <label>
+                  Filter by Section:
+                  <select
+                    value={filterSection}
+                    onChange={(e) => setFilterSection(e.target.value)}
+                  >
+                    <option value="All">All</option>
+                    {uniqueSections.map((sec) => (
+                      <option key={sec} value={sec}>
+                        {sec}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Filter by Gender:
+                  <select
+                    value={filterGender}
+                    onChange={(e) => setFilterGender(e.target.value)}
+                  >
+                    <option value="All">All</option>
+                    {uniqueGenders.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <table className="people-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
                   <th>Grade & Section</th>
                   <th>Sex</th>
                   <th>Nutrition Status</th>
                 </tr>
               </thead>
               <tbody>
-                {students.length === 0 ? (
-                   <tr>
-                     <td colSpan="4" style={{ textAlign: "center" }}>No students found.</td>
-                   </tr>
+                {filteredStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" style={{ textAlign: "center" }}>
+                      No students found.
+                    </td>
+                  </tr>
                 ) : (
-                   students.map((s) => (
+                  filteredStudents.map((s) => (
                     <tr key={s.id}>
                       <td>{s.name}</td>
                       <td>{s.gradeSection}</td>
@@ -268,6 +320,7 @@ export default function StudentTeacher() {
                 )}
               </tbody>
             </table>
+            </>
           )}
 
           {activeTab === "teachers" && (
@@ -285,7 +338,9 @@ export default function StudentTeacher() {
               <tbody>
                 {teachers.length === 0 ? (
                   <tr>
-                    <td colSpan="6" style={{ textAlign: "center" }}>No teachers found.</td>
+                    <td colSpan="6" style={{ textAlign: "center" }}>
+                      No teachers found.
+                    </td>
                   </tr>
                 ) : (
                   teachers.map((t) => (
@@ -296,11 +351,26 @@ export default function StudentTeacher() {
                       <td>{t.section}</td>
                       <td>{t.active ? "Active" : "Inactive"}</td>
                       <td className="actions-cell">
-                        <button className="btn small edit" onClick={() => openEditModal(t)}>Edit</button>
-                        <button className="btn small" onClick={() => toggleActive(t)}>
+                        <button
+                          className="btn small edit"
+                          onClick={() => openEditModal(t)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className={`btn small ${
+                            t.active ? "deactivate" : "activate"
+                          }`}
+                          onClick={() => toggleActive(t)}
+                        >
                           {t.active ? "Deactivate" : "Activate"}
                         </button>
-                        <button className="btn small delete" onClick={() => deleteTeacher(t)}>Delete</button>
+                        <button
+                          className="btn small delete"
+                          onClick={() => deleteTeacher(t)}
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))
