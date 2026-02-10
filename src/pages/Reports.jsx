@@ -9,6 +9,12 @@ import {
   Download,
   FileText
 } from "lucide-react";
+import PageHeader from "../components/common/PageHeader";
+import FilterBar from "../components/common/FilterBar";
+import GradeTabs from "../components/common/GradeTabs";
+import StatCard from "../components/common/StatCard";
+import Button from "../components/common/Button";
+import "../components/common/TableStyles.css";
 import "./Reports.css";
 
 // Constants
@@ -22,6 +28,7 @@ export default function Reports() {
   const [error, setError] = useState(null);
 
   // Filter State
+  const [searchQuery, setSearchQuery] = useState("");
   const [grade, setGrade] = useState("All Grades");
   const [section, setSection] = useState("All Sections");
   const [status, setStatus] = useState("All Status");
@@ -127,7 +134,13 @@ export default function Reports() {
 
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
-      // 1. Grade
+      // 1. Search
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        if (!s.name.toLowerCase().includes(q)) return false;
+      }
+
+      // 2. Grade
       if (grade !== "All Grades") {
         const g = s.gradeLevel;
         if (grade === "K1" && g !== "K1" && g !== "K") return false;
@@ -135,15 +148,15 @@ export default function Reports() {
         else if (grade !== "K1" && grade !== "K2" && g !== grade) return false;
       }
 
-      // 2. Section
+      // 3. Section
       if (section !== "All Sections" && s.section !== section) return false;
 
-      // 3. Status
+      // 4. Status
       if (status !== "All Status" && (s.status || "").toLowerCase() !== status.toLowerCase()) return false;
 
       return true;
     });
-  }, [students, grade, section, status]);
+  }, [students, grade, section, status, searchQuery]);
 
   // -------- SUMMARY STATS --------
   const summary = useMemo(() => {
@@ -194,14 +207,30 @@ export default function Reports() {
 
   return (
     <div className="reports-wrapper">
-      <h2 className="reports-title">Reports & Analytics</h2>
+      <PageHeader
+        title="Reports & Analytics"
+        action={
+            <Button
+                variant="primary"
+                onClick={exportCSV}
+                disabled={loading || filteredStudents.length === 0}
+                icon={<Download size={16} />}
+            >
+                Export CSV
+            </Button>
+        }
+      />
 
-      {/* FILTERS */}
-      <div className="reports-filters">
-        <select value={grade} onChange={(e) => { setGrade(e.target.value); setSection("All Sections"); }}>
-          {GRADE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
-        </select>
-
+      <FilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onReset={() => {
+            setSearchQuery("");
+            setGrade("All Grades");
+            setSection("All Sections");
+            setStatus("All Status");
+          }}
+      >
         <select value={section} onChange={(e) => setSection(e.target.value)}>
           <option value="All Sections">All Sections</option>
           {availableSections.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -210,64 +239,32 @@ export default function Reports() {
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
           {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
+      </FilterBar>
 
-        <button className="export-btn" onClick={exportCSV} disabled={loading || filteredStudents.length === 0}>
-          <Download size={16} style={{ marginRight: 8 }} />
-          Export CSV
-        </button>
-      </div>
+      <GradeTabs
+          activeGrade={grade}
+          onTabClick={(g) => {
+              setGrade(g);
+              setSection("All Sections");
+          }}
+          grades={GRADE_OPTIONS}
+      />
 
       {/* SUMMARY CARDS */}
       <div className="reports-summary">
-        <div className="summary-card">
-          <div className="card-header">
-            <Users size={20} className="icon-blue" />
-            <h3>Total Students</h3>
-          </div>
-          <p className="card-value">{loading ? "..." : summary.total}</p>
-        </div>
-        <div className="summary-card">
-          <div className="card-header">
-            <CheckCircle size={20} className="icon-green" />
-            <h3>Normal</h3>
-          </div>
-          <p className="card-value">{loading ? "..." : summary.normal}</p>
-        </div>
-        <div className="summary-card">
-          <div className="card-header">
-            <AlertTriangle size={20} className="icon-yellow" />
-            <h3>Wasted</h3>
-          </div>
-          <p className="card-value">{loading ? "..." : summary.wasted}</p>
-        </div>
-        <div className="summary-card">
-           <div className="card-header">
-            <AlertTriangle size={20} className="icon-orange" />
-            <h3>Severely Wasted</h3>
-          </div>
-          <p className="card-value">{loading ? "..." : summary.severelyWasted}</p>
-        </div>
-        <div className="summary-card">
-          <div className="card-header">
-            <Activity size={20} className="icon-purple" />
-            <h3>Overweight</h3>
-          </div>
-          <p className="card-value">{loading ? "..." : summary.overweight}</p>
-        </div>
-         <div className="summary-card">
-          <div className="card-header">
-            <XCircle size={20} className="icon-red" />
-            <h3>Obese</h3>
-          </div>
-          <p className="card-value">{loading ? "..." : summary.obese}</p>
-        </div>
+        <StatCard label="Total Students" value={loading ? "..." : summary.total} icon={<Users size={20}/>} color="blue" />
+        <StatCard label="Normal" value={loading ? "..." : summary.normal} icon={<CheckCircle size={20}/>} color="green" />
+        <StatCard label="Wasted" value={loading ? "..." : summary.wasted} icon={<AlertTriangle size={20}/>} color="yellow" />
+        <StatCard label="Severely Wasted" value={loading ? "..." : summary.severelyWasted} icon={<AlertTriangle size={20}/>} color="orange" />
+        <StatCard label="Overweight" value={loading ? "..." : summary.overweight} icon={<Activity size={20}/>} color="purple" />
+        <StatCard label="Obese" value={loading ? "..." : summary.obese} icon={<XCircle size={20}/>} color="red" />
       </div>
 
       {/* TABLE */}
-      <div className="reports-table-container">
+      <div className="data-table-container">
         {error && <div className="error-message">{error}</div>}
 
-        <table className="reports-table">
+        <table className="data-table">
           <thead>
             <tr>
               <th>Name</th>

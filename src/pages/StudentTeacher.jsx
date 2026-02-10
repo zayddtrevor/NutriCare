@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
+import PageHeader from "../components/common/PageHeader";
+import FilterBar from "../components/common/FilterBar";
+import Button from "../components/common/Button";
+import "../components/common/TableStyles.css"; // Import standard table styles
 import "./StudentTeacher.css";
 
 export default function StudentTeacher() {
@@ -8,6 +12,8 @@ export default function StudentTeacher() {
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
 
+  // Filters
+  const [searchQuery, setSearchQuery] = useState("");
   const [studentFilterGrade, setStudentFilterGrade] = useState("All");
   const [studentFilterSection, setStudentFilterSection] = useState("All");
   const [studentFilterGender, setStudentFilterGender] = useState("All");
@@ -239,6 +245,12 @@ export default function StudentTeacher() {
 
   // Filter students
   const filteredStudents = students.filter((s) => {
+    // 1. Search
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!s.name.toLowerCase().includes(q)) return false;
+    }
+    // 2. Filters
     const matchGrade = studentFilterGrade === "All" || s.grade === studentFilterGrade;
     const matchSection = studentFilterSection === "All" || s.section === studentFilterSection;
     const matchGender = studentFilterGender === "All" || s.sex === studentFilterGender;
@@ -250,6 +262,14 @@ export default function StudentTeacher() {
 
   // Filter teachers
   const filteredTeachers = teachers.filter((t) => {
+    // 1. Search
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const fullName = `${t.firstName} ${t.lastName}`.toLowerCase();
+      const email = t.email.toLowerCase();
+      if (!fullName.includes(q) && !email.includes(q)) return false;
+    }
+    // 2. Filters
     const matchSection = teacherFilterSection === "All" || t.section === teacherFilterSection;
     const matchStatus = teacherFilterStatus === "All" || (teacherFilterStatus === "Active" ? t.active : !t.active);
     return matchSection && matchStatus;
@@ -257,14 +277,12 @@ export default function StudentTeacher() {
 
   return (
     <div className="student-page">
-      <div className="header-area">
-        <h1>Management</h1>
-        {activeTab === "teachers" && (
-          <div className="button-row">
-            <button className="btn add" onClick={openAddModal}>+ Add Teacher</button>
-          </div>
+      <PageHeader
+        title="Student & Teacher Management"
+        action={activeTab === "teachers" && (
+          <Button variant="success" onClick={openAddModal}>+ Add Teacher</Button>
         )}
-      </div>
+      />
 
       <div className="tab-navigation">
         <button
@@ -282,67 +300,57 @@ export default function StudentTeacher() {
       </div>
 
       {loading ? (
-        <p>Loading...</p>
+        <div className="table-loading">Loading...</div>
       ) : (
-        <div className="table-card">
+        <div className="data-table-container">
           {activeTab === "students" && (
             <>
-              <div className="filter-row">
-                <label>
-                  Grade:
+              <FilterBar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onReset={() => {
+                  setSearchQuery("");
+                  setStudentFilterGrade("All");
+                  setStudentFilterSection("All");
+                  setStudentFilterGender("All");
+                }}
+              >
                   <select
                     value={studentFilterGrade}
                     onChange={(e) => setStudentFilterGrade(e.target.value)}
                   >
-                    <option value="All">All</option>
+                    <option value="All">All Grades</option>
                     {uniqueStudentGrades.map((g) => (
                       <option key={g} value={g}>
                         {g}
                       </option>
                     ))}
                   </select>
-                </label>
-                <label>
-                  Section:
                   <select
                     value={studentFilterSection}
                     onChange={(e) => setStudentFilterSection(e.target.value)}
                   >
-                    <option value="All">All</option>
+                    <option value="All">All Sections</option>
                     {uniqueStudentSections.map((sec) => (
                       <option key={sec} value={sec}>
                         {sec}
                       </option>
                     ))}
                   </select>
-                </label>
-                <label>
-                  Gender:
                   <select
                     value={studentFilterGender}
                     onChange={(e) => setStudentFilterGender(e.target.value)}
                   >
-                    <option value="All">All</option>
+                    <option value="All">All Genders</option>
                     {uniqueStudentGenders.map((g) => (
                       <option key={g} value={g}>
                         {g}
                       </option>
                     ))}
                   </select>
-                </label>
-                <button
-                  className="btn small reset"
-                  onClick={() => {
-                    setStudentFilterGrade("All");
-                    setStudentFilterSection("All");
-                    setStudentFilterGender("All");
-                  }}
-                >
-                  Reset Filters
-                </button>
-              </div>
+              </FilterBar>
 
-              <table className="people-table">
+              <table className="data-table">
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -375,43 +383,37 @@ export default function StudentTeacher() {
 
           {activeTab === "teachers" && (
             <>
-              <div className="filter-row">
-                <label>
-                  Section:
+              <FilterBar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onReset={() => {
+                  setSearchQuery("");
+                  setTeacherFilterSection("All");
+                  setTeacherFilterStatus("All");
+                }}
+              >
                   <select
                     value={teacherFilterSection}
                     onChange={(e) => setTeacherFilterSection(e.target.value)}
                   >
-                    <option value="All">All</option>
+                    <option value="All">All Sections</option>
                     {uniqueTeacherSections.map((sec) => (
                       <option key={sec} value={sec}>
                         {sec}
                       </option>
                     ))}
                   </select>
-                </label>
-                <label>
-                  Status:
                   <select
                     value={teacherFilterStatus}
                     onChange={(e) => setTeacherFilterStatus(e.target.value)}
                   >
-                    <option value="All">All</option>
+                    <option value="All">All Status</option>
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                   </select>
-                </label>
-                <button
-                  className="btn small reset"
-                  onClick={() => {
-                    setTeacherFilterSection("All");
-                    setTeacherFilterStatus("All");
-                  }}
-                >
-                  Reset Filters
-                </button>
-              </div>
-              <table className="people-table">
+              </FilterBar>
+
+              <table className="data-table">
                 <thead>
                   <tr>
                     <th>ID No.</th>
@@ -437,27 +439,28 @@ export default function StudentTeacher() {
                       <td>{t.email}</td>
                       <td>{t.section}</td>
                       <td>{t.active ? "Active" : "Inactive"}</td>
-                        <td className="actions-cell">
-                          <button
-                            className="btn small edit"
+                        <td className="cell-actions">
+                          <Button
+                            variant="primary"
+                            size="sm"
                             onClick={() => openEditModal(t)}
                           >
                             Edit
-                          </button>
-                          <button
-                            className={`btn small ${
-                              t.active ? "deactivate" : "activate"
-                            }`}
+                          </Button>
+                          <Button
+                            variant={t.active ? "warning" : "success"}
+                            size="sm"
                             onClick={() => toggleActive(t)}
                           >
                             {t.active ? "Deactivate" : "Activate"}
-                          </button>
-                          <button
-                            className="btn small delete"
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
                             onClick={() => deleteTeacher(t)}
                           >
                             Delete
-                          </button>
+                          </Button>
                         </td>
                       </tr>
                     ))
@@ -529,10 +532,10 @@ export default function StudentTeacher() {
               </label>
 
               <div className="modal-actions">
-                <button className="btn add" type="submit">Save</button>
-                <button className="btn cancel" type="button" onClick={closeModal}>
+                <Button variant="primary" type="submit">Save</Button>
+                <Button variant="secondary" type="button" onClick={closeModal}>
                   Cancel
-                </button>
+                </Button>
               </div>
             </form>
           </div>

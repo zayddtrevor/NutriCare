@@ -1,7 +1,13 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "../supabaseClient";
-import { Search, RefreshCw, AlertCircle, X } from "lucide-react";
+import { AlertCircle, X, Users, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
+import PageHeader from "../components/common/PageHeader";
+import FilterBar from "../components/common/FilterBar";
+import GradeTabs from "../components/common/GradeTabs";
+import StatCard from "../components/common/StatCard";
+import Button from "../components/common/Button";
+import "../components/common/TableStyles.css";
 import "./FeedingNutrition.css";
 
 // Constants
@@ -155,13 +161,17 @@ export default function FeedingNutrition() {
   };
 
   const clearFilters = () => {
+    setActiveGrade("K1");
     setSelectedSection("All");
     setStatusFilter("All");
     setSearchQuery("");
+    fetchData(); // Requirement: Re-fetch default data
   };
 
   return (
     <div className="feeding-nutrition-page">
+        <PageHeader title="Feeding & Nutrition" />
+
         {/* Banner */}
         <div className="meal-banner card-fullwidth">
             <div className="meal-left">
@@ -176,21 +186,13 @@ export default function FeedingNutrition() {
             </div>
         </div>
 
-        {/* Filters Bar */}
-        <div className="filter-bar">
-            <div className="filter-item search-wrapper">
-                <Search className="filter-icon" size={18} />
-                <input
-                    type="text"
-                    placeholder="Search name or section..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="filter-input"
-                />
-            </div>
-             <div className="filter-item">
+        <FilterBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onReset={clearFilters}
+            isLoading={loading}
+        >
                 <select
-                    className="filter-select"
                     value={selectedSection}
                     onChange={(e) => setSelectedSection(e.target.value)}
                 >
@@ -199,51 +201,27 @@ export default function FeedingNutrition() {
                         <option key={sec} value={sec}>{sec}</option>
                     ))}
                 </select>
-            </div>
-            <div className="filter-item">
                  <select
-                    className="filter-select"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                 >
-                    <option value="All">All Nutrition Status</option>
+                    <option value="All">All Status</option>
                     <option value="Normal">Normal</option>
                     <option value="Wasted">Wasted</option>
                     <option value="Severely Wasted">Severely Wasted</option>
                     <option value="Overweight">Overweight</option>
                     <option value="Obese">Obese</option>
                 </select>
-            </div>
-             <div className="filter-item">
-                 {/* Only show clear button if filters are active */}
-                 {(selectedSection !== "All" || statusFilter !== "All" || searchQuery) && (
-                     <button className="btn-clear-filter" onClick={clearFilters}>
-                         Clear Filters
-                     </button>
-                 )}
-            </div>
-             <div className="filter-item refresh-wrapper">
-                 <button className="btn-refresh" onClick={fetchData} title="Refresh Data">
-                     <RefreshCw size={18} className={loading ? "spin" : ""} />
-                 </button>
-             </div>
-        </div>
+        </FilterBar>
 
-        {/* Grade Tabs */}
-        <div className="grade-tabs-container">
-            {FEEDING_GRADES.map(grade => (
-                <button
-                    key={grade.key}
-                    className={`grade-tab ${activeGrade === grade.key ? "active" : ""}`}
-                    onClick={() => {
-                        setActiveGrade(grade.key);
-                        setSelectedSection("All"); // Reset section when changing grade
-                    }}
-                >
-                    {grade.label}
-                </button>
-            ))}
-        </div>
+        <GradeTabs
+            activeGrade={activeGrade}
+            onTabClick={(g) => {
+                setActiveGrade(g);
+                setSelectedSection("All");
+            }}
+            grades={FEEDING_GRADES}
+        />
 
         {/* Main Content Area */}
         <div className="content-area">
@@ -258,7 +236,7 @@ export default function FeedingNutrition() {
                     <AlertCircle size={48} className="error-icon" />
                     <h3>Oops! Something went wrong.</h3>
                     <p>{error}</p>
-                    <button className="btn-retry" onClick={handleRetry}>Try Again</button>
+                    <Button variant="primary" onClick={handleRetry}>Try Again</Button>
                 </div>
             ) : filteredStudents.length === 0 ? (
                 <div className="empty-state">
@@ -266,32 +244,23 @@ export default function FeedingNutrition() {
                     <h3>No students found</h3>
                     <p>Try adjusting your filters or search query.</p>
                      {(selectedSection !== "All" || statusFilter !== "All" || searchQuery) && (
-                         <button className="btn-clear-filter mt-4" onClick={clearFilters}>
+                         <Button variant="outline" className="mt-4" onClick={clearFilters}>
                              Clear Filters
-                         </button>
+                         </Button>
                      )}
                 </div>
             ) : (
                 <>
                     {/* Stats Summary */}
                     <div className="stats-row">
-                        <div className="stat-card">
-                            <span className="stat-label">Total Students</span>
-                            <span className="stat-value">{summary.total}</span>
-                        </div>
-                         <div className="stat-card">
-                            <span className="stat-label">Present</span>
-                            <span className="stat-value">{summary.presentCount}</span>
-                        </div>
-                         <div className="stat-card">
-                            <span className="stat-label">Absent</span>
-                            <span className="stat-value">{summary.absentCount}</span>
-                        </div>
+                        <StatCard label="Total Students" value={summary.total} icon={<Users size={20}/>} color="blue" />
+                        <StatCard label="Present" value={summary.presentCount} icon={<CheckCircle size={20}/>} color="green" />
+                        <StatCard label="Absent" value={summary.absentCount} icon={<XCircle size={20}/>} color="red" />
                     </div>
 
                     {/* Table */}
-                    <div className="table-wrapper">
-                        <table className="feeding-table">
+                    <div className="data-table-container">
+                        <table className="data-table">
                             <thead>
                                 <tr>
                                     <th>Name</th>
@@ -299,7 +268,7 @@ export default function FeedingNutrition() {
                                     <th>Nutrition Status</th>
                                     <th>BMI</th>
                                     <th>Attendance</th>
-                                    <th>Actions</th>
+                                    <th className="th-actions">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -320,13 +289,14 @@ export default function FeedingNutrition() {
                                                 <span className="attendance-absent">-</span>
                                             )}
                                         </td>
-                                        <td>
-                                            <button
-                                                className="btn-view"
+                                        <td className="cell-actions">
+                                            <Button
+                                                variant="secondary"
+                                                size="sm"
                                                 onClick={() => setShowDetailsId(student.id)}
                                             >
                                                 View
-                                            </button>
+                                            </Button>
                                         </td>
                                     </tr>
                                 ))}
@@ -343,7 +313,7 @@ export default function FeedingNutrition() {
                 <div className="modal-content" onClick={e => e.stopPropagation()}>
                     <div className="modal-header">
                         <h3>Student Details</h3>
-                        <button className="btn-close" onClick={() => setShowDetailsId(null)}><X size={20} /></button>
+                        <Button variant="secondary" size="sm" onClick={() => setShowDetailsId(null)} icon={<X size={16} />} />
                     </div>
                     {(() => {
                         const s = students.find(st => st.id === showDetailsId);
