@@ -1,8 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../supabaseClient";
+import { Users } from "lucide-react";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
+import StatCard from "../components/common/StatCard";
 import Button from "../components/common/Button";
 import "../components/common/TableStyles.css"; // Import standard table styles
 import "./StudentTeacher.css";
@@ -314,6 +316,27 @@ export default function StudentTeacher() {
         <div className="data-table-container">
           {activeTab === "students" && (
             <>
+              <div className="students-summary-row">
+                <StatCard
+                  label="Total Students"
+                  value={students.length}
+                  icon={<Users size={20} />}
+                  color="blue"
+                />
+
+                <div className="grade-sections-summary">
+                   <h4>Sections per Grade</h4>
+                   <div className="grade-sections-grid">
+                      {GRADES.map(grade => (
+                        <div key={grade} className="grade-section-item">
+                           <span className="gs-label">{grade}:</span>
+                           <span className="gs-count">{SCHOOL_DATA[grade].length}</span>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+              </div>
+
               <FilterBar
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
