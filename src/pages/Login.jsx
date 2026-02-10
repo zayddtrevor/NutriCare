@@ -7,11 +7,13 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -21,6 +23,7 @@ export default function Login() {
     if (error) {
       console.error("❌ Admin Login failed:", error.message);
       setError("Invalid email or password");
+      setIsLoading(false);
     } else {
       console.log("✅ Admin Login successful");
       navigate("/dashboard");
@@ -29,43 +32,49 @@ export default function Login() {
 
   return (
     <div className="login-container">
-      <div className="welcome-overlay-text">
-        <h1 className="welcome-title-overlay">
-          Welcome to{" "}
-          <span className="nutricare-highlight-overlay">NutriCare!</span>
-        </h1>
-        <p className="tagline-overlay">Monitor. Nourish. Grow.</p>
-      </div>
+      <div className="login-content-wrapper">
+        <div className="welcome-overlay-text">
+          <h1 className="welcome-title-overlay">
+            Welcome to{" "}
+            <span className="nutricare-highlight-overlay">NutriCare!</span>
+          </h1>
+          <p className="tagline-overlay">Monitor. Nourish. Grow.</p>
+        </div>
 
-      <div className="login-card">
-        <h2 className="login-title">NutriCare Admin</h2>
-        <p className="login-description">
-          Monitoring the health of the students
-        </p>
+        <div className="login-card">
+          <h2 className="login-title">NutriCare Admin</h2>
+          <p className="login-description">
+            Monitoring the health of the students
+          </p>
 
-        <form onSubmit={handleLogin}>
-          <input
-            type="email"
-            placeholder="E-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <form onSubmit={handleLogin}>
+            <input
+              type="email"
+              placeholder="E-mail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={isLoading}
+            />
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={isLoading}
+            />
 
-          <button type="submit" className="login-btn">
-            Login
-          </button>
+            <button type="submit" className="login-btn" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login"}
+            </button>
 
-          {error && <p className="login-error">{error}</p>}
-        </form>
+            <div className="error-container">
+              {error && <p className="login-error">{error}</p>}
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
