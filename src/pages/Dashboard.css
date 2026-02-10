@@ -72,11 +72,18 @@
   line-height: 1.3;
   margin-bottom: 10px;
   opacity: 0.9;
+  color: white;
 }
 
 .stat-value {
   font-size: 1.8rem;
   font-weight: 800;
+  color: white;
+}
+
+/* Ensure specificity overrides any global conflicting .stat-value */
+.dashboard-card .stat-value {
+  color: white;
 }
 
 .welcome-section {
