@@ -21,6 +21,7 @@ export default function StudentTeacher() {
   const [studentFilterGrade, setStudentFilterGrade] = useState("All");
   const [studentFilterSection, setStudentFilterSection] = useState("All");
   const [studentFilterGender, setStudentFilterGender] = useState("All");
+  const [studentFilterStatus, setStudentFilterStatus] = useState("All");
 
   const [teacherFilterSection, setTeacherFilterSection] = useState("All");
   const [teacherFilterStatus, setTeacherFilterStatus] = useState("All");
@@ -317,7 +318,8 @@ export default function StudentTeacher() {
     const matchGrade = studentFilterGrade === "All" || s.grade === studentFilterGrade;
     const matchSection = studentFilterSection === "All" || s.section === studentFilterSection;
     const matchGender = studentFilterGender === "All" || s.sex === studentFilterGender;
-    return matchGrade && matchSection && matchGender;
+    const matchStatus = studentFilterStatus === "All" || (s.nutritionStatus || "").toLowerCase() === studentFilterStatus.toLowerCase();
+    return matchGrade && matchSection && matchGender && matchStatus;
   });
 
   // Ensure alphabetical sort (already sorted in fetch, but good to ensure)
@@ -411,8 +413,21 @@ export default function StudentTeacher() {
                   setStudentFilterGrade("All");
                   setStudentFilterSection("All");
                   setStudentFilterGender("All");
+                  setStudentFilterStatus("All");
                 }}
               >
+                  <select
+                    value={studentFilterStatus}
+                    onChange={(e) => setStudentFilterStatus(e.target.value)}
+                  >
+                    <option value="All">All Status</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Wasted">Wasted</option>
+                    <option value="Severely Wasted">Severely Wasted</option>
+                    <option value="Overweight">Overweight</option>
+                    <option value="Obese">Obese</option>
+                    <option value="Unknown">Unknown</option>
+                  </select>
                   <select
                     value={studentFilterGrade}
                     onChange={(e) => setStudentFilterGrade(e.target.value)}

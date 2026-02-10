@@ -254,6 +254,7 @@ export default function FeedingNutrition() {
                     <option value="Severely Wasted">Severely Wasted</option>
                     <option value="Overweight">Overweight</option>
                     <option value="Obese">Obese</option>
+                    <option value="Unknown">Unknown</option>
                 </select>
         </FilterBar>
 
