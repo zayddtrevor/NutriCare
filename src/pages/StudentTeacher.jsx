@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../supabaseClient";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
 import Button from "../components/common/Button";
+import { SCHOOL_DATA } from "../constants/schoolData";
+import { normalizeStudent } from "../utils/normalize";
 import "../components/common/TableStyles.css"; // Import standard table styles
 import "./StudentTeacher.css";
 
@@ -48,30 +50,24 @@ export default function StudentTeacher() {
   async function fetchStudents() {
     setLoading(true);
     // Fetch students
-    // We try to sort by 'name' if possible, but if column doesn't exist it might fail?
-    // Supabase usually ignores invalid order columns or throws.
-    // Safest is to just select * first.
+    // Use .range(0, 9999) to bypass 1000 row limit
     const { data, error } = await supabase
       .from("students")
-      .select("*");
+      .select("*")
+      .range(0, 9999);
 
     if (error) {
         console.error("Error fetching students:", error);
     } else {
-        // Map data to handle variations
+        // Map data to handle variations using normalizeStudent
         const mapped = data.map(s => {
-          const grade = s.grade_level || "";
-          const section = s.section || "";
-          const gradeSectionDisplay = (grade && section)
-            ? `Grade ${grade} – ${section}`
-            : (grade || section || "Unknown");
-
+          const normalized = normalizeStudent(s);
           return {
             id: s.id,
             name: s.name || s.full_name || "Unknown",
-            grade: grade,
-            section: section,
-            gradeSectionDisplay: gradeSectionDisplay,
+            grade: normalized.grade_level,
+            section: normalized.section,
+            gradeSectionDisplay: normalized.gradeSectionDisplay,
             sex: s.sex || "-",
             nutritionStatus: s.nutrition_status || s.nutritionStatus || "-",
           };
@@ -91,6 +87,7 @@ export default function StudentTeacher() {
     const { data, error } = await supabase
       .from("teachers")
       .select("*")
+      .range(0, 9999)
       .order("last_name", { ascending: true });
 
     if (error) {
@@ -235,13 +232,25 @@ export default function StudentTeacher() {
   // Render
   // =========================
 
-  // Compute unique values for filters (Students)
-  const uniqueStudentGrades = [...new Set(students.map((s) => s.grade).filter(Boolean))].sort();
-  const uniqueStudentSections = [...new Set(students.map((s) => s.section).filter(Boolean))].sort();
-  const uniqueStudentGenders = [...new Set(students.map((s) => s.sex).filter(Boolean))].sort();
+  // Available filter options
+  const gradeOptions = Object.keys(SCHOOL_DATA);
+
+  const sectionOptions = useMemo(() => {
+    if (studentFilterGrade === "All") {
+      const allSections = Object.values(SCHOOL_DATA).flat();
+      return [...new Set(allSections)].sort();
+    }
+    return SCHOOL_DATA[studentFilterGrade] || [];
+  }, [studentFilterGrade]);
+
+  const uniqueStudentGenders = useMemo(() => {
+     return [...new Set(students.map((s) => s.sex).filter(Boolean))].sort();
+  }, [students]);
 
   // Compute unique values for filters (Teachers)
-  const uniqueTeacherSections = [...new Set(teachers.map((t) => t.section).filter(Boolean))].sort();
+  const uniqueTeacherSections = useMemo(() => {
+    return [...new Set(teachers.map((t) => t.section).filter(Boolean))].sort();
+  }, [teachers]);
 
   // Filter students
   const filteredStudents = students.filter((s) => {
@@ -256,9 +265,6 @@ export default function StudentTeacher() {
     const matchGender = studentFilterGender === "All" || s.sex === studentFilterGender;
     return matchGrade && matchSection && matchGender;
   });
-
-  // Ensure alphabetical sort (already sorted in fetch, but good to ensure)
-  filteredStudents.sort((a, b) => a.name.localeCompare(b.name));
 
   // Filter teachers
   const filteredTeachers = teachers.filter((t) => {
@@ -317,10 +323,13 @@ export default function StudentTeacher() {
               >
                   <select
                     value={studentFilterGrade}
-                    onChange={(e) => setStudentFilterGrade(e.target.value)}
+                    onChange={(e) => {
+                        setStudentFilterGrade(e.target.value);
+                        setStudentFilterSection("All");
+                    }}
                   >
                     <option value="All">All Grades</option>
-                    {uniqueStudentGrades.map((g) => (
+                    {gradeOptions.map((g) => (
                       <option key={g} value={g}>
                         {g}
                       </option>
@@ -331,7 +340,7 @@ export default function StudentTeacher() {
                     onChange={(e) => setStudentFilterSection(e.target.value)}
                   >
                     <option value="All">All Sections</option>
-                    {uniqueStudentSections.map((sec) => (
+                    {sectionOptions.map((sec) => (
                       <option key={sec} value={sec}>
                         {sec}
                       </option>

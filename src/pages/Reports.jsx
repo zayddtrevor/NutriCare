@@ -9,17 +9,38 @@ import {
   Download,
   FileText
 } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
-import GradeTabs from "../components/common/GradeTabs";
 import StatCard from "../components/common/StatCard";
 import Button from "../components/common/Button";
+import { SCHOOL_DATA } from "../constants/schoolData";
+import { normalizeStudent } from "../utils/normalize";
 import "../components/common/TableStyles.css";
 import "./Reports.css";
 
 // Constants
-const GRADE_OPTIONS = ["All Grades", "K1", "K2", "1", "2", "3", "4", "5", "6"];
 const STATUS_OPTIONS = ["All Status", "Normal", "Wasted", "Severely Wasted", "Overweight", "Obese"];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+const STATUS_COLORS = {
+  "Normal": "#22c55e",
+  "Wasted": "#eab308",
+  "Severely Wasted": "#ef4444",
+  "Overweight": "#3b82f6",
+  "Obese": "#a855f7"
+};
 
 export default function Reports() {
   // Data State
@@ -41,7 +62,8 @@ export default function Reports() {
       // 1. Fetch Students
       const { data: studentsData, error: studentsError } = await supabase
         .from("students")
-        .select("*");
+        .select("*")
+        .range(0, 9999);
 
       if (studentsError) throw studentsError;
 
@@ -84,6 +106,7 @@ export default function Reports() {
       const sbfpSet = new Set(sbfpList.map(r => r.student_id));
 
       const processed = studentsData.map((s) => {
+        const normalized = normalizeStudent(s);
         const bmiRecord = bmiMap[s.id];
         const attRecord = attMap[s.id] || { present: 0, absent: 0 };
 
@@ -93,11 +116,11 @@ export default function Reports() {
         return {
           id: s.id,
           name: s.name || s.full_name || "Unknown",
-          gradeLevel: (s.grade_level || "").toString(),
-          section: s.section || "Unknown",
+          gradeLevel: normalized.grade_level,
+          section: normalized.section,
           sex: s.sex || null,
           birthDate: s.birth_date || s.dob || null,
-          gradeSection: `${s.grade_level || "?"} - ${s.section || "?"}`,
+          gradeSection: normalized.gradeSectionDisplay,
           status: nutritionStatus,
           bmi: bmiValue ? parseFloat(bmiValue).toFixed(1) : "-",
           presentDays: attRecord.present,
@@ -123,16 +146,10 @@ export default function Reports() {
   // -------- FILTERS --------
   const availableSections = useMemo(() => {
     if (grade === "All Grades") {
-       return [...new Set(students.map(s => s.section))].filter(Boolean).sort();
+        return Object.values(SCHOOL_DATA).flat().sort();
     }
-    const filteredByGrade = students.filter(s => {
-      const g = s.gradeLevel;
-      if (grade === "K1") return g === "K1" || g === "K";
-      if (grade === "K2") return g === "K2";
-      return g === grade;
-    });
-    return [...new Set(filteredByGrade.map(s => s.section))].filter(Boolean).sort();
-  }, [students, grade]);
+    return SCHOOL_DATA[grade] || [];
+  }, [grade]);
 
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
@@ -145,9 +162,7 @@ export default function Reports() {
       // 2. Grade
       if (grade !== "All Grades") {
         const g = s.gradeLevel;
-        if (grade === "K1" && g !== "K1" && g !== "K") return false;
-        else if (grade === "K2" && g !== "K2") return false;
-        else if (grade !== "K1" && grade !== "K2" && g !== grade) return false;
+        if (g !== grade) return false;
       }
 
       // 3. Section
@@ -159,6 +174,52 @@ export default function Reports() {
       return true;
     });
   }, [students, grade, section, status, searchQuery]);
+
+  // -------- CHART DATA --------
+  const chartData = useMemo(() => {
+    // 1. Grade Distribution
+    const gradeCounts = {};
+    filteredStudents.forEach(s => {
+        const g = s.gradeLevel || "Unknown";
+        gradeCounts[g] = (gradeCounts[g] || 0) + 1;
+    });
+
+    // Sort keys based on SCHOOL_DATA order if possible
+    const gradeOrder = Object.keys(SCHOOL_DATA);
+    const gradeData = Object.keys(gradeCounts)
+        .map(g => ({ name: g, count: gradeCounts[g] }))
+        .sort((a, b) => {
+            const idxA = gradeOrder.indexOf(a.name);
+            const idxB = gradeOrder.indexOf(b.name);
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            return a.name.localeCompare(b.name);
+        });
+
+    // 2. Status Distribution
+    const statusCounts = {};
+    filteredStudents.forEach(s => {
+        const st = s.status || "Unknown";
+        statusCounts[st] = (statusCounts[st] || 0) + 1;
+    });
+    const statusData = Object.keys(statusCounts).map(k => ({
+        name: k,
+        value: statusCounts[k]
+    }));
+
+    // 3. Attendance
+    let totalPresent = 0;
+    let totalAbsent = 0;
+    filteredStudents.forEach(s => {
+        totalPresent += s.presentDays;
+        totalAbsent += s.absentDays;
+    });
+    const attendanceData = [
+        { name: "Present", value: totalPresent },
+        { name: "Absent", value: totalAbsent }
+    ];
+
+    return { gradeData, statusData, attendanceData };
+  }, [filteredStudents]);
 
   // -------- SUMMARY STATS --------
   const summary = useMemo(() => {
@@ -270,6 +331,8 @@ export default function Reports() {
     document.body.removeChild(link);
   };
 
+  const gradeOptions = Object.keys(SCHOOL_DATA);
+
   return (
     <div className="reports-wrapper">
       <PageHeader
@@ -305,6 +368,15 @@ export default function Reports() {
             setStatus("All Status");
           }}
       >
+        <select value={grade} onChange={(e) => {
+            setGrade(e.target.value);
+            setSection("All Sections");
+        }}>
+            <option value="All Grades">All Grades</option>
+            {gradeOptions.map(g => (
+                <option key={g} value={g}>{g}</option>
+            ))}
+        </select>
         <select value={section} onChange={(e) => setSection(e.target.value)}>
           <option value="All Sections">All Sections</option>
           {availableSections.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -315,15 +387,6 @@ export default function Reports() {
         </select>
       </FilterBar>
 
-      <GradeTabs
-          activeGrade={grade}
-          onTabClick={(g) => {
-              setGrade(g);
-              setSection("All Sections");
-          }}
-          grades={GRADE_OPTIONS}
-      />
-
       {/* SUMMARY CARDS */}
       <div className="reports-summary">
         <StatCard label="Total Students" value={loading ? "..." : summary.total} icon={<Users size={20}/>} color="blue" />
@@ -333,6 +396,74 @@ export default function Reports() {
         <StatCard label="Overweight" value={loading ? "..." : summary.overweight} icon={<Activity size={20}/>} color="purple" />
         <StatCard label="Obese" value={loading ? "..." : summary.obese} icon={<XCircle size={20}/>} color="red" />
       </div>
+
+      {/* CHARTS SECTION */}
+      {!loading && !error && filteredStudents.length > 0 && (
+          <div className="charts-grid">
+              {/* Students per Grade */}
+              <div className="chart-card">
+                  <h3>Students per Grade</h3>
+                  <div className="chart-container">
+                      <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={chartData.gradeData}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                              <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                              <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                              <Tooltip cursor={{ fill: '#f3f4f6' }} />
+                              <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                      </ResponsiveContainer>
+                  </div>
+              </div>
+
+              {/* Nutrition Status */}
+              <div className="chart-card">
+                  <h3>Nutrition Status Distribution</h3>
+                  <div className="chart-container">
+                      <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                              <Pie
+                                  data={chartData.statusData}
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius={60}
+                                  outerRadius={80}
+                                  paddingAngle={5}
+                                  dataKey="value"
+                              >
+                                  {chartData.statusData.map((entry, index) => (
+                                      <Cell key={`cell-${index}`} fill={STATUS_COLORS[entry.name] || COLORS[index % COLORS.length]} />
+                                  ))}
+                              </Pie>
+                              <Tooltip />
+                              <Legend verticalAlign="bottom" height={36}/>
+                          </PieChart>
+                      </ResponsiveContainer>
+                  </div>
+              </div>
+
+               {/* Attendance Summary */}
+               <div className="chart-card">
+                  <h3>Attendance Summary (Days)</h3>
+                  <div className="chart-container">
+                      <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={chartData.attendanceData} layout="vertical">
+                               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                               <XAxis type="number" hide />
+                               <YAxis dataKey="name" type="category" width={80} tickLine={false} axisLine={false} />
+                               <Tooltip cursor={{ fill: '#f3f4f6' }} />
+                               <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                                    {chartData.attendanceData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.name === "Present" ? "#22c55e" : "#ef4444"} />
+                                    ))}
+                               </Bar>
+                          </BarChart>
+                      </ResponsiveContainer>
+                  </div>
+              </div>
+          </div>
+      )}
+
 
       {/* TABLE */}
       <div className="data-table-container">

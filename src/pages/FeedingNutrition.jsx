@@ -4,23 +4,12 @@ import { AlertCircle, X, Users, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
-import GradeTabs from "../components/common/GradeTabs";
 import StatCard from "../components/common/StatCard";
 import Button from "../components/common/Button";
+import { SCHOOL_DATA } from "../constants/schoolData";
+import { normalizeStudent } from "../utils/normalize";
 import "../components/common/TableStyles.css";
 import "./FeedingNutrition.css";
-
-// Constants
-const FEEDING_GRADES = [
-  { key: "K1", label: "K1" },
-  { key: "K2", label: "K2" },
-  { key: "1", label: "G1" },
-  { key: "2", label: "G2" },
-  { key: "3", label: "G3" },
-  { key: "4", label: "G4" },
-  { key: "5", label: "G5" },
-  { key: "6", label: "G6" },
-];
 
 export default function FeedingNutrition() {
   // State
@@ -30,7 +19,7 @@ export default function FeedingNutrition() {
   const [error, setError] = useState(null);
 
   // Filters
-  const [activeGrade, setActiveGrade] = useState("K1");
+  const [activeGrade, setActiveGrade] = useState("All");
   const [selectedSection, setSelectedSection] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,7 +35,8 @@ export default function FeedingNutrition() {
       // Fetch Students
       const { data: studentsData, error: studentsError } = await supabase
         .from("students")
-        .select("*");
+        .select("*")
+        .range(0, 9999);
 
       if (studentsError) throw studentsError;
 
@@ -60,19 +50,22 @@ export default function FeedingNutrition() {
       const attList = attRes.status === "fulfilled" && attRes.value.data ? attRes.value.data : [];
 
       // Normalize Students Data
-      const normalizedStudents = studentsData.map(s => ({
-        id: s.id,
-        name: s.name || s.full_name || "Unknown",
-        gradeLevel: (s.grade_level || "").toString(),
-        section: (s.section || "").toString(),
-        sex: s.sex || "-",
-        nutritionStatus: s.nutrition_status || s.nutritionStatus || "Unknown",
-        weight: s.weight,
-        height: s.height,
-        bmi: s.bmi,
-        // Helper for display
-        gradeSectionDisplay: `${s.grade_level || "?"} - ${s.section || "?"}`
-      }));
+      const normalizedStudents = studentsData.map(s => {
+        const normalized = normalizeStudent(s);
+        return {
+            id: s.id,
+            name: s.name || s.full_name || "Unknown",
+            gradeLevel: normalized.grade_level,
+            section: normalized.section,
+            sex: s.sex || "-",
+            nutritionStatus: s.nutrition_status || s.nutritionStatus || "Unknown",
+            weight: s.weight,
+            height: s.height,
+            bmi: s.bmi,
+            // Helper for display
+            gradeSectionDisplay: normalized.gradeSectionDisplay
+        };
+      });
 
       setStudents(normalizedStudents);
 
@@ -97,29 +90,17 @@ export default function FeedingNutrition() {
 
   // Derived Data: Available Sections for Active Grade
   const availableSections = useMemo(() => {
-    if (!students.length) return [];
-    // Filter students by active grade first
-    const gradeStudents = students.filter(s =>
-      s.gradeLevel.toUpperCase() === activeGrade.toUpperCase() ||
-      (activeGrade === "K1" && (s.gradeLevel === "K" || s.gradeLevel === "Kinder 1")) // Handle variations
-    );
-    // Extract unique sections
-    const sections = [...new Set(gradeStudents.map(s => s.section))].filter(Boolean).sort();
-    return sections;
-  }, [students, activeGrade]);
+    if (activeGrade === "All") {
+        return Object.values(SCHOOL_DATA).flat().sort();
+    }
+    return SCHOOL_DATA[activeGrade] || [];
+  }, [activeGrade]);
 
   // Filtered Students Logic
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
       // 1. Grade Filter
-      // loose match for K1/K2/Grade X
-      let gradeMatch = false;
-      const sGrade = s.gradeLevel.toUpperCase();
-      if (activeGrade === "K1") gradeMatch = sGrade === "K1" || sGrade === "K" || sGrade === "Kinder 1";
-      else if (activeGrade === "K2") gradeMatch = sGrade === "K2" || sGrade === "Kinder 2";
-      else gradeMatch = sGrade === activeGrade || sGrade === `GRADE ${activeGrade}` || sGrade === activeGrade.toString();
-
-      if (!gradeMatch) return false;
+      if (activeGrade !== "All" && s.gradeLevel !== activeGrade) return false;
 
       // 2. Section Filter
       if (selectedSection !== "All" && s.section !== selectedSection) return false;
@@ -161,12 +142,14 @@ export default function FeedingNutrition() {
   };
 
   const clearFilters = () => {
-    setActiveGrade("K1");
+    setActiveGrade("All");
     setSelectedSection("All");
     setStatusFilter("All");
     setSearchQuery("");
     fetchData(); // Requirement: Re-fetch default data
   };
+
+  const gradeOptions = Object.keys(SCHOOL_DATA);
 
   return (
     <div className="feeding-nutrition-page">
@@ -193,6 +176,19 @@ export default function FeedingNutrition() {
             isLoading={loading}
         >
                 <select
+                    value={activeGrade}
+                    onChange={(e) => {
+                        setActiveGrade(e.target.value);
+                        setSelectedSection("All");
+                    }}
+                >
+                    <option value="All">All Grades</option>
+                    {gradeOptions.map(g => (
+                        <option key={g} value={g}>{g}</option>
+                    ))}
+                </select>
+
+                <select
                     value={selectedSection}
                     onChange={(e) => setSelectedSection(e.target.value)}
                 >
@@ -214,15 +210,6 @@ export default function FeedingNutrition() {
                 </select>
         </FilterBar>
 
-        <GradeTabs
-            activeGrade={activeGrade}
-            onTabClick={(g) => {
-                setActiveGrade(g);
-                setSelectedSection("All");
-            }}
-            grades={FEEDING_GRADES}
-        />
-
         {/* Main Content Area */}
         <div className="content-area">
             {loading ? (
@@ -243,7 +230,7 @@ export default function FeedingNutrition() {
                     <div className="empty-icon">📂</div>
                     <h3>No students found</h3>
                     <p>Try adjusting your filters or search query.</p>
-                     {(selectedSection !== "All" || statusFilter !== "All" || searchQuery) && (
+                     {(activeGrade !== "All" || selectedSection !== "All" || statusFilter !== "All" || searchQuery) && (
                          <Button variant="outline" className="mt-4" onClick={clearFilters}>
                              Clear Filters
                          </Button>
