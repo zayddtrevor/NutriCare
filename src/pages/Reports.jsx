@@ -95,6 +95,8 @@ export default function Reports() {
           name: s.name || s.full_name || "Unknown",
           gradeLevel: (s.grade_level || "").toString(),
           section: s.section || "Unknown",
+          sex: s.sex || "",
+          birthDate: s.birth_date || s.birthdate || s.dob || "",
           gradeSection: `${s.grade_level || "?"} - ${s.section || "?"}`,
           status: nutritionStatus,
           bmi: bmiValue ? parseFloat(bmiValue).toFixed(1) : "-",
@@ -181,25 +183,81 @@ export default function Reports() {
   const exportCSV = () => {
     if (filteredStudents.length === 0) return;
 
-    const headers = ["Name", "Grade", "Section", "Nutrition Status", "BMI", "Present Days", "Absent Days"];
-    const csvContent = [
-      headers.join(","),
-      ...filteredStudents.map(s => [
-        `"${s.name}"`,
-        `"${s.gradeLevel}"`,
-        `"${s.section}"`,
-        `"${s.status}"`,
-        s.bmi,
-        s.presentDays,
-        s.absentDays
-      ].join(","))
-    ].join("\n");
+    // Strict column order: student_id, full_name, grade, section, sex, birth_date, bmi, nutrition_status, present_days, absent_days, report_date
+    const headers = [
+      "student_id",
+      "full_name",
+      "grade",
+      "section",
+      "sex",
+      "birth_date",
+      "bmi",
+      "nutrition_status",
+      "present_days",
+      "absent_days",
+      "report_date"
+    ];
+
+    const reportDate = new Date().toISOString().slice(0, 10);
+
+    const csvRows = filteredStudents.map(s => {
+      // Helper to handle potential commas in data by quoting, and ensure null/undefined is empty string
+      const sanitize = (val) => {
+        if (val === null || val === undefined) return "";
+        const str = String(val);
+        if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      };
+
+      return [
+        s.id,                  // student_id
+        sanitize(s.name),      // full_name
+        sanitize(s.gradeLevel),// grade
+        sanitize(s.section),   // section
+        sanitize(s.sex),       // sex
+        sanitize(s.birthDate), // birth_date
+        s.bmi === "-" ? "" : s.bmi, // bmi (handle "-" placeholder if present)
+        sanitize(s.status),    // nutrition_status
+        s.presentDays,         // present_days
+        s.absentDays,          // absent_days
+        reportDate             // report_date
+      ].join(",");
+    });
+
+    const csvContent = [headers.join(","), ...csvRows].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `reports_export_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `NutriCare_Report_${reportDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const downloadTemplate = () => {
+    const headers = [
+      "student_id",
+      "full_name",
+      "grade",
+      "section",
+      "sex",
+      "birth_date",
+      "bmi",
+      "nutrition_status",
+      "present_days",
+      "absent_days",
+      "report_date"
+    ];
+    const csvContent = headers.join(",");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "NutriCare_Report_Template.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -210,14 +268,25 @@ export default function Reports() {
       <PageHeader
         title="Reports & Analytics"
         action={
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
             <Button
+              variant="outline"
+              onClick={downloadTemplate}
+              icon={<FileText size={16} />}
+            >
+              Template
+            </Button>
+            <div title="Uses NutriCare standard format">
+              <Button
                 variant="primary"
                 onClick={exportCSV}
                 disabled={loading || filteredStudents.length === 0}
                 icon={<Download size={16} />}
-            >
+              >
                 Export CSV
-            </Button>
+              </Button>
+            </div>
+          </div>
         }
       />
 
