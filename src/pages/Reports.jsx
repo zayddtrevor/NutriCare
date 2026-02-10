@@ -42,15 +42,16 @@ export default function Reports() {
       // 1. Fetch Students
       const { data: studentsData, error: studentsError } = await supabase
         .from("students")
-        .select("*");
+        .select("*")
+        .range(0, 9999);
 
       if (studentsError) throw studentsError;
 
       // 2. Fetch Optional Data in Parallel
       const [bmiRes, attRes, sbfpRes] = await Promise.allSettled([
-        supabase.from("bmi_records").select("*").order("date_recorded", { ascending: false }),
-        supabase.from("attendance").select("*"),
-        supabase.from("sbfp_beneficiaries").select("student_id")
+        supabase.from("bmi_records").select("*").order("created_at", { ascending: false }).range(0, 9999),
+        supabase.from("attendance").select("*").range(0, 9999),
+        supabase.from("sbfp_beneficiaries").select("student_id").range(0, 9999)
       ]);
 
       const bmiList = bmiRes.status === "fulfilled" && bmiRes.value.data ? bmiRes.value.data : [];
@@ -167,6 +168,7 @@ export default function Reports() {
     const severelyWasted = filteredStudents.filter(s => (s.status || "").toLowerCase() === "severely wasted").length;
     const overweight = filteredStudents.filter(s => (s.status || "").toLowerCase() === "overweight").length;
     const obese = filteredStudents.filter(s => (s.status || "").toLowerCase() === "obese").length;
+    const unknown = filteredStudents.filter(s => !s.status || s.status === "Unknown" || s.status === "-").length;
 
     return {
       total,
@@ -174,7 +176,8 @@ export default function Reports() {
       wasted,
       severelyWasted,
       overweight,
-      obese
+      obese,
+      unknown
     };
   }, [filteredStudents]);
 
@@ -331,6 +334,7 @@ export default function Reports() {
         <StatCard label="Severely Wasted" value={loading ? "..." : summary.severelyWasted} icon={<AlertTriangle size={20}/>} color="orange" />
         <StatCard label="Overweight" value={loading ? "..." : summary.overweight} icon={<Activity size={20}/>} color="purple" />
         <StatCard label="Obese" value={loading ? "..." : summary.obese} icon={<XCircle size={20}/>} color="red" />
+        <StatCard label="Unknown" value={loading ? "..." : summary.unknown} icon={<Users size={20}/>} color="gray" />
       </div>
 
       {/* TABLE */}

@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../supabaseClient";
 import { Users } from "lucide-react";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
+import { recalculateNutritionStatus } from "../utils/nutritionUpdater";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
 import StatCard from "../components/common/StatCard";
@@ -20,11 +21,13 @@ export default function StudentTeacher() {
   const [studentFilterGrade, setStudentFilterGrade] = useState("All");
   const [studentFilterSection, setStudentFilterSection] = useState("All");
   const [studentFilterGender, setStudentFilterGender] = useState("All");
+  const [studentFilterStatus, setStudentFilterStatus] = useState("All");
 
   const [teacherFilterSection, setTeacherFilterSection] = useState("All");
   const [teacherFilterStatus, setTeacherFilterStatus] = useState("All");
 
   const [loading, setLoading] = useState(true);
+  const [isRecalculating, setIsRecalculating] = useState(false);
 
   // Modal State (for Teachers only for now)
   const [showModal, setShowModal] = useState(false);
@@ -50,43 +53,70 @@ export default function StudentTeacher() {
 
   async function fetchStudents() {
     setLoading(true);
-    // Fetch students
-    // We try to sort by 'name' if possible, but if column doesn't exist it might fail?
-    // Supabase usually ignores invalid order columns or throws.
-    // Safest is to just select * first.
-    const { data, error } = await supabase
+
+    // 1. Fetch students
+    const { data: studentsData, error: studentError } = await supabase
       .from("students")
-      .select("*");
+      .select("*")
+      .range(0, 9999);
 
-    if (error) {
-        console.error("Error fetching students:", error);
-    } else {
-        // Map data to handle variations
-        const mapped = data.map(s => {
-          const rawGrade = s.grade_level || "";
-          const grade = normalizeGrade(rawGrade);
-          const section = s.section || "";
-          const gradeSectionDisplay = (grade && section)
-            ? `${grade} – ${section}`
-            : (grade || section || "Unknown");
-
-          return {
-            id: s.id,
-            name: s.name || s.full_name || "Unknown",
-            grade: grade, // Normalized grade
-            rawGrade: rawGrade,
-            section: section,
-            gradeSectionDisplay: gradeSectionDisplay,
-            sex: s.sex || "-",
-            nutritionStatus: s.nutrition_status || s.nutritionStatus || "-",
-          };
-        });
-
-        // Sort manually to be safe
-        mapped.sort((a, b) => a.name.localeCompare(b.name));
-
-        setStudents(mapped);
+    if (studentError) {
+        console.error("Error fetching students:", studentError);
+        setLoading(false);
+        return;
     }
+
+    // 2. Fetch latest BMI records for status
+    // We fetch all and map them because Supabase doesn't support easy "latest per student" in one query without join/view
+    const { data: bmiData, error: bmiError } = await supabase
+      .from("bmi_records")
+      .select("student_id, nutrition_status, created_at")
+      .order("created_at", { ascending: false })
+      .range(0, 9999);
+
+    if (bmiError) {
+       console.error("Error fetching BMI records:", bmiError);
+    }
+
+    // Map student_id -> latest status
+    const statusMap = {};
+    if (bmiData) {
+      bmiData.forEach(r => {
+        if (!statusMap[r.student_id]) {
+          statusMap[r.student_id] = r.nutrition_status;
+        }
+      });
+    }
+
+    // Map data to handle variations
+    const mapped = studentsData.map(s => {
+      const rawGrade = s.grade_level || "";
+      const grade = normalizeGrade(rawGrade);
+      const section = s.section || "";
+      const gradeSectionDisplay = (grade && section)
+        ? `${grade} – ${section}`
+        : (grade || section || "Unknown");
+
+      // Use status from BMI record if available, fallback to "Unknown"
+      // Note: s.nutrition_status might not exist in students table anymore per PR feedback
+      const status = statusMap[s.id] || "Unknown";
+
+      return {
+        id: s.id,
+        name: s.name || s.full_name || "Unknown",
+        grade: grade, // Normalized grade
+        rawGrade: rawGrade,
+        section: section,
+        gradeSectionDisplay: gradeSectionDisplay,
+        sex: s.sex || "-",
+        nutritionStatus: status,
+      };
+    });
+
+    // Sort manually to be safe
+    mapped.sort((a, b) => a.name.localeCompare(b.name));
+
+    setStudents(mapped);
     setLoading(false);
   }
 
@@ -198,6 +228,27 @@ export default function StudentTeacher() {
   }
 
   // =========================
+  // Recalculate Status
+  // =========================
+  async function handleRecalculate() {
+    if (!window.confirm("This will update nutrition status for students with 'Unknown' status based on their latest BMI records. Continue?")) {
+      return;
+    }
+
+    setIsRecalculating(true);
+    const result = await recalculateNutritionStatus();
+    setIsRecalculating(false);
+
+    if (result.success) {
+      alert(result.message || `Updated ${result.count} students.`);
+      fetchStudents(); // Refresh data
+    } else {
+      console.error("Recalculation failed:", result.error);
+      alert(`Failed to recalculate status: ${result.error?.message || "Unknown error"}`);
+    }
+  }
+
+  // =========================
   // Activate / Deactivate (Teachers)
   // =========================
   async function toggleActive(teacher) {
@@ -267,7 +318,8 @@ export default function StudentTeacher() {
     const matchGrade = studentFilterGrade === "All" || s.grade === studentFilterGrade;
     const matchSection = studentFilterSection === "All" || s.section === studentFilterSection;
     const matchGender = studentFilterGender === "All" || s.sex === studentFilterGender;
-    return matchGrade && matchSection && matchGender;
+    const matchStatus = studentFilterStatus === "All" || (s.nutritionStatus || "").toLowerCase() === studentFilterStatus.toLowerCase();
+    return matchGrade && matchSection && matchGender && matchStatus;
   });
 
   // Ensure alphabetical sort (already sorted in fetch, but good to ensure)
@@ -293,9 +345,22 @@ export default function StudentTeacher() {
     <div className="student-page">
       <PageHeader
         title="Student & Teacher Management"
-        action={activeTab === "teachers" && (
-          <Button variant="success" onClick={openAddModal}>+ Add Teacher</Button>
-        )}
+        action={
+          <div style={{ display: "flex", gap: "10px" }}>
+            {activeTab === "students" && (
+              <Button
+                variant="outline"
+                onClick={handleRecalculate}
+                disabled={loading || isRecalculating}
+              >
+                {isRecalculating ? "Recalculating..." : "Recalculate Status"}
+              </Button>
+            )}
+            {activeTab === "teachers" && (
+              <Button variant="success" onClick={openAddModal}>+ Add Teacher</Button>
+            )}
+          </div>
+        }
       />
 
       <div className="tab-navigation">
@@ -348,8 +413,21 @@ export default function StudentTeacher() {
                   setStudentFilterGrade("All");
                   setStudentFilterSection("All");
                   setStudentFilterGender("All");
+                  setStudentFilterStatus("All");
                 }}
               >
+                  <select
+                    value={studentFilterStatus}
+                    onChange={(e) => setStudentFilterStatus(e.target.value)}
+                  >
+                    <option value="All">All Status</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Wasted">Wasted</option>
+                    <option value="Severely Wasted">Severely Wasted</option>
+                    <option value="Overweight">Overweight</option>
+                    <option value="Obese">Obese</option>
+                    <option value="Unknown">Unknown</option>
+                  </select>
                   <select
                     value={studentFilterGrade}
                     onChange={(e) => setStudentFilterGrade(e.target.value)}
@@ -407,7 +485,11 @@ export default function StudentTeacher() {
                       <td>{s.name}</td>
                       <td>{s.gradeSectionDisplay}</td>
                       <td>{s.sex}</td>
-                      <td>{s.nutritionStatus}</td>
+                      <td>
+                        <span className={`status-badge ${s.nutritionStatus.toLowerCase().replace(/\s/g, '-')}`}>
+                          {s.nutritionStatus}
+                        </span>
+                      </td>
                     </tr>
                    ))
                 )}

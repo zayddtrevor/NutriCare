@@ -42,9 +42,32 @@ export default function FeedingNutrition() {
       // Fetch Students
       const { data: studentsData, error: studentsError } = await supabase
         .from("students")
-        .select("*");
+        .select("*")
+        .range(0, 9999);
 
       if (studentsError) throw studentsError;
+
+      // Fetch latest BMI records for status (Nutrition Status is in bmi_records, not students)
+      const { data: bmiData } = await supabase
+        .from("bmi_records")
+        .select("student_id, nutrition_status, bmi, weight_kg, height_m, created_at")
+        .order("created_at", { ascending: false })
+        .range(0, 9999);
+
+      // Map student_id -> latest record info
+      const studentBMIMap = {};
+      if (bmiData) {
+        bmiData.forEach(r => {
+          if (!studentBMIMap[r.student_id]) {
+            studentBMIMap[r.student_id] = {
+                status: r.nutrition_status,
+                bmi: r.bmi,
+                weight: r.weight_kg,
+                height: r.height_m
+            };
+          }
+        });
+      }
 
       // Fetch Daily Meal (Hardcoded for 2026-02-10 as per request)
       // Week 2, Tuesday
@@ -74,6 +97,9 @@ export default function FeedingNutrition() {
         const normalizedGrade = normalizeGrade(rawGrade);
         const section = (s.section || "").toString();
 
+        // Get info from latest BMI record if available
+        const bmiInfo = studentBMIMap[s.id] || {};
+
         return {
           id: s.id,
           name: s.name || s.full_name || "Unknown",
@@ -81,10 +107,10 @@ export default function FeedingNutrition() {
           rawGrade: rawGrade,
           section: section,
           sex: s.sex || "-",
-          nutritionStatus: s.nutrition_status || s.nutritionStatus || "Unknown",
-          weight: s.weight,
-          height: s.height,
-          bmi: s.bmi,
+          nutritionStatus: bmiInfo.status || s.nutrition_status || s.nutritionStatus || "Unknown",
+          weight: bmiInfo.weight || s.weight,
+          height: bmiInfo.height || s.height,
+          bmi: bmiInfo.bmi || s.bmi,
           // Helper for display
           gradeSectionDisplay: `${normalizedGrade} - ${section}`
         };
@@ -228,6 +254,7 @@ export default function FeedingNutrition() {
                     <option value="Severely Wasted">Severely Wasted</option>
                     <option value="Overweight">Overweight</option>
                     <option value="Obese">Obese</option>
+                    <option value="Unknown">Unknown</option>
                 </select>
         </FilterBar>
 
