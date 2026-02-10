@@ -9,3 +9,8 @@
   ➜  Network: use --host to expose
 [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
 4:05:22 AM [vite] hmr update /src/pages/Login.jsx, /src/pages/StudentTeacher.jsx, /src/pages/Dashboard.jsx, /src/pages/Reports.jsx, /src/pages/FeedingNutrition.jsx, /src/components/RequireAuth.jsx, /src/components/Sidebar.jsx
+4:11:40 AM [vite] hmr update /src/pages/Reports.css
+4:13:40 AM [vite] hmr update /src/pages/Login.jsx, /src/pages/StudentTeacher.jsx, /src/pages/Dashboard.jsx, /src/pages/Reports.jsx, /src/pages/FeedingNutrition.jsx, /src/components/RequireAuth.jsx, /src/components/Sidebar.jsx
+4:14:45 AM [vite] hmr update /src/pages/Login.jsx, /src/pages/StudentTeacher.jsx, /src/pages/Dashboard.jsx, /src/pages/Reports.jsx, /src/pages/FeedingNutrition.jsx, /src/components/RequireAuth.jsx, /src/components/Sidebar.jsx
+4:15:23 AM [vite] hmr update /src/pages/Login.jsx, /src/pages/StudentTeacher.jsx, /src/pages/Dashboard.jsx, /src/pages/Reports.jsx, /src/pages/FeedingNutrition.jsx, /src/components/RequireAuth.jsx, /src/components/Sidebar.jsx
+4:15:56 AM [vite] hmr update /src/pages/Login.jsx, /src/pages/StudentTeacher.jsx, /src/pages/Dashboard.jsx, /src/pages/Reports.jsx, /src/pages/FeedingNutrition.jsx, /src/components/RequireAuth.jsx, /src/components/Sidebar.jsx

@@ -123,6 +123,18 @@
 .icon-purple { color: #8b5cf6; }
 
 /* ------------ TABLE ------------ */
+/* Specific overrides for reports page table alignment and wrapping */
+.reports-wrapper .data-table th,
+.reports-wrapper .data-table td {
+  text-align: center;
+  white-space: nowrap; /* Ensures columns expand to fit long text */
+}
+
+/* Ensure actions column header is also aligned right if needed, but centering might be better */
+.reports-wrapper .data-table th.th-actions {
+  text-align: center;
+}
+
 .reports-table-container {
   background: var(--white);
   border-radius: 12px;
