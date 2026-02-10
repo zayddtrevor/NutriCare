@@ -95,6 +95,8 @@ export default function Reports() {
           name: s.name || s.full_name || "Unknown",
           gradeLevel: (s.grade_level || "").toString(),
           section: s.section || "Unknown",
+          sex: s.sex || null,
+          birthDate: s.birth_date || s.dob || null,
           gradeSection: `${s.grade_level || "?"} - ${s.section || "?"}`,
           status: nutritionStatus,
           bmi: bmiValue ? parseFloat(bmiValue).toFixed(1) : "-",
@@ -178,28 +180,91 @@ export default function Reports() {
   }, [filteredStudents]);
 
   // -------- EXPORT CSV --------
+  const escapeCsvField = (field) => {
+    if (field === null || field === undefined) return "";
+    const stringField = String(field);
+    if (stringField.includes(",") || stringField.includes('"') || stringField.includes("\n")) {
+      return `"${stringField.replace(/"/g, '""')}"`;
+    }
+    return stringField;
+  };
+
   const exportCSV = () => {
     if (filteredStudents.length === 0) return;
 
-    const headers = ["Name", "Grade", "Section", "Nutrition Status", "BMI", "Present Days", "Absent Days"];
+    const headers = [
+      "student_id",
+      "full_name",
+      "grade",
+      "section",
+      "sex",
+      "birth_date",
+      "bmi",
+      "nutrition_status",
+      "present_days",
+      "absent_days",
+      "report_date"
+    ];
+
+    const reportDate = new Date().toISOString().slice(0, 10);
+
+    // Helper to clean placeholders for CSV export
+    const cleanValue = (val) => {
+      if (val === "-" || val === "Unknown" || val === "?") return "";
+      return val;
+    };
+
     const csvContent = [
       headers.join(","),
-      ...filteredStudents.map(s => [
-        `"${s.name}"`,
-        `"${s.gradeLevel}"`,
-        `"${s.section}"`,
-        `"${s.status}"`,
-        s.bmi,
-        s.presentDays,
-        s.absentDays
-      ].join(","))
+      ...filteredStudents.map(s => {
+        return [
+          escapeCsvField(s.id),
+          escapeCsvField(cleanValue(s.name)),
+          escapeCsvField(cleanValue(s.gradeLevel)),
+          escapeCsvField(cleanValue(s.section)),
+          escapeCsvField(cleanValue(s.sex)),
+          escapeCsvField(cleanValue(s.birthDate)),
+          escapeCsvField(cleanValue(s.bmi)),
+          escapeCsvField(cleanValue(s.status)),
+          escapeCsvField(s.presentDays),
+          escapeCsvField(s.absentDays),
+          escapeCsvField(reportDate)
+        ].join(",");
+      })
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `reports_export_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `NutriCare_Report_${reportDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // -------- DOWNLOAD TEMPLATE --------
+  const downloadTemplate = () => {
+    const headers = [
+      "student_id",
+      "full_name",
+      "grade",
+      "section",
+      "sex",
+      "birth_date",
+      "bmi",
+      "nutrition_status",
+      "present_days",
+      "absent_days",
+      "report_date"
+    ];
+
+    const csvContent = headers.join(",");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "NutriCare_Report_Template.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -210,6 +275,14 @@ export default function Reports() {
       <PageHeader
         title="Reports & Analytics"
         action={
+          <div style={{ display: "flex", gap: "10px" }}>
+            <Button
+              variant="outline"
+              onClick={downloadTemplate}
+              icon={<FileText size={16} />}
+            >
+              Download Template
+            </Button>
             <Button
                 variant="primary"
                 onClick={exportCSV}
@@ -218,6 +291,7 @@ export default function Reports() {
             >
                 Export CSV
             </Button>
+          </div>
         }
       />
 
