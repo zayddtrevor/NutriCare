@@ -17,6 +17,8 @@ export default function StudentTeacher() {
   const [studentFilterGrade, setStudentFilterGrade] = useState("All");
   const [studentFilterSection, setStudentFilterSection] = useState("All");
   const [studentFilterGender, setStudentFilterGender] = useState("All");
+  const [studentFilterStatus, setStudentFilterStatus] = useState("All");
+  const [studentSortBy, setStudentSortBy] = useState("name-asc");
 
   const [teacherFilterSection, setTeacherFilterSection] = useState("All");
   const [teacherFilterStatus, setTeacherFilterStatus] = useState("All");
@@ -254,11 +256,19 @@ export default function StudentTeacher() {
     const matchGrade = studentFilterGrade === "All" || s.grade === studentFilterGrade;
     const matchSection = studentFilterSection === "All" || s.section === studentFilterSection;
     const matchGender = studentFilterGender === "All" || s.sex === studentFilterGender;
-    return matchGrade && matchSection && matchGender;
+    const matchStatus = studentFilterStatus === "All" || s.nutritionStatus === studentFilterStatus;
+
+    return matchGrade && matchSection && matchGender && matchStatus;
   });
 
-  // Ensure alphabetical sort (already sorted in fetch, but good to ensure)
-  filteredStudents.sort((a, b) => a.name.localeCompare(b.name));
+  // Sort students
+  filteredStudents.sort((a, b) => {
+    if (studentSortBy === "name-desc") {
+      return b.name.localeCompare(a.name);
+    }
+    // Default: name-asc
+    return a.name.localeCompare(b.name);
+  });
 
   // Filter teachers
   const filteredTeachers = teachers.filter((t) => {
@@ -313,8 +323,18 @@ export default function StudentTeacher() {
                   setStudentFilterGrade("All");
                   setStudentFilterSection("All");
                   setStudentFilterGender("All");
+                  setStudentFilterStatus("All");
+                  setStudentSortBy("name-asc");
                 }}
               >
+                  <select
+                    value={studentSortBy}
+                    onChange={(e) => setStudentSortBy(e.target.value)}
+                    title="Sort By"
+                  >
+                    <option value="name-asc">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                  </select>
                   <select
                     value={studentFilterGrade}
                     onChange={(e) => setStudentFilterGrade(e.target.value)}
@@ -347,6 +367,17 @@ export default function StudentTeacher() {
                         {g}
                       </option>
                     ))}
+                  </select>
+                  <select
+                    value={studentFilterStatus}
+                    onChange={(e) => setStudentFilterStatus(e.target.value)}
+                  >
+                    <option value="All">All Status</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Wasted">Wasted</option>
+                    <option value="Severely Wasted">Severely Wasted</option>
+                    <option value="Overweight">Overweight</option>
+                    <option value="Obese">Obese</option>
                   </select>
               </FilterBar>
 

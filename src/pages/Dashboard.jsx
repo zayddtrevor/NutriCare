@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { GraduationCap, UserCheck, BarChart3 } from "lucide-react";
+import { GraduationCap, UserCheck, BarChart3, Sparkles } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import "./Dashboard.css";
 
@@ -83,10 +83,14 @@ export default function Dashboard() {
       </section>
 
       <section className="welcome-section">
-        <h3>Welcome, Admin!</h3>
+        <div className="welcome-header">
+          <Sparkles size={24} style={{ color: "#F59E0B" }} />
+          <h3>Welcome, Admin!</h3>
+        </div>
+        <div className="welcome-divider" />
         <p>
           This is your main dashboard. Live student and teacher counts are now
-          powered by Supabase.
+          powered by Supabase. Navigate to the tabs above to manage records.
         </p>
       </section>
     </div>
