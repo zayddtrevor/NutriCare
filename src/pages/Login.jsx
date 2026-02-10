@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import "./Login.css";
+import NutriCareLogo from "./NutriCare.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -29,6 +30,21 @@ export default function Login() {
       navigate("/dashboard");
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-content">
+          <div className="loading-logo-container">
+            <img src={NutriCareLogo} alt="NutriCare Logo" className="loading-logo" />
+          </div>
+          <h2 className="loading-title">NutriCare</h2>
+          <p className="loading-tagline">Monitor. Nourish. Grow.</p>
+          <div className="loading-spinner"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="login-container">
@@ -67,7 +83,7 @@ export default function Login() {
             />
 
             <button type="submit" className="login-btn" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Login"}
+              Login
             </button>
 
             <div className="error-container">
