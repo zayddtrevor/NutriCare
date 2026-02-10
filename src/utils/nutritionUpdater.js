@@ -14,33 +14,11 @@ export async function recalculateNutritionStatus() {
   try {
     console.log("Starting nutrition status recalculation...");
 
-    // 1. Fetch all students who need update (nutrition_status is null, 'Unknown', or '-')
-    const { data: students, error: studentError } = await supabase
-      .from("students")
-      .select("id, nutrition_status")
-      .range(0, 9999);
-
-    if (studentError) {
-      console.error("Error fetching students:", studentError);
-      throw studentError;
-    }
-
-    const targetStudents = students.filter(
-      (s) => !s.nutrition_status || s.nutrition_status === "Unknown" || s.nutrition_status === "-"
-    );
-
-    if (targetStudents.length === 0) {
-      console.log("No students found with 'Unknown' status.");
-      return { success: true, count: 0, message: "No students needed updates." };
-    }
-
-    console.log(`Found ${targetStudents.length} students to check.`);
-
-    // 2. Fetch all BMI records to find the latest for each student
+    // 1. Fetch all BMI records to find the latest for each student
     // Optimization: Fetch only needed columns and sort by created_at desc
     const { data: allBmiRecords, error: bmiError } = await supabase
       .from("bmi_records")
-      .select("student_id, bmi, created_at")
+      .select("id, student_id, bmi, nutrition_status, created_at")
       .order("created_at", { ascending: false })
       .range(0, 9999);
 
@@ -58,11 +36,18 @@ export async function recalculateNutritionStatus() {
       }
     });
 
-    // 3. Determine updates
+    // 2. Determine updates
     const updates = [];
-    for (const student of targetStudents) {
-      const record = latestBmiMap[student.id];
-      if (record && record.bmi != null) {
+
+    // Iterate over the latest records we found
+    for (const studentId in latestBmiMap) {
+      const record = latestBmiMap[studentId];
+
+      // Check if status is Unknown/Null/-
+      const currentStatus = record.nutrition_status;
+      const needsUpdate = !currentStatus || currentStatus === "Unknown" || currentStatus === "-";
+
+      if (needsUpdate && record.bmi != null) {
         const bmi = parseFloat(record.bmi);
         let status = "Unknown";
 
@@ -75,17 +60,21 @@ export async function recalculateNutritionStatus() {
         // Only update if we calculated a valid status
         if (status !== "Unknown") {
           updates.push({
-            id: student.id,
+            id: record.id, // Update the BMI record itself
             nutrition_status: status
           });
         }
       }
     }
 
-    console.log(`Identified ${updates.length} students to update.`);
+    console.log(`Identified ${updates.length} BMI records to update.`);
 
-    // 4. Perform updates (Batching requests)
-    // We use .update() to ensure we only modify the nutrition_status column
+    if (updates.length === 0) {
+      return { success: true, count: 0, message: "No BMI records needed updates." };
+    }
+
+    // 3. Perform updates (Batching requests)
+    // We use .update() on bmi_records table
     const BATCH_SIZE = 20; // Concurrent requests
     let updatedCount = 0;
 
@@ -93,20 +82,20 @@ export async function recalculateNutritionStatus() {
       const batch = updates.slice(i, i + BATCH_SIZE);
       const promises = batch.map(u =>
         supabase
-          .from("students")
+          .from("bmi_records")
           .update({ nutrition_status: u.nutrition_status })
           .eq("id", u.id)
       );
 
       await Promise.all(promises);
       updatedCount += batch.length;
-      console.log(`Updated ${updatedCount} / ${updates.length} students...`);
+      console.log(`Updated ${updatedCount} / ${updates.length} records...`);
     }
 
     return {
       success: true,
       count: updatedCount,
-      message: `Successfully updated ${updatedCount} students.`
+      message: `Successfully updated ${updatedCount} BMI records.`
     };
 
   } catch (error) {
