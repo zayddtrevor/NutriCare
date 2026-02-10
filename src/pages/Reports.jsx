@@ -168,6 +168,7 @@ export default function Reports() {
     const severelyWasted = filteredStudents.filter(s => (s.status || "").toLowerCase() === "severely wasted").length;
     const overweight = filteredStudents.filter(s => (s.status || "").toLowerCase() === "overweight").length;
     const obese = filteredStudents.filter(s => (s.status || "").toLowerCase() === "obese").length;
+    const unknown = filteredStudents.filter(s => !s.status || s.status === "Unknown" || s.status === "-").length;
 
     return {
       total,
@@ -175,7 +176,8 @@ export default function Reports() {
       wasted,
       severelyWasted,
       overweight,
-      obese
+      obese,
+      unknown
     };
   }, [filteredStudents]);
 
@@ -332,6 +334,7 @@ export default function Reports() {
         <StatCard label="Severely Wasted" value={loading ? "..." : summary.severelyWasted} icon={<AlertTriangle size={20}/>} color="orange" />
         <StatCard label="Overweight" value={loading ? "..." : summary.overweight} icon={<Activity size={20}/>} color="purple" />
         <StatCard label="Obese" value={loading ? "..." : summary.obese} icon={<XCircle size={20}/>} color="red" />
+        <StatCard label="Unknown" value={loading ? "..." : summary.unknown} icon={<Users size={20}/>} color="gray" />
       </div>
 
       {/* TABLE */}
