@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 import { AlertCircle, X, Users, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
+import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
 import GradeTabs from "../components/common/GradeTabs";
@@ -11,16 +12,10 @@ import "../components/common/TableStyles.css";
 import "./FeedingNutrition.css";
 
 // Constants
-const FEEDING_GRADES = [
-  { key: "K1", label: "K1" },
-  { key: "K2", label: "K2" },
-  { key: "1", label: "G1" },
-  { key: "2", label: "G2" },
-  { key: "3", label: "G3" },
-  { key: "4", label: "G4" },
-  { key: "5", label: "G5" },
-  { key: "6", label: "G6" },
-];
+const FEEDING_GRADES = GRADES.map(g => ({
+  key: g,
+  label: g.replace("Grade ", "G")
+}));
 
 export default function FeedingNutrition() {
   // State
@@ -60,19 +55,26 @@ export default function FeedingNutrition() {
       const attList = attRes.status === "fulfilled" && attRes.value.data ? attRes.value.data : [];
 
       // Normalize Students Data
-      const normalizedStudents = studentsData.map(s => ({
-        id: s.id,
-        name: s.name || s.full_name || "Unknown",
-        gradeLevel: (s.grade_level || "").toString(),
-        section: (s.section || "").toString(),
-        sex: s.sex || "-",
-        nutritionStatus: s.nutrition_status || s.nutritionStatus || "Unknown",
-        weight: s.weight,
-        height: s.height,
-        bmi: s.bmi,
-        // Helper for display
-        gradeSectionDisplay: `${s.grade_level || "?"} - ${s.section || "?"}`
-      }));
+      const normalizedStudents = studentsData.map(s => {
+        const rawGrade = (s.grade_level || "").toString();
+        const normalizedGrade = normalizeGrade(rawGrade);
+        const section = (s.section || "").toString();
+
+        return {
+          id: s.id,
+          name: s.name || s.full_name || "Unknown",
+          gradeLevel: normalizedGrade,
+          rawGrade: rawGrade,
+          section: section,
+          sex: s.sex || "-",
+          nutritionStatus: s.nutrition_status || s.nutritionStatus || "Unknown",
+          weight: s.weight,
+          height: s.height,
+          bmi: s.bmi,
+          // Helper for display
+          gradeSectionDisplay: `${normalizedGrade} - ${section}`
+        };
+      });
 
       setStudents(normalizedStudents);
 
@@ -97,29 +99,15 @@ export default function FeedingNutrition() {
 
   // Derived Data: Available Sections for Active Grade
   const availableSections = useMemo(() => {
-    if (!students.length) return [];
-    // Filter students by active grade first
-    const gradeStudents = students.filter(s =>
-      s.gradeLevel.toUpperCase() === activeGrade.toUpperCase() ||
-      (activeGrade === "K1" && (s.gradeLevel === "K" || s.gradeLevel === "Kinder 1")) // Handle variations
-    );
-    // Extract unique sections
-    const sections = [...new Set(gradeStudents.map(s => s.section))].filter(Boolean).sort();
-    return sections;
-  }, [students, activeGrade]);
+    return SCHOOL_DATA[activeGrade] || [];
+  }, [activeGrade]);
 
   // Filtered Students Logic
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
       // 1. Grade Filter
-      // loose match for K1/K2/Grade X
-      let gradeMatch = false;
-      const sGrade = s.gradeLevel.toUpperCase();
-      if (activeGrade === "K1") gradeMatch = sGrade === "K1" || sGrade === "K" || sGrade === "Kinder 1";
-      else if (activeGrade === "K2") gradeMatch = sGrade === "K2" || sGrade === "Kinder 2";
-      else gradeMatch = sGrade === activeGrade || sGrade === `GRADE ${activeGrade}` || sGrade === activeGrade.toString();
-
-      if (!gradeMatch) return false;
+      // With normalization, s.gradeLevel is already one of the official keys
+      if (s.gradeLevel !== activeGrade) return false;
 
       // 2. Section Filter
       if (selectedSection !== "All" && s.section !== selectedSection) return false;

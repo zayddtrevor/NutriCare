@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../supabaseClient";
+import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
 import Button from "../components/common/Button";
@@ -60,16 +61,18 @@ export default function StudentTeacher() {
     } else {
         // Map data to handle variations
         const mapped = data.map(s => {
-          const grade = s.grade_level || "";
+          const rawGrade = s.grade_level || "";
+          const grade = normalizeGrade(rawGrade);
           const section = s.section || "";
           const gradeSectionDisplay = (grade && section)
-            ? `Grade ${grade} – ${section}`
+            ? `${grade} – ${section}`
             : (grade || section || "Unknown");
 
           return {
             id: s.id,
             name: s.name || s.full_name || "Unknown",
-            grade: grade,
+            grade: grade, // Normalized grade
+            rawGrade: rawGrade,
             section: section,
             gradeSectionDisplay: gradeSectionDisplay,
             sex: s.sex || "-",
@@ -236,8 +239,14 @@ export default function StudentTeacher() {
   // =========================
 
   // Compute unique values for filters (Students)
-  const uniqueStudentGrades = [...new Set(students.map((s) => s.grade).filter(Boolean))].sort();
-  const uniqueStudentSections = [...new Set(students.map((s) => s.section).filter(Boolean))].sort();
+  const uniqueStudentSections = useMemo(() => {
+    if (studentFilterGrade === "All") {
+      // Flatten all sections from SCHOOL_DATA
+      return [...new Set(Object.values(SCHOOL_DATA).flat())].sort();
+    }
+    return SCHOOL_DATA[studentFilterGrade] || [];
+  }, [studentFilterGrade]);
+
   const uniqueStudentGenders = [...new Set(students.map((s) => s.sex).filter(Boolean))].sort();
 
   // Compute unique values for filters (Teachers)
@@ -320,7 +329,7 @@ export default function StudentTeacher() {
                     onChange={(e) => setStudentFilterGrade(e.target.value)}
                   >
                     <option value="All">All Grades</option>
-                    {uniqueStudentGrades.map((g) => (
+                    {GRADES.map((g) => (
                       <option key={g} value={g}>
                         {g}
                       </option>
