@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import "./Login.css";
 import NutriCareLogo from "./NutriCare.png";
+import { Loader2 } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
   const navigate = useNavigate();
 
@@ -16,42 +18,37 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-    setIsFadingOut(false);
-
-    const startTime = Date.now();
 
     const { error: loginError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    // Ensure minimum 2 seconds load time
-    const elapsedTime = Date.now() - startTime;
-    const minLoadTime = 2000;
-    const waitTime = Math.max(0, minLoadTime - elapsedTime);
-
-    if (waitTime > 0) {
-      await new Promise((resolve) => setTimeout(resolve, waitTime));
-    }
-
-    // Trigger fade out
-    setIsFadingOut(true);
-
-    // Wait for fade out animation (800ms)
-    await new Promise((resolve) => setTimeout(resolve, 900));
-
     if (loginError) {
+      // Small delay for UX so it doesn't flash too fast
+      await new Promise((resolve) => setTimeout(resolve, 500));
       console.error("❌ Admin Login failed:", loginError.message);
       setError("Invalid email or password");
       setIsLoading(false);
-      setIsFadingOut(false);
     } else {
       console.log("✅ Admin Login successful");
+      // Success! Show overlay and transition
+      setShowSuccessOverlay(true);
+
+      // Enforce minimum display time for the brand overlay
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Trigger fade out
+      setIsFadingOut(true);
+
+      // Wait for fade out animation
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
       navigate("/dashboard");
     }
   };
 
-  if (isLoading) {
+  if (showSuccessOverlay) {
     return (
       <div className={`loading-screen ${isFadingOut ? "fade-out" : ""}`}>
         <div className="loading-content">
@@ -84,26 +81,39 @@ export default function Login() {
           </p>
 
           <form onSubmit={handleLogin}>
-            <input
-              type="email"
-              placeholder="E-mail"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-            />
+            <div className="input-group">
+                <input
+                type="email"
+                placeholder="E-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+                aria-label="Email Address"
+                />
+            </div>
 
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-            />
+            <div className="input-group">
+                <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={isLoading}
+                aria-label="Password"
+                />
+            </div>
 
             <button type="submit" className="login-btn" disabled={isLoading}>
-              Login
+              {isLoading ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <Loader2 className="spin" size={20} />
+                      <span>Logging in...</span>
+                  </div>
+              ) : (
+                  "Login"
+              )}
             </button>
 
             <div className="error-container">

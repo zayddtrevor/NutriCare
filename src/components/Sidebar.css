@@ -1,14 +1,45 @@
 .sidebar {
-  width: 240px; /* Increased slightly for better spacing */
+  width: 240px;
   min-width: 240px;
   background: var(--sidebar-bg);
   color: #fff;
-  min-height: 100vh; 
-  height: 100%; 
-  padding: 24px 20px; /* Increased padding */
+  min-height: 100vh;
+  height: 100%;
+  padding: 24px 20px;
   display: flex;
   flex-direction: column;
   gap: 24px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.sidebar.collapsed {
+  width: 80px;
+  min-width: 80px;
+  padding: 24px 12px;
+}
+
+.collapse-btn {
+  position: absolute;
+  top: 24px;
+  right: -12px;
+  background: var(--primary-blue, #3b82f6);
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 10;
+  transition: transform 0.2s;
+}
+
+.sidebar.collapsed .collapse-btn {
+  transform: rotate(180deg);
 }
 
 .brand {
@@ -17,25 +48,41 @@
   align-items: center;
   padding-bottom: 8px;
   margin-bottom: 8px;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.sidebar.collapsed .brand {
+  justify-content: center;
+  gap: 0;
 }
 
 .logo-circle {
-  width: 48px; /* Slightly larger */
+  width: 48px;
   height: 48px;
-  border-radius: 50%; /* Fully round */
+  min-width: 48px;
+  border-radius: 50%;
   background: #2aa786;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   color: white;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15); /* Subtle glow */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   font-size: 1.1rem;
 }
 
 .brand-text {
   display: flex;
   flex-direction: column;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+
+.brand-text.hidden {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
 }
 
 .brand-title {
@@ -54,7 +101,7 @@
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 8px; /* Reduced gap slightly as items are taller */
+  gap: 8px;
   margin-top: 4px;
 }
 
@@ -67,14 +114,23 @@
   padding-left: 12px;
   letter-spacing: 0.8px;
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.nav-section-label.hidden {
+  height: 0;
+  margin: 0;
+  opacity: 0;
 }
 
 .nav a {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: rgba(255, 255, 255, 0.75); /* Dirty white */
-  padding: 12px 16px; /* Comfortable padding */
+  color: rgba(255, 255, 255, 0.75);
+  padding: 12px 16px;
   border-radius: 8px;
   text-decoration: none;
   font-size: 0.95rem;
@@ -82,24 +138,40 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .nav a {
+  justify-content: center;
+  padding: 12px;
+}
+
+.nav a span.hidden {
+  display: none;
 }
 
 .nav a svg {
   stroke-width: 2px;
   opacity: 0.9;
+  min-width: 20px;
 }
 
 /* Hover State */
 .nav a:hover {
-  background: rgba(255, 255, 255, 0.05); /* Lighter on hover */
+  background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.95);
-  transform: translateX(2px); /* Subtle movement */
+  transform: translateX(2px);
+}
+
+.sidebar.collapsed .nav a:hover {
+  transform: none;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* Active State */
 .nav a.active {
-  background: rgba(0, 0, 0, 0.2); /* Darker background */
-  color: #ffffff; /* Bright white */
+  background: rgba(0, 0, 0, 0.2);
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -111,13 +183,13 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background-color: var(--accent); /* Green accent */
+  background-color: var(--accent);
   border-top-right-radius: 2px;
   border-bottom-right-radius: 2px;
 }
 
 .logout-btn {
-  margin-top: auto; /* Push to bottom if flex container allows, or just margin */
+  margin-top: auto;
   margin-top: 24px;
   display: flex;
   align-items: center;
@@ -134,15 +206,30 @@
   font-family: inherit;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .logout-btn {
+  justify-content: center;
+  padding: 12px;
+}
+
+.logout-btn span.hidden {
+  display: none;
 }
 
 .logout-btn svg {
   stroke-width: 2px;
   opacity: 0.9;
+  min-width: 20px;
 }
 
 .logout-btn:hover {
   background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.95);
   transform: translateX(2px);
+}
+
+.sidebar.collapsed .logout-btn:hover {
+  transform: none;
 }
