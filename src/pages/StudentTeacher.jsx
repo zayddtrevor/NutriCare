@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../supabaseClient";
 import { Users } from "lucide-react";
+import { recalculateNutritionStatus } from "../utils/nutritionUpdater";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
@@ -25,6 +26,7 @@ export default function StudentTeacher() {
   const [teacherFilterStatus, setTeacherFilterStatus] = useState("All");
 
   const [loading, setLoading] = useState(true);
+  const [recalculating, setRecalculating] = useState(false);
 
   // Modal State (for Teachers only for now)
   const [showModal, setShowModal] = useState(false);
@@ -78,7 +80,7 @@ export default function StudentTeacher() {
             section: section,
             gradeSectionDisplay: gradeSectionDisplay,
             sex: s.sex || "-",
-            nutritionStatus: s.nutrition_status || s.nutritionStatus || "-",
+            nutritionStatus: s.nutrition_status || s.nutritionStatus || "Unknown",
           };
         });
 
@@ -236,6 +238,21 @@ export default function StudentTeacher() {
     }
   }
 
+  async function handleRecalculate() {
+    if (!window.confirm("This will update nutrition statuses for all students based on their latest BMI records. Continue?")) return;
+
+    setRecalculating(true);
+    const result = await recalculateNutritionStatus();
+    setRecalculating(false);
+
+    if (result.success) {
+      alert(`Successfully updated ${result.updated} student statuses.`);
+      fetchStudents();
+    } else {
+      alert("Failed to recalculate status. Check console for details.");
+    }
+  }
+
   // =========================
   // Render
   // =========================
@@ -293,9 +310,19 @@ export default function StudentTeacher() {
     <div className="student-page">
       <PageHeader
         title="Student & Teacher Management"
-        action={activeTab === "teachers" && (
-          <Button variant="success" onClick={openAddModal}>+ Add Teacher</Button>
-        )}
+        action={
+          activeTab === "teachers" ? (
+            <Button variant="success" onClick={openAddModal}>+ Add Teacher</Button>
+          ) : (
+            <Button
+              variant="primary"
+              onClick={handleRecalculate}
+              disabled={recalculating}
+            >
+              {recalculating ? "Recalculating..." : "Recalculate Status"}
+            </Button>
+          )
+        }
       />
 
       <div className="tab-navigation">
@@ -407,7 +434,11 @@ export default function StudentTeacher() {
                       <td>{s.name}</td>
                       <td>{s.gradeSectionDisplay}</td>
                       <td>{s.sex}</td>
-                      <td>{s.nutritionStatus}</td>
+                      <td>
+                        <span className={`status-badge ${s.nutritionStatus.toLowerCase().replace(/\s/g, '-')}`}>
+                          {s.nutritionStatus}
+                        </span>
+                      </td>
                     </tr>
                    ))
                 )}
