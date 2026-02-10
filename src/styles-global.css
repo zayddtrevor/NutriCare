@@ -1,13 +1,56 @@
 /* Basic resets + global fonts & colors */
 :root {
+  /* Brand Colors */
+  --primary-blue: #3B7DD8;
+  --primary-blue-hover: #336BC9;
+  --secondary-blue: #80a4d3; /* Legacy/Muted blue */
+
+  /* Status Colors */
+  --success-green: #28a745;
+  --success-green-hover: #218838;
+  --warning-yellow: #ffc107;
+  --warning-yellow-hover: #e0a800;
+  --danger-red: #dc3545;
+  --danger-red-hover: #c82333;
+  --info-cyan: #17a2b8;
+
+  /* UI Colors */
+  --bg-color: #f4f7f9;
   --sidebar-bg: #123846;
-  --accent: #5cd9a6;
-  --muted-bg: #f4f8fb;
-  --card-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --white: #ffffff;
+  --border-color: #e0e0e0;
+  --input-border: #ced4da;
+
+  /* Text Colors */
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  --text-light: #ffffff;
   --text-dark: #0f2540;
+
+  /* Accent */
+  --accent: #5cd9a6;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+  --card-shadow: var(--shadow-md);
+
+  /* Spacing */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html,body,#root { height: 100%; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color: var(--text-dark); }
+html,body,#root { height: 100%; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color: var(--text-dark); background-color: var(--bg-color); }
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; }
+
+/* Global Utility Classes */
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.w-full { width: 100%; }
+.text-center { text-align: center; }
+.mb-4 { margin-bottom: 1rem; }

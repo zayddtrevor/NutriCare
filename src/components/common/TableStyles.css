@@ -1,0 +1,92 @@
+.data-table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border-color);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.data-table thead th {
+  background-color: #f8fafc;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid var(--border-color);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.data-table tbody td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+  background-color: #f8fbff;
+}
+
+/* Empty State inside table */
+.table-empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.table-loading {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+/* Common cell styles */
+.cell-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end; /* Requirement: Action column aligned right */
+}
+
+/* Ensure actions column header is also aligned right if needed */
+.data-table thead th.th-actions {
+  text-align: right;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.status-badge.normal { background-color: #d1fae5; color: #065f46; } /* Green */
+.status-badge.wasted { background-color: #fef3c7; color: #92400e; } /* Yellow */
+.status-badge.severely-wasted { background-color: #fee2e2; color: #b91c1c; } /* Red */
+.status-badge.overweight { background-color: #e0f2fe; color: #075985; } /* Blue */
+.status-badge.obese { background-color: #eeddee; color: #862e9c; } /* Purple */
+.status-badge.unknown { background-color: #f3f4f6; color: #6b7280; } /* Gray */
+
+/* Attendance specific */
+.attendance-present { color: var(--success-green); font-weight: 600; }
+.attendance-absent { color: var(--text-secondary); }
