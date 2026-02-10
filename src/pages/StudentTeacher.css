@@ -335,3 +335,60 @@
   color: #007bff;
   background: rgba(0, 123, 255, 0.05);
 }
+
+/* Summary Stats */
+.students-summary-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: stretch;
+}
+
+.grade-sections-summary {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.grade-sections-summary h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.grade-sections-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.grade-section-item {
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+  padding: 8px 12px;
+  border-radius: 6px;
+  align-items: center;
+  min-width: 60px;
+}
+
+.gs-label {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+}
+
+.gs-count {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-blue);
+}

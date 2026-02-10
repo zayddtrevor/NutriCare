@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { SCHOOL_DATA } from './constants/schoolData';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -31,44 +32,107 @@ if (supabaseUrl && supabaseAnonKey) {
     }
   };
 
-  const mockBuilder = {
-    select: function() { return this; },
-    insert: function() { return this; },
-    update: function() { return this; },
-    delete: function() { return this; },
-    eq: function() { return this; },
-    neq: function() { return this; },
-    gt: function() { return this; },
-    lt: function() { return this; },
-    gte: function() { return this; },
-    lte: function() { return this; },
-    like: function() { return this; },
-    ilike: function() { return this; },
-    is: function() { return this; },
-    in: function() { return this; },
-    contains: function() { return this; },
-    order: function() { return this; },
-    limit: function() { return this; },
-    single: function() { return this; },
-    maybeSingle: function() { return this; },
-    then: function(resolve, reject) {
-      setTimeout(() => {
-        resolve({ data: [], error: null });
-      }, 500);
-    }
+  // --- MOCK DATA GENERATION ---
+  const STUDENTS = [];
+  let studentIdCounter = 1000;
+
+  Object.entries(SCHOOL_DATA).forEach(([grade, sections]) => {
+      sections.forEach(section => {
+          // Generate roughly 9 students per section to reach ~1800 total (209 sections * 9 = 1881)
+          const count = 9;
+          for(let i=0; i<count; i++) {
+              const sex = Math.random() > 0.5 ? 'M' : 'F';
+              const statusOptions = ['Normal', 'Wasted', 'Severely Wasted', 'Overweight', 'Obese'];
+              // Weighted random for realistic status distribution?
+              // Let's just do random for now as per "Use Real Data" implies volume/structure, not necessarily statistical accuracy unless specified.
+              const status = statusOptions[Math.floor(Math.random() * statusOptions.length)];
+
+              STUDENTS.push({
+                  id: studentIdCounter++,
+                  name: `Student ${studentIdCounter} (${grade} - ${section})`,
+                  grade_level: grade, // Store as official key "Grade 1", "K1" etc.
+                  section: section,
+                  sex: sex,
+                  nutrition_status: status,
+                  bmi: (14 + Math.random() * 12).toFixed(1),
+                  birth_date: "2015-01-01", // Placeholder
+                  weight: (20 + Math.random() * 30).toFixed(1),
+                  height: (100 + Math.random() * 50).toFixed(1),
+              });
+          }
+      });
+  });
+
+  const MOCK_DB = {
+      students: STUDENTS,
+      teachers: [
+        { id: 1, teacher_id_number: "T-001", first_name: "Juan", last_name: "Dela Cruz", email: "juan@school.edu", section: "SAGING", active: true },
+        { id: 2, teacher_id_number: "T-002", first_name: "Maria", last_name: "Santos", email: "maria@school.edu", section: "MASAYAHIN", active: true }
+      ],
+      attendance: [],
+      bmi_records: [],
+      sbfp_beneficiaries: []
+  };
+
+  const createMockBuilder = (table) => {
+    const query = {
+        data: MOCK_DB[table] || [],
+        error: null,
+        _order: null,
+    };
+
+    return {
+      select: function() { return this; },
+      insert: function() { return this; },
+      update: function() { return this; },
+      delete: function() { return this; },
+      eq: function(col, val) {
+          // Simple client-side filtering for specific cases if needed
+          if (table === 'attendance' && col === 'date') {
+              // Return empty for now as we don't mock attendance dates dynamically yet
+          }
+          return this;
+      },
+      neq: function() { return this; },
+      gt: function() { return this; },
+      lt: function() { return this; },
+      gte: function() { return this; },
+      lte: function() { return this; },
+      like: function() { return this; },
+      ilike: function() { return this; },
+      is: function() { return this; },
+      in: function() { return this; },
+      contains: function() { return this; },
+      order: function(col, { ascending = true } = {}) {
+        if (query.data.length > 0 && col) {
+             query.data = [...query.data].sort((a, b) => {
+                 if (a[col] < b[col]) return ascending ? -1 : 1;
+                 if (a[col] > b[col]) return ascending ? 1 : -1;
+                 return 0;
+             });
+        }
+        return this;
+      },
+      limit: function() { return this; },
+      range: function() { return this; }, // Just ignore range for mock to return all
+      single: function() { return this; },
+      maybeSingle: function() { return this; },
+      then: function(resolve, reject) {
+        setTimeout(() => {
+          resolve({ data: query.data, error: query.error });
+        }, 300); // Simulate delay
+      }
+    };
   };
 
   supabase = {
-    from: () => mockBuilder,
+    from: (table) => createMockBuilder(table),
     auth: {
       getSession: () => Promise.resolve({
         data: { session: mockSession },
         error: null
       }),
       onAuthStateChange: (callback) => {
-        // In a real app, this callback is called on auth state changes.
-        // For our mock, we can just return the unsubscribe.
-        // If we wanted to be fancy, we could store callbacks and call them on signIn/signOut.
         return { data: { subscription: { unsubscribe: () => {} } } };
       },
       signInWithPassword: ({ email, password }) => {
@@ -81,7 +145,7 @@ if (supabaseUrl && supabaseAnonKey) {
             } else {
                resolve({ data: { session: null }, error: { message: "Invalid credentials" } });
             }
-          }, 500); // Simulate network delay
+          }, 500);
         });
       },
       signOut: () => {

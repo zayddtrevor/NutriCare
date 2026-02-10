@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "../supabaseClient";
+import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import {
   Users,
   Activity,
@@ -18,7 +19,7 @@ import "../components/common/TableStyles.css";
 import "./Reports.css";
 
 // Constants
-const GRADE_OPTIONS = ["All Grades", "K1", "K2", "1", "2", "3", "4", "5", "6"];
+const GRADE_OPTIONS = ["All Grades", ...GRADES];
 const STATUS_OPTIONS = ["All Status", "Normal", "Wasted", "Severely Wasted", "Overweight", "Obese"];
 
 export default function Reports() {
@@ -90,14 +91,19 @@ export default function Reports() {
         const nutritionStatus = bmiRecord?.nutrition_status || s.nutrition_status || s.nutritionStatus || "Unknown";
         const bmiValue = bmiRecord?.bmi || s.bmi || null;
 
+        const rawGrade = (s.grade_level || "").toString();
+        const normalizedGrade = normalizeGrade(rawGrade);
+        const section = s.section || "Unknown";
+
         return {
           id: s.id,
           name: s.name || s.full_name || "Unknown",
-          gradeLevel: (s.grade_level || "").toString(),
-          section: s.section || "Unknown",
+          gradeLevel: normalizedGrade,
+          rawGrade: rawGrade,
+          section: section,
           sex: s.sex || null,
           birthDate: s.birth_date || s.dob || null,
-          gradeSection: `${s.grade_level || "?"} - ${s.section || "?"}`,
+          gradeSection: `${normalizedGrade} - ${section}`,
           status: nutritionStatus,
           bmi: bmiValue ? parseFloat(bmiValue).toFixed(1) : "-",
           presentDays: attRecord.present,
@@ -123,31 +129,24 @@ export default function Reports() {
   // -------- FILTERS --------
   const availableSections = useMemo(() => {
     if (grade === "All Grades") {
-       return [...new Set(students.map(s => s.section))].filter(Boolean).sort();
+       return [...new Set(Object.values(SCHOOL_DATA).flat())].sort();
     }
-    const filteredByGrade = students.filter(s => {
-      const g = s.gradeLevel;
-      if (grade === "K1") return g === "K1" || g === "K";
-      if (grade === "K2") return g === "K2";
-      return g === grade;
-    });
-    return [...new Set(filteredByGrade.map(s => s.section))].filter(Boolean).sort();
-  }, [students, grade]);
+    return SCHOOL_DATA[grade] || [];
+  }, [grade]);
 
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
       // 1. Search
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        if (!s.name.toLowerCase().includes(q)) return false;
+        const nameMatch = s.name.toLowerCase().includes(q);
+        const sectionMatch = s.section.toLowerCase().includes(q);
+        if (!nameMatch && !sectionMatch) return false;
       }
 
       // 2. Grade
       if (grade !== "All Grades") {
-        const g = s.gradeLevel;
-        if (grade === "K1" && g !== "K1" && g !== "K") return false;
-        else if (grade === "K2" && g !== "K2") return false;
-        else if (grade !== "K1" && grade !== "K2" && g !== grade) return false;
+        if (s.gradeLevel !== grade) return false;
       }
 
       // 3. Section

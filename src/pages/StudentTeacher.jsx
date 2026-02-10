@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../supabaseClient";
+import { Users } from "lucide-react";
+import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
+import StatCard from "../components/common/StatCard";
 import Button from "../components/common/Button";
 import "../components/common/TableStyles.css"; // Import standard table styles
 import "./StudentTeacher.css";
@@ -60,16 +63,18 @@ export default function StudentTeacher() {
     } else {
         // Map data to handle variations
         const mapped = data.map(s => {
-          const grade = s.grade_level || "";
+          const rawGrade = s.grade_level || "";
+          const grade = normalizeGrade(rawGrade);
           const section = s.section || "";
           const gradeSectionDisplay = (grade && section)
-            ? `Grade ${grade} – ${section}`
+            ? `${grade} – ${section}`
             : (grade || section || "Unknown");
 
           return {
             id: s.id,
             name: s.name || s.full_name || "Unknown",
-            grade: grade,
+            grade: grade, // Normalized grade
+            rawGrade: rawGrade,
             section: section,
             gradeSectionDisplay: gradeSectionDisplay,
             sex: s.sex || "-",
@@ -236,8 +241,14 @@ export default function StudentTeacher() {
   // =========================
 
   // Compute unique values for filters (Students)
-  const uniqueStudentGrades = [...new Set(students.map((s) => s.grade).filter(Boolean))].sort();
-  const uniqueStudentSections = [...new Set(students.map((s) => s.section).filter(Boolean))].sort();
+  const uniqueStudentSections = useMemo(() => {
+    if (studentFilterGrade === "All") {
+      // Flatten all sections from SCHOOL_DATA
+      return [...new Set(Object.values(SCHOOL_DATA).flat())].sort();
+    }
+    return SCHOOL_DATA[studentFilterGrade] || [];
+  }, [studentFilterGrade]);
+
   const uniqueStudentGenders = [...new Set(students.map((s) => s.sex).filter(Boolean))].sort();
 
   // Compute unique values for filters (Teachers)
@@ -248,7 +259,9 @@ export default function StudentTeacher() {
     // 1. Search
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      if (!s.name.toLowerCase().includes(q)) return false;
+      const nameMatch = s.name.toLowerCase().includes(q);
+      const sectionMatch = s.section.toLowerCase().includes(q);
+      if (!nameMatch && !sectionMatch) return false;
     }
     // 2. Filters
     const matchGrade = studentFilterGrade === "All" || s.grade === studentFilterGrade;
@@ -267,7 +280,8 @@ export default function StudentTeacher() {
       const q = searchQuery.toLowerCase();
       const fullName = `${t.firstName} ${t.lastName}`.toLowerCase();
       const email = t.email.toLowerCase();
-      if (!fullName.includes(q) && !email.includes(q)) return false;
+      const section = t.section.toLowerCase();
+      if (!fullName.includes(q) && !email.includes(q) && !section.includes(q)) return false;
     }
     // 2. Filters
     const matchSection = teacherFilterSection === "All" || t.section === teacherFilterSection;
@@ -305,6 +319,27 @@ export default function StudentTeacher() {
         <div className="data-table-container">
           {activeTab === "students" && (
             <>
+              <div className="students-summary-row">
+                <StatCard
+                  label="Total Students"
+                  value={students.length}
+                  icon={<Users size={20} />}
+                  color="blue"
+                />
+
+                <div className="grade-sections-summary">
+                   <h4>Sections per Grade</h4>
+                   <div className="grade-sections-grid">
+                      {GRADES.map(grade => (
+                        <div key={grade} className="grade-section-item">
+                           <span className="gs-label">{grade}:</span>
+                           <span className="gs-count">{SCHOOL_DATA[grade].length}</span>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+              </div>
+
               <FilterBar
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
@@ -320,7 +355,7 @@ export default function StudentTeacher() {
                     onChange={(e) => setStudentFilterGrade(e.target.value)}
                   >
                     <option value="All">All Grades</option>
-                    {uniqueStudentGrades.map((g) => (
+                    {GRADES.map((g) => (
                       <option key={g} value={g}>
                         {g}
                       </option>
