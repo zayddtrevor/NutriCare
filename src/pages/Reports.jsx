@@ -21,6 +21,21 @@ import "./Reports.css";
 const GRADE_OPTIONS = ["All Grades", "K1", "K2", "1", "2", "3", "4", "5", "6"];
 const STATUS_OPTIONS = ["All Status", "Normal", "Wasted", "Severely Wasted", "Overweight", "Obese"];
 
+// Helper to format date YYYY-MM-DD
+const formatDateForFilename = (date = new Date()) => {
+  return date.toISOString().slice(0, 10);
+};
+
+// Helper to escape CSV values
+const escapeCSV = (value) => {
+  if (value === null || value === undefined) return "";
+  const stringValue = String(value);
+  if (stringValue.includes('"') || stringValue.includes(',') || stringValue.includes('\n')) {
+    return `"${stringValue.replace(/"/g, '""')}"`;
+  }
+  return stringValue;
+};
+
 export default function Reports() {
   // Data State
   const [students, setStudents] = useState([]);
@@ -96,6 +111,8 @@ export default function Reports() {
           gradeLevel: (s.grade_level || "").toString(),
           section: s.section || "Unknown",
           gradeSection: `${s.grade_level || "?"} - ${s.section || "?"}`,
+          sex: s.sex || "",
+          birthDate: s.birth_date || "",
           status: nutritionStatus,
           bmi: bmiValue ? parseFloat(bmiValue).toFixed(1) : "-",
           presentDays: attRecord.present,
@@ -177,29 +194,105 @@ export default function Reports() {
     };
   }, [filteredStudents]);
 
-  // -------- EXPORT CSV --------
+  // -------- EXPORT CSV (Strict Format) --------
   const exportCSV = () => {
     if (filteredStudents.length === 0) return;
 
-    const headers = ["Name", "Grade", "Section", "Nutrition Status", "BMI", "Present Days", "Absent Days"];
+    // Strict column order: student_id, full_name, grade, section, sex, birth_date, bmi, nutrition_status, present_days, absent_days, report_date
+    const headers = [
+      "student_id",
+      "full_name",
+      "grade",
+      "section",
+      "sex",
+      "birth_date",
+      "bmi",
+      "nutrition_status",
+      "present_days",
+      "absent_days",
+      "report_date"
+    ];
+
+    const reportDate = formatDateForFilename();
+
     const csvContent = [
       headers.join(","),
-      ...filteredStudents.map(s => [
-        `"${s.name}"`,
-        `"${s.gradeLevel}"`,
-        `"${s.section}"`,
-        `"${s.status}"`,
-        s.bmi,
-        s.presentDays,
-        s.absentDays
-      ].join(","))
+      ...filteredStudents.map(s => {
+        // Sanitize data: replace placeholders with empty strings
+        const section = s.section === "Unknown" ? "" : s.section;
+        const status = s.status === "Unknown" ? "" : s.status;
+        const bmi = s.bmi === "-" ? "" : s.bmi;
+
+        return [
+          escapeCSV(s.id),
+          escapeCSV(s.name),
+          escapeCSV(s.gradeLevel),
+          escapeCSV(section),
+          escapeCSV(s.sex),
+          escapeCSV(s.birthDate),
+          escapeCSV(bmi),
+          escapeCSV(status),
+          escapeCSV(s.presentDays),
+          escapeCSV(s.absentDays),
+          escapeCSV(reportDate)
+        ].join(",");
+      })
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `reports_export_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `NutriCare_Report_${reportDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // -------- EXPORT TEMPLATE (Bonus Format) --------
+  const exportTemplateCSV = () => {
+    if (filteredStudents.length === 0) return;
+
+    // Bonus column structure: Student ID, Full Name, Grade Level, Section, Nutrition Status, BMI, Present Days, Absent Days
+    const headers = [
+      "Student ID",
+      "Full Name",
+      "Grade Level",
+      "Section",
+      "Nutrition Status",
+      "BMI",
+      "Present Days",
+      "Absent Days"
+    ];
+
+    const reportDate = formatDateForFilename();
+
+    const csvContent = [
+      headers.join(","),
+      ...filteredStudents.map(s => {
+        // Sanitize data
+        const section = s.section === "Unknown" ? "" : s.section;
+        const status = s.status === "Unknown" ? "" : s.status;
+        const bmi = s.bmi === "-" ? "" : s.bmi;
+
+        return [
+          escapeCSV(s.id),
+          escapeCSV(s.name),
+          escapeCSV(s.gradeLevel),
+          escapeCSV(section),
+          escapeCSV(status),
+          escapeCSV(bmi),
+          escapeCSV(s.presentDays),
+          escapeCSV(s.absentDays)
+        ].join(",");
+      })
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `NutriCare_Reports_${reportDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -210,14 +303,25 @@ export default function Reports() {
       <PageHeader
         title="Reports & Analytics"
         action={
+          <>
             <Button
-                variant="primary"
-                onClick={exportCSV}
-                disabled={loading || filteredStudents.length === 0}
-                icon={<Download size={16} />}
+              variant="outline"
+              onClick={exportTemplateCSV}
+              disabled={loading || filteredStudents.length === 0}
+              icon={<FileText size={16} />}
             >
-                Export CSV
+              Download CSV Template
             </Button>
+            <Button
+              variant="primary"
+              onClick={exportCSV}
+              disabled={loading || filteredStudents.length === 0}
+              icon={<Download size={16} />}
+              title="Uses NutriCare standard format"
+            >
+              Export CSV
+            </Button>
+          </>
         }
       />
 
