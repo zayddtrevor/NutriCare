@@ -487,21 +487,21 @@ export default function FeedingNutrition() {
       try {
         //const sbfpCol = collection(db, "sbfpBeneficiaries");
         //const sbfpSnap = await getDocs(sbfpCol);
-        const sbfpSnapList = [];
-        const sbfpOnly = [];
+        // const sbfpSnapList = [];
+        // const sbfpOnly = [];
         const docs = [];
-        sbfpSnap.forEach((d) => {
-          const dd = { id: d.id, ...(d.data() || {}) };
-          // normalize name + gradeSection fields we saw in CSV
-          dd.name = (dd.name || dd.Name || "").toString().trim();
-          dd.rawGradeSection = dd.gradeSection || dd["Grade/ Section"] || dd.rawGradeSection || dd["Grade/ Section"] || "";
-          dd.gradeSection = normalizeGradeSection(dd.rawGradeSection);
-          dd.weightKg = dd.weightKg ?? dd.weight ?? dd["Weight (Kg)"] ?? null;
-          dd.height = dd.height ?? dd["Height (cm)"] ?? null;
-          dd.bmi = dd.bmi ?? null;
-          dd.nutritionStatus = dd.nutritionStatus || dd["Nutritional Status (NS)"] || dd["Nutritional Status"] || "Unknown";
-          docs.push(dd);
-        });
+        // sbfpSnap.forEach((d) => {
+        //   const dd = { id: d.id, ...(d.data() || {}) };
+        //   // normalize name + gradeSection fields we saw in CSV
+        //   dd.name = (dd.name || dd.Name || "").toString().trim();
+        //   dd.rawGradeSection = dd.gradeSection || dd["Grade/ Section"] || dd.rawGradeSection || dd["Grade/ Section"] || "";
+        //   dd.gradeSection = normalizeGradeSection(dd.rawGradeSection);
+        //   dd.weightKg = dd.weightKg ?? dd.weight ?? dd["Weight (Kg)"] ?? null;
+        //   dd.height = dd.height ?? dd["Height (cm)"] ?? null;
+        //   dd.bmi = dd.bmi ?? null;
+        //   dd.nutritionStatus = dd.nutritionStatus || dd["Nutritional Status (NS)"] || dd["Nutritional Status"] || "Unknown";
+        //   docs.push(dd);
+        // });
         sbfpSnapList = docs;
       } catch (e) {
         // missing collection or permission; we'll just treat as empty

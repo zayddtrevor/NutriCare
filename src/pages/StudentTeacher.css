@@ -74,6 +74,36 @@
   padding: 1.5rem;
 }
 
+.filter-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-row label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #495057;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-row select {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background-color: #fff;
+  cursor: pointer;
+  outline: none;
+}
+
+.filter-row select:focus {
+  border-color: var(--blue);
+}
+
 .people-table {
   width: 100%;
   border-collapse: collapse;
@@ -113,8 +143,18 @@
 }
 
 .btn.small.edit {
-  background: var(--edit);
-  box-shadow: 0 3px var(--edit-dark);
+  background: var(--blue);
+  box-shadow: 0 3px var(--blue-dark);
+}
+
+.btn.small.activate {
+  background: var(--green);
+  box-shadow: 0 3px var(--green-dark);
+}
+
+.btn.small.deactivate {
+  background: #f0ad4e;
+  box-shadow: 0 3px #eea236;
 }
 
 .btn.small.delete {
@@ -262,11 +302,6 @@
   font-size: 1rem;
 }
 
-.tab-btn:hover {
-  color: #007bff;
-  background: rgba(0, 123, 255, 0.05);
-}
-
 .tab-btn.active-tab {
   background: white;
   color: #007bff;
@@ -275,4 +310,9 @@
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
   z-index: 10;
   border-bottom: 2px solid white;
+}
+
+.tab-btn:hover {
+  color: #007bff;
+  background: rgba(0, 123, 255, 0.05);
 }
