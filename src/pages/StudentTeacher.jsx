@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../supabaseClient";
-import { Users } from "lucide-react";
+import { Users, RefreshCw } from "lucide-react";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
+import { recalculateStudentNutritionStatus } from "../utils/nutritionUpdater";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
 import StatCard from "../components/common/StatCard";
@@ -25,6 +26,7 @@ export default function StudentTeacher() {
   const [teacherFilterStatus, setTeacherFilterStatus] = useState("All");
 
   const [loading, setLoading] = useState(true);
+  const [isRecalculating, setIsRecalculating] = useState(false);
 
   // Modal State (for Teachers only for now)
   const [showModal, setShowModal] = useState(false);
@@ -117,6 +119,24 @@ export default function StudentTeacher() {
     }
 
     setLoading(false);
+  }
+
+  async function handleRecalculateStatus() {
+    if (!window.confirm("This will update all students' nutrition status based on their latest BMI record. Continue?")) {
+      return;
+    }
+
+    setIsRecalculating(true);
+    try {
+      const count = await recalculateStudentNutritionStatus();
+      alert(`Successfully updated ${count} student records.`);
+      fetchStudents(); // Refresh data
+    } catch (error) {
+      console.error("Recalculation error:", error);
+      alert("Failed to recalculate status. Check console for details.");
+    } finally {
+      setIsRecalculating(false);
+    }
   }
 
   // =========================
@@ -293,9 +313,20 @@ export default function StudentTeacher() {
     <div className="student-page">
       <PageHeader
         title="Student & Teacher Management"
-        action={activeTab === "teachers" && (
-          <Button variant="success" onClick={openAddModal}>+ Add Teacher</Button>
-        )}
+        action={
+          activeTab === "teachers" ? (
+            <Button variant="success" onClick={openAddModal}>+ Add Teacher</Button>
+          ) : (
+             <Button
+                variant="outline"
+                onClick={handleRecalculateStatus}
+                disabled={isRecalculating}
+                icon={isRecalculating ? <RefreshCw className="spin" size={16} /> : <RefreshCw size={16} />}
+              >
+                {isRecalculating ? "Updating..." : "Recalculate Status"}
+              </Button>
+          )
+        }
       />
 
       <div className="tab-navigation">
