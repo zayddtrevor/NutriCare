@@ -9,22 +9,42 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
+    setIsFadingOut(false);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const startTime = Date.now();
+
+    const { error: loginError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
-      console.error("❌ Admin Login failed:", error.message);
+    // Ensure minimum 2 seconds load time
+    const elapsedTime = Date.now() - startTime;
+    const minLoadTime = 2000;
+    const waitTime = Math.max(0, minLoadTime - elapsedTime);
+
+    if (waitTime > 0) {
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+    }
+
+    // Trigger fade out
+    setIsFadingOut(true);
+
+    // Wait for fade out animation (800ms)
+    await new Promise((resolve) => setTimeout(resolve, 900));
+
+    if (loginError) {
+      console.error("❌ Admin Login failed:", loginError.message);
       setError("Invalid email or password");
       setIsLoading(false);
+      setIsFadingOut(false);
     } else {
       console.log("✅ Admin Login successful");
       navigate("/dashboard");
@@ -33,7 +53,7 @@ export default function Login() {
 
   if (isLoading) {
     return (
-      <div className="loading-screen">
+      <div className={`loading-screen ${isFadingOut ? "fade-out" : ""}`}>
         <div className="loading-content">
           <div className="loading-logo-container">
             <img src={NutriCareLogo} alt="NutriCare Logo" className="loading-logo" />
