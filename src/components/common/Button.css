@@ -69,7 +69,7 @@
 
 .btn-warning {
   background-color: var(--warning-yellow);
-  color: #212529; /* Dark text for contrast */
+  color: var(--white);
   border-color: var(--warning-yellow);
 }
 
