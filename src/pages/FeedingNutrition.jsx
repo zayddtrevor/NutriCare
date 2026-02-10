@@ -21,6 +21,7 @@ export default function FeedingNutrition() {
   // State
   const [students, setStudents] = useState([]);
   const [attendanceData, setAttendanceData] = useState({}); // Placeholder for attendance
+  const [dailyMeal, setDailyMeal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -44,6 +45,19 @@ export default function FeedingNutrition() {
         .select("*");
 
       if (studentsError) throw studentsError;
+
+      // Fetch Daily Meal (Hardcoded for 2026-02-10 as per request)
+      // Week 2, Tuesday
+      const { data: mealData } = await supabase
+        .from("nutrition_meals")
+        .select("*")
+        .eq("week_number", 2)
+        .eq("day_of_week", "Tuesday")
+        .maybeSingle();
+
+      if (mealData) {
+        setDailyMeal(mealData);
+      }
 
       // Attempt fetch optional tables (SBFP, Attendance)
       // We use Promise.allSettled to not fail if they don't exist
@@ -164,13 +178,28 @@ export default function FeedingNutrition() {
         <div className="meal-banner card-fullwidth">
             <div className="meal-left">
             <h2 className="meal-title">🍽️ Meal for Today</h2>
-            <h3 className="meal-name">Rotating Menu — Placeholder</h3>
-            <p className="meal-desc">Chicken adobo, brown rice, mixed vegetables (placeholder)</p>
-            <div className="meal-meta">Date: {todayKey}</div>
+            {dailyMeal ? (
+                <>
+                    <h3 className="meal-name">{dailyMeal.meal_name}</h3>
+                    <p className="meal-desc">
+                        Calories: {dailyMeal.calories} | Protein: {dailyMeal.protein}g | Carbs: {dailyMeal.carbohydrates}g | Fats: {dailyMeal.fats}g
+                    </p>
+                </>
+            ) : (
+                <>
+                    <h3 className="meal-name">Rotating Menu — Placeholder</h3>
+                    <p className="meal-desc">Chicken adobo, brown rice, mixed vegetables (placeholder)</p>
+                </>
+            )}
+            <div className="meal-meta">Date: 2026-02-10</div>
             </div>
             {/* Image Placeholder or Actual Image */}
              <div className="meal-right">
-                <div className="meal-img-placeholder">Image</div>
+                {dailyMeal && dailyMeal.image_url ? (
+                    <img src={dailyMeal.image_url} alt={dailyMeal.meal_name} className="meal-img" />
+                ) : (
+                    <div className="meal-img-placeholder">Image</div>
+                )}
             </div>
         </div>
 

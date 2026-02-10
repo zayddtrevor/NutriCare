@@ -71,7 +71,31 @@ if (supabaseUrl && supabaseAnonKey) {
       ],
       attendance: [],
       bmi_records: [],
-      sbfp_beneficiaries: []
+      sbfp_beneficiaries: [],
+      nutrition_meals: [
+          {
+              id: "meal-001",
+              week_number: 2,
+              day_of_week: "Tuesday",
+              meal_name: "Ginataang Tokwa",
+              calories: 121,
+              protein: 6,
+              carbohydrates: 6,
+              fats: 8,
+              image_url: "https://placehold.co/600x400/fdfcdc/5d4037?text=Ginataang+Tokwa"
+          },
+          {
+              id: "meal-002",
+              week_number: 2,
+              day_of_week: "Wednesday",
+              meal_name: "Pork Menudo",
+              calories: 202,
+              protein: 8,
+              carbohydrates: 5,
+              fats: 17,
+              image_url: "https://placehold.co/600x400?text=Pork+Menudo"
+          }
+      ]
   };
 
   const createMockBuilder = (table) => {
@@ -87,9 +111,8 @@ if (supabaseUrl && supabaseAnonKey) {
       update: function() { return this; },
       delete: function() { return this; },
       eq: function(col, val) {
-          // Simple client-side filtering for specific cases if needed
-          if (table === 'attendance' && col === 'date') {
-              // Return empty for now as we don't mock attendance dates dynamically yet
+          if (query.data) {
+              query.data = query.data.filter(item => item[col] == val);
           }
           return this;
       },
@@ -115,8 +138,23 @@ if (supabaseUrl && supabaseAnonKey) {
       },
       limit: function() { return this; },
       range: function() { return this; }, // Just ignore range for mock to return all
-      single: function() { return this; },
-      maybeSingle: function() { return this; },
+      single: function() {
+          if (query.data && query.data.length > 0) {
+              query.data = query.data[0];
+          } else {
+              query.data = null;
+              query.error = { message: "No rows found" };
+          }
+          return this;
+      },
+      maybeSingle: function() {
+          if (query.data && query.data.length > 0) {
+              query.data = query.data[0];
+          } else {
+              query.data = null;
+          }
+          return this;
+      },
       then: function(resolve, reject) {
         setTimeout(() => {
           resolve({ data: query.data, error: query.error });
