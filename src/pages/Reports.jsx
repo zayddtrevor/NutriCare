@@ -243,11 +243,46 @@ export default function Reports() {
     document.body.removeChild(link);
   };
 
+  // -------- DOWNLOAD TEMPLATE --------
+  const downloadTemplate = () => {
+    const headers = [
+      "student_id",
+      "full_name",
+      "grade",
+      "section",
+      "sex",
+      "birth_date",
+      "bmi",
+      "nutrition_status",
+      "present_days",
+      "absent_days",
+      "report_date"
+    ];
+
+    const csvContent = headers.join(",");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "NutriCare_Report_Template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="reports-wrapper">
       <PageHeader
         title="Reports & Analytics"
         action={
+          <div style={{ display: "flex", gap: "10px" }}>
+            <Button
+              variant="outline"
+              onClick={downloadTemplate}
+              icon={<FileText size={16} />}
+            >
+              Download Template
+            </Button>
             <Button
                 variant="primary"
                 onClick={exportCSV}
@@ -256,6 +291,7 @@ export default function Reports() {
             >
                 Export CSV
             </Button>
+          </div>
         }
       />
 
