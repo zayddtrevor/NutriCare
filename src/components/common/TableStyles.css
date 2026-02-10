@@ -1,14 +1,17 @@
 .data-table-container {
   width: 100%;
-  overflow-x: auto;
+  overflow: auto; /* Enable both x and y scrolling */
+  max-height: 75vh; /* Limit height to viewport to enable sticky header */
   background: white;
   border-radius: var(--radius-md);
   box-shadow: var(--card-shadow);
   border: 1px solid var(--border-color);
+  position: relative;
 }
 
 .data-table {
   width: 100%;
+  border-collapse: separate; /* Required for sticky to work well with borders sometimes, but collapse is standard */
   border-collapse: collapse;
   font-size: 0.95rem;
   color: var(--text-primary);
@@ -21,14 +24,18 @@
   text-transform: uppercase;
   font-size: 0.8rem;
   letter-spacing: 0.05em;
-  padding: 1rem 1.5rem;
+  padding: 1.25rem 1.5rem; /* Increased padding */
   border-bottom: 2px solid var(--border-color);
   text-align: left;
   white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 20; /* Ensure it stays above content */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05); /* Subtle shadow for depth when scrolling */
 }
 
 .data-table tbody td {
-  padding: 1rem 1.5rem;
+  padding: 1.25rem 1.5rem; /* Increased padding */
   border-bottom: 1px solid #f0f0f0;
   vertical-align: middle;
 }
@@ -43,10 +50,14 @@
 
 /* Empty State inside table */
 .table-empty-state {
-  text-align: center;
-  padding: 3rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
   color: var(--text-secondary);
   font-size: 1rem;
+  text-align: center;
 }
 
 .table-loading {
@@ -55,12 +66,13 @@
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
+  font-weight: 500;
 }
 
 /* Common cell styles */
 .cell-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem; /* Increased gap */
   justify-content: flex-end; /* Requirement: Action column aligned right */
 }
 
@@ -71,21 +83,24 @@
 
 /* Status Badges */
 .status-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.25rem 0.75rem;
-  border-radius: var(--radius-pill);
+  border-radius: 9999px; /* Pill shape */
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: capitalize;
   white-space: nowrap;
+  line-height: 1.2;
 }
 
-.status-badge.normal { background-color: #d1fae5; color: #065f46; } /* Green */
-.status-badge.wasted { background-color: #fef3c7; color: #92400e; } /* Yellow */
-.status-badge.severely-wasted { background-color: #fee2e2; color: #b91c1c; } /* Red */
-.status-badge.overweight { background-color: #e0f2fe; color: #075985; } /* Blue */
-.status-badge.obese { background-color: #eeddee; color: #862e9c; } /* Purple */
-.status-badge.unknown { background-color: #f3f4f6; color: #6b7280; } /* Gray */
+.status-badge.normal { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; } /* Green */
+.status-badge.wasted { background-color: #fef9c3; color: #a16207; border: 1px solid #fde047; } /* Yellow */
+.status-badge.severely-wasted { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; } /* Red */
+.status-badge.overweight { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; } /* Blue */
+.status-badge.obese { background-color: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; } /* Purple */
+.status-badge.unknown { background-color: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; } /* Gray */
 
 /* Attendance specific */
 .attendance-present { color: var(--success-green); font-weight: 600; }

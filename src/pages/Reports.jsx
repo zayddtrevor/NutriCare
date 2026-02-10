@@ -363,10 +363,10 @@ export default function Reports() {
               ))
             ) : filteredStudents.length === 0 ? (
               <tr>
-                <td colSpan="6" className="empty-state">
-                  <div className="empty-state-content">
-                    <FileText size={48} className="empty-icon" />
-                    <p>No records found matching your filters.</p>
+                <td colSpan="6">
+                  <div className="table-empty-state">
+                    <FileText size={48} style={{ color: "var(--text-secondary)", marginBottom: "1rem" }} />
+                    <p style={{ margin: 0 }}>No records found matching your filters.</p>
                   </div>
                 </td>
               </tr>
