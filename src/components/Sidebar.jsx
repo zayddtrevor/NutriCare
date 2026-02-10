@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LayoutGrid, Users, Utensils, LineChart, LogOut } from "lucide-react";
 import "./Sidebar.css";
 import { supabase } from "../supabaseClient";
 
@@ -29,36 +30,43 @@ export default function Sidebar() {
       </div>
 
       <nav className="nav">
+        <div className="nav-section-label">MAIN</div>
         <Link
           to="/dashboard"
           className={loc.pathname === "/dashboard" ? "active" : ""}
         >
-          Dashboard
+          <LayoutGrid size={20} />
+          <span>Dashboard</span>
         </Link>
 
+        <div className="nav-section-label">MANAGEMENT</div>
         <Link
           to="/management"
           className={loc.pathname === "/management" ? "active" : ""}
         >
-          Student & Teacher
+          <Users size={20} />
+          <span>Student & Teacher</span>
         </Link>
 
         <Link
           to="/feeding"
           className={loc.pathname === "/feeding" ? "active" : ""}
         >
-          Feeding & Nutrition
+          <Utensils size={20} />
+          <span>Feeding & Nutrition</span>
         </Link>
 
         <Link
           to="/reports"
           className={loc.pathname === "/reports" ? "active" : ""}
         >
-          Reports
+          <LineChart size={20} />
+          <span>Reports</span>
         </Link>
 
         <button onClick={handleLogout} className="logout-btn">
-          Logout
+          <LogOut size={20} />
+          <span>Logout</span>
         </button>
       </nav>
     </aside>
