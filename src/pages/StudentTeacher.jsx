@@ -3,16 +3,12 @@ import { supabase } from "../supabaseClient";
 import "./StudentTeacher.css";
 
 export default function StudentTeacher() {
-  const [activeTab, setActiveTab] = useState("students");
-
-  const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
-
   const [loading, setLoading] = useState(true);
 
-  // Modal State (for Teachers only for now)
   const [showModal, setShowModal] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
+
   const [formData, setFormData] = useState({
     idNumber: "",
     firstName: "",
@@ -22,45 +18,11 @@ export default function StudentTeacher() {
   });
 
   // =========================
-  // Fetch Data
+  // Fetch teachers
   // =========================
   useEffect(() => {
-    if (activeTab === "students") {
-      fetchStudents();
-    } else {
-      fetchTeachers();
-    }
-  }, [activeTab]);
-
-  async function fetchStudents() {
-    setLoading(true);
-    // Fetch students
-    // We try to sort by 'name' if possible, but if column doesn't exist it might fail?
-    // Supabase usually ignores invalid order columns or throws.
-    // Safest is to just select * first.
-    const { data, error } = await supabase
-      .from("students")
-      .select("*");
-
-    if (error) {
-        console.error("Error fetching students:", error);
-    } else {
-        // Map data to handle variations
-        const mapped = data.map(s => ({
-            id: s.id,
-            name: s.name || s.full_name || "Unknown",
-            gradeSection: s.grade_section || s.grade || "Unknown",
-            sex: s.sex || "-",
-            nutritionStatus: s.nutrition_status || s.nutritionStatus || "-",
-        }));
-
-        // Sort manually to be safe
-        mapped.sort((a, b) => a.name.localeCompare(b.name));
-
-        setStudents(mapped);
-    }
-    setLoading(false);
-  }
+    fetchTeachers();
+  }, []);
 
   async function fetchTeachers() {
     setLoading(true);
@@ -92,7 +54,7 @@ export default function StudentTeacher() {
   }
 
   // =========================
-  // Form handlers (Teachers)
+  // Form handlers
   // =========================
   function openAddModal() {
     setEditingTeacher(null);
@@ -170,7 +132,7 @@ export default function StudentTeacher() {
   }
 
   // =========================
-  // Activate / Deactivate (Teachers)
+  // Activate / Deactivate
   // =========================
   async function toggleActive(teacher) {
     const { error } = await supabase
@@ -212,172 +174,94 @@ export default function StudentTeacher() {
   // Render
   // =========================
   return (
-    <div className="student-page">
-      <div className="header-area">
-        <h1>Management</h1>
-        {activeTab === "teachers" && (
-          <div className="button-row">
-            <button className="btn add" onClick={openAddModal}>+ Add Teacher</button>
-          </div>
-        )}
-      </div>
-
-      <div className="tab-navigation">
-        <button
-          className={`tab-btn ${activeTab === "students" ? "active-tab" : ""}`}
-          onClick={() => setActiveTab("students")}
-        >
-          Students
-        </button>
-        <button
-          className={`tab-btn ${activeTab === "teachers" ? "active-tab" : ""}`}
-          onClick={() => setActiveTab("teachers")}
-        >
-          Teachers
-        </button>
+    <div className="student-teacher-page">
+      <div className="header">
+        <h2>Teachers</h2>
+        <button onClick={openAddModal}>+ Add Teacher</button>
       </div>
 
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <div className="table-card">
-          {activeTab === "students" && (
-            <table className="people-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Grade & Section</th>
-                  <th>Sex</th>
-                  <th>Nutrition Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.length === 0 ? (
-                   <tr>
-                     <td colSpan="4" style={{ textAlign: "center" }}>No students found.</td>
-                   </tr>
-                ) : (
-                   students.map((s) => (
-                    <tr key={s.id}>
-                      <td>{s.name}</td>
-                      <td>{s.gradeSection}</td>
-                      <td>{s.sex}</td>
-                      <td>{s.nutritionStatus}</td>
-                    </tr>
-                   ))
-                )}
-              </tbody>
-            </table>
-          )}
-
-          {activeTab === "teachers" && (
-            <table className="people-table">
-              <thead>
-                <tr>
-                  <th>ID No.</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Section</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teachers.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" style={{ textAlign: "center" }}>No teachers found.</td>
-                  </tr>
-                ) : (
-                  teachers.map((t) => (
-                    <tr key={t.uid} className={!t.active ? "inactive" : ""}>
-                      <td>{t.idNumber}</td>
-                      <td>{t.firstName} {t.lastName}</td>
-                      <td>{t.email}</td>
-                      <td>{t.section}</td>
-                      <td>{t.active ? "Active" : "Inactive"}</td>
-                      <td className="actions-cell">
-                        <button className="btn small edit" onClick={() => openEditModal(t)}>Edit</button>
-                        <button className="btn small" onClick={() => toggleActive(t)}>
-                          {t.active ? "Deactivate" : "Activate"}
-                        </button>
-                        <button className="btn small delete" onClick={() => deleteTeacher(t)}>Delete</button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID No.</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Section</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {teachers.map((t) => (
+              <tr key={t.uid} className={!t.active ? "inactive" : ""}>
+                <td>{t.idNumber}</td>
+                <td>{t.firstName} {t.lastName}</td>
+                <td>{t.email}</td>
+                <td>{t.section}</td>
+                <td>{t.active ? "Active" : "Inactive"}</td>
+                <td>
+                  <button onClick={() => openEditModal(t)}>Edit</button>
+                  <button onClick={() => toggleActive(t)}>
+                    {t.active ? "Deactivate" : "Activate"}
+                  </button>
+                  <button onClick={() => deleteTeacher(t)}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
 
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <div className="modal-header">
-              <h3>{editingTeacher ? "Edit Teacher" : "Add Teacher"}</h3>
-              <button className="close-btn" onClick={closeModal}>✕</button>
+        <div className="modal">
+          <form onSubmit={handleSubmit}>
+            <h3>{editingTeacher ? "Edit Teacher" : "Add Teacher"}</h3>
+
+            <input
+              name="idNumber"
+              placeholder="Teacher ID Number"
+              value={formData.idNumber}
+              onChange={handleChange}
+            />
+            <input
+              name="firstName"
+              placeholder="First Name"
+              value={formData.firstName}
+              onChange={handleChange}
+              required
+            />
+            <input
+              name="lastName"
+              placeholder="Last Name"
+              value={formData.lastName}
+              onChange={handleChange}
+              required
+            />
+            <input
+              name="email"
+              type="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+            <input
+              name="section"
+              placeholder="Section"
+              value={formData.section}
+              onChange={handleChange}
+            />
+
+            <div className="modal-actions">
+              <button type="submit">Save</button>
+              <button type="button" onClick={closeModal}>
+                Cancel
+              </button>
             </div>
-
-            <form onSubmit={handleSubmit} className="modal-form">
-              <label>
-                ID Number
-                <input
-                  name="idNumber"
-                  placeholder="Teacher ID Number"
-                  value={formData.idNumber}
-                  onChange={handleChange}
-                />
-              </label>
-              <label>
-                First Name
-                <input
-                  name="firstName"
-                  placeholder="First Name"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
-              <label>
-                Last Name
-                <input
-                  name="lastName"
-                  placeholder="Last Name"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
-              <label>
-                Email
-                <input
-                  name="email"
-                  type="email"
-                  placeholder="Email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
-              <label>
-                Section
-                <input
-                  name="section"
-                  placeholder="Section"
-                  value={formData.section}
-                  onChange={handleChange}
-                />
-              </label>
-
-              <div className="modal-actions">
-                <button className="btn add" type="submit">Save</button>
-                <button className="btn cancel" type="button" onClick={closeModal}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
+          </form>
         </div>
       )}
     </div>
