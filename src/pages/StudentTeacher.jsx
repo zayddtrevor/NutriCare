@@ -53,7 +53,8 @@ export default function StudentTeacher() {
     // Safest is to just select * first.
     const { data, error } = await supabase
       .from("students")
-      .select("*");
+      .select("*")
+      .range(0, 9999);
 
     if (error) {
         console.error("Error fetching students:", error);
@@ -91,7 +92,8 @@ export default function StudentTeacher() {
     const { data, error } = await supabase
       .from("teachers")
       .select("*")
-      .order("last_name", { ascending: true });
+      .order("last_name", { ascending: true })
+      .range(0, 9999);
 
     if (error) {
       console.error("Error fetching teachers:", error);

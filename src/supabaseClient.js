@@ -49,6 +49,7 @@ if (supabaseUrl && supabaseAnonKey) {
     contains: function() { return this; },
     order: function() { return this; },
     limit: function() { return this; },
+    range: function() { return this; },
     single: function() { return this; },
     maybeSingle: function() { return this; },
     then: function(resolve, reject) {
