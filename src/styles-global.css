@@ -54,3 +54,21 @@ button { font-family: inherit; }
 .w-full { width: 100%; }
 .text-center { text-align: center; }
 .mb-4 { margin-bottom: 1rem; }
+
+/* Status Badges */
+.status-badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.status-badge.normal { background-color: #d1fae5; color: #065f46; }
+.status-badge.wasted { background-color: #fef3c7; color: #92400e; }
+.status-badge.severely-wasted { background-color: #fee2e2; color: #b91c1c; }
+.status-badge.overweight { background-color: #e0f2fe; color: #075985; }
+.status-badge.obese { background-color: #eeddee; color: #862e9c; }
+.status-badge.unknown { background-color: #f3f4f6; color: #6b7280; }
