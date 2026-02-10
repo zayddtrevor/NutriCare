@@ -46,14 +46,15 @@ export default function FeedingNutrition() {
       // Fetch Students
       const { data: studentsData, error: studentsError } = await supabase
         .from("students")
-        .select("*");
+        .select("*")
+        .range(0, 9999);
 
       if (studentsError) throw studentsError;
 
       // Attempt fetch optional tables (SBFP, Attendance)
       // We use Promise.allSettled to not fail if they don't exist
       const [attRes] = await Promise.allSettled([
-        supabase.from("attendance").select("*").eq("date", todayKey) // Assuming a date column
+        supabase.from("attendance").select("*").eq("date", todayKey).range(0, 9999) // Assuming a date column
       ]);
 
       // Attendance structure might vary. If table exists, we use it. If not, empty.

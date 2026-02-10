@@ -41,15 +41,16 @@ export default function Reports() {
       // 1. Fetch Students
       const { data: studentsData, error: studentsError } = await supabase
         .from("students")
-        .select("*");
+        .select("*")
+        .range(0, 9999);
 
       if (studentsError) throw studentsError;
 
       // 2. Fetch Optional Data in Parallel
       const [bmiRes, attRes, sbfpRes] = await Promise.allSettled([
-        supabase.from("bmi_records").select("*").order("date_recorded", { ascending: false }),
-        supabase.from("attendance").select("*"),
-        supabase.from("sbfp_beneficiaries").select("student_id")
+        supabase.from("bmi_records").select("*").order("date_recorded", { ascending: false }).range(0, 9999),
+        supabase.from("attendance").select("*").range(0, 9999),
+        supabase.from("sbfp_beneficiaries").select("student_id").range(0, 9999)
       ]);
 
       const bmiList = bmiRes.status === "fulfilled" && bmiRes.value.data ? bmiRes.value.data : [];
