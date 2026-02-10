@@ -47,7 +47,19 @@ if (supabaseUrl && supabaseAnonKey) {
         data: { session: null },
         error: null
       }),
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      signInWithPassword: ({ email, password }) => {
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            if (email && password) {
+               resolve({ data: { session: { user: { email } } }, error: null });
+            } else {
+               resolve({ data: { session: null }, error: { message: "Invalid credentials" } });
+            }
+          }, 500); // Simulate network delay
+        });
+      },
+      signOut: () => Promise.resolve({ error: null }),
     }
   };
 }
