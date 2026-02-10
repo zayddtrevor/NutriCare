@@ -139,7 +139,9 @@ export default function Reports() {
       // 1. Search
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        if (!s.name.toLowerCase().includes(q)) return false;
+        const nameMatch = s.name.toLowerCase().includes(q);
+        const sectionMatch = s.section.toLowerCase().includes(q);
+        if (!nameMatch && !sectionMatch) return false;
       }
 
       // 2. Grade

@@ -259,7 +259,9 @@ export default function StudentTeacher() {
     // 1. Search
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      if (!s.name.toLowerCase().includes(q)) return false;
+      const nameMatch = s.name.toLowerCase().includes(q);
+      const sectionMatch = s.section.toLowerCase().includes(q);
+      if (!nameMatch && !sectionMatch) return false;
     }
     // 2. Filters
     const matchGrade = studentFilterGrade === "All" || s.grade === studentFilterGrade;
@@ -278,7 +280,8 @@ export default function StudentTeacher() {
       const q = searchQuery.toLowerCase();
       const fullName = `${t.firstName} ${t.lastName}`.toLowerCase();
       const email = t.email.toLowerCase();
-      if (!fullName.includes(q) && !email.includes(q)) return false;
+      const section = t.section.toLowerCase();
+      if (!fullName.includes(q) && !email.includes(q) && !section.includes(q)) return false;
     }
     // 2. Filters
     const matchSection = teacherFilterSection === "All" || t.section === teacherFilterSection;
