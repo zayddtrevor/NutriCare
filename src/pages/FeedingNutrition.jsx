@@ -39,35 +39,13 @@ export default function FeedingNutrition() {
     setLoading(true);
     setError(null);
     try {
-      // Fetch Students
+      // Fetch Students with latest BMI records
       const { data: studentsData, error: studentsError } = await supabase
         .from("students")
-        .select("*")
+        .select("*, bmi_records(nutrition_status, bmi, weight_kg, height_m, created_at)")
         .range(0, 9999);
 
       if (studentsError) throw studentsError;
-
-      // Fetch latest BMI records for status (Nutrition Status is in bmi_records, not students)
-      const { data: bmiData } = await supabase
-        .from("bmi_records")
-        .select("student_id, nutrition_status, bmi, weight_kg, height_m, created_at")
-        .order("created_at", { ascending: false })
-        .range(0, 9999);
-
-      // Map student_id -> latest record info
-      const studentBMIMap = {};
-      if (bmiData) {
-        bmiData.forEach(r => {
-          if (!studentBMIMap[r.student_id]) {
-            studentBMIMap[r.student_id] = {
-                status: r.nutrition_status,
-                bmi: r.bmi,
-                weight: r.weight_kg,
-                height: r.height_m
-            };
-          }
-        });
-      }
 
       // Fetch Daily Meal (Hardcoded for 2026-02-10 as per request)
       // Week 2, Tuesday
@@ -97,8 +75,21 @@ export default function FeedingNutrition() {
         const normalizedGrade = normalizeGrade(rawGrade);
         const section = (s.section || "").toString();
 
-        // Get info from latest BMI record if available
-        const bmiInfo = studentBMIMap[s.id] || {};
+        // Find latest BMI record from nested data
+        let bmiInfo = {};
+        if (s.bmi_records && s.bmi_records.length > 0) {
+            // Sort descending by created_at to get latest
+            const sorted = [...s.bmi_records].sort((a, b) =>
+                new Date(b.created_at) - new Date(a.created_at)
+            );
+            const latest = sorted[0];
+            bmiInfo = {
+                status: latest.nutrition_status,
+                bmi: latest.bmi,
+                weight: latest.weight_kg,
+                height: latest.height_m
+            };
+        }
 
         return {
           id: s.id,
@@ -107,10 +98,10 @@ export default function FeedingNutrition() {
           rawGrade: rawGrade,
           section: section,
           sex: s.sex || "-",
-          nutritionStatus: bmiInfo.status || s.nutrition_status || s.nutritionStatus || "Unknown",
-          weight: bmiInfo.weight || s.weight,
-          height: bmiInfo.height || s.height,
-          bmi: bmiInfo.bmi || s.bmi,
+          nutritionStatus: bmiInfo.status || "Unknown",
+          weight: bmiInfo.weight || null,
+          height: bmiInfo.height || null,
+          bmi: bmiInfo.bmi || null,
           // Helper for display
           gradeSectionDisplay: `${normalizedGrade} - ${section}`
         };

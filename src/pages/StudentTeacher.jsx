@@ -14,6 +14,7 @@ export default function StudentTeacher() {
   const [activeTab, setActiveTab] = useState("students");
 
   const [students, setStudents] = useState([]);
+  const [totalStudentsCount, setTotalStudentsCount] = useState(0);
   const [teachers, setTeachers] = useState([]);
 
   // Filters
@@ -54,70 +55,68 @@ export default function StudentTeacher() {
   async function fetchStudents() {
     setLoading(true);
 
-    // 1. Fetch students
-    const { data: studentsData, error: studentError } = await supabase
-      .from("students")
-      .select("*")
-      .range(0, 9999);
+    try {
+      // 1. Fetch total count (consistent with Dashboard)
+      const { count, error: countError } = await supabase
+        .from("students")
+        .select("*", { count: "exact", head: true });
 
-    if (studentError) {
-        console.error("Error fetching students:", studentError);
-        setLoading(false);
-        return;
-    }
+      if (!countError) {
+        setTotalStudentsCount(count);
+      }
 
-    // 2. Fetch latest BMI records for status
-    // We fetch all and map them because Supabase doesn't support easy "latest per student" in one query without join/view
-    const { data: bmiData, error: bmiError } = await supabase
-      .from("bmi_records")
-      .select("student_id, nutrition_status, created_at")
-      .order("created_at", { ascending: false })
-      .range(0, 9999);
+      // 2. Fetch students with joined BMI records
+      const { data: studentsData, error: studentError } = await supabase
+        .from("students")
+        .select("*, bmi_records(nutrition_status, created_at)")
+        .range(0, 9999);
 
-    if (bmiError) {
-       console.error("Error fetching BMI records:", bmiError);
-    }
+      if (studentError) {
+          console.error("Error fetching students:", studentError);
+          setLoading(false);
+          return;
+      }
 
-    // Map student_id -> latest status
-    const statusMap = {};
-    if (bmiData) {
-      bmiData.forEach(r => {
-        if (!statusMap[r.student_id]) {
-          statusMap[r.student_id] = r.nutrition_status;
+      // Map data to handle variations
+      const mapped = studentsData.map(s => {
+        const rawGrade = s.grade_level || "";
+        const grade = normalizeGrade(rawGrade);
+        const section = s.section || "";
+        const gradeSectionDisplay = (grade && section)
+          ? `${grade} – ${section}`
+          : (grade || section || "Unknown");
+
+        // Find latest BMI record
+        let status = "Unknown";
+        if (s.bmi_records && s.bmi_records.length > 0) {
+          // Sort descending by created_at to get latest
+          const sorted = [...s.bmi_records].sort((a, b) =>
+            new Date(b.created_at) - new Date(a.created_at)
+          );
+          status = sorted[0].nutrition_status || "Unknown";
         }
+
+        return {
+          id: s.id,
+          name: s.name || s.full_name || "Unknown",
+          grade: grade, // Normalized grade
+          rawGrade: rawGrade,
+          section: section,
+          gradeSectionDisplay: gradeSectionDisplay,
+          sex: s.sex || "-",
+          nutritionStatus: status,
+        };
       });
+
+      // Sort manually to be safe
+      mapped.sort((a, b) => a.name.localeCompare(b.name));
+
+      setStudents(mapped);
+    } catch (err) {
+      console.error("Unexpected error in fetchStudents:", err);
+    } finally {
+      setLoading(false);
     }
-
-    // Map data to handle variations
-    const mapped = studentsData.map(s => {
-      const rawGrade = s.grade_level || "";
-      const grade = normalizeGrade(rawGrade);
-      const section = s.section || "";
-      const gradeSectionDisplay = (grade && section)
-        ? `${grade} – ${section}`
-        : (grade || section || "Unknown");
-
-      // Use status from BMI record if available, fallback to "Unknown"
-      // Note: s.nutrition_status might not exist in students table anymore per PR feedback
-      const status = statusMap[s.id] || "Unknown";
-
-      return {
-        id: s.id,
-        name: s.name || s.full_name || "Unknown",
-        grade: grade, // Normalized grade
-        rawGrade: rawGrade,
-        section: section,
-        gradeSectionDisplay: gradeSectionDisplay,
-        sex: s.sex || "-",
-        nutritionStatus: status,
-      };
-    });
-
-    // Sort manually to be safe
-    mapped.sort((a, b) => a.name.localeCompare(b.name));
-
-    setStudents(mapped);
-    setLoading(false);
   }
 
   async function fetchTeachers() {
@@ -387,7 +386,7 @@ export default function StudentTeacher() {
               <div className="students-summary-row">
                 <StatCard
                   label="Total Students"
-                  value={students.length}
+                  value={totalStudentsCount || students.length}
                   icon={<Users size={20} />}
                   color="blue"
                 />
@@ -395,12 +394,21 @@ export default function StudentTeacher() {
                 <div className="grade-sections-summary">
                    <h4>Sections per Grade</h4>
                    <div className="grade-sections-grid">
-                      {GRADES.map(grade => (
-                        <div key={grade} className="grade-section-item">
-                           <span className="gs-label">{grade}:</span>
-                           <span className="gs-count">{SCHOOL_DATA[grade].length}</span>
-                        </div>
-                      ))}
+                      {GRADES.map(grade => {
+                        // Count unique sections for this grade dynamically from fetched students
+                        const uniqueSections = new Set(
+                          students
+                            .filter(s => s.grade === grade)
+                            .map(s => s.section)
+                            .filter(Boolean)
+                        );
+                        return (
+                          <div key={grade} className="grade-section-item">
+                             <span className="gs-label">{grade}:</span>
+                             <span className="gs-count">{uniqueSections.size}</span>
+                          </div>
+                        );
+                      })}
                    </div>
                 </div>
               </div>
