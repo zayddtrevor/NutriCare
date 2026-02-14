@@ -205,7 +205,7 @@ export default function FeedingNutrition() {
 
         {/* Banner */}
         <div className="meal-banner card-fullwidth">
-            <div className="meal-left">
+            <div className="meal-left" style={!(dailyMeal && dailyMeal.image_url) ? { textAlign: 'center', width: '100%' } : {}}>
             <h2 className="meal-title">🍽️ Meal for Today</h2>
             {dailyMeal ? (
                 <>
@@ -221,14 +221,12 @@ export default function FeedingNutrition() {
             )}
             <div className="meal-meta">{displayDate}</div>
             </div>
-            {/* Image Placeholder or Actual Image */}
+            {/* Image Container - Only if URL exists */}
+            {dailyMeal && dailyMeal.image_url && (
              <div className="meal-right">
-                {dailyMeal && dailyMeal.image_url ? (
-                    <img src={dailyMeal.image_url} alt={dailyMeal.meal_name} className="meal-img" />
-                ) : (
-                    <div className="meal-img-placeholder">Image</div>
-                )}
+                <img src={dailyMeal.image_url} alt={dailyMeal.meal_name} className="meal-img" />
             </div>
+            )}
         </div>
 
         <FilterBar
