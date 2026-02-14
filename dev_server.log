@@ -1,0 +1,11 @@
+
+> nutricare-admin@1.0.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 329 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+1:58:18 PM [vite] hmr update /src/pages/Login.jsx, /src/pages/Dashboard.jsx, /src/pages/StudentTeacher.jsx, /src/pages/FeedingNutrition.jsx, /src/pages/Reports.jsx, /src/components/RequireAuth.jsx, /src/components/Sidebar.jsx

@@ -3,6 +3,7 @@ import { supabase } from "../supabaseClient";
 import { Users } from "lucide-react";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import { recalculateNutritionStatus } from "../utils/nutritionUpdater";
+import { getTotalStudents } from "../utils/studentData";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
 import StatCard from "../components/common/StatCard";
@@ -14,6 +15,7 @@ export default function StudentTeacher() {
   const [activeTab, setActiveTab] = useState("students");
 
   const [students, setStudents] = useState([]);
+  const [totalStudents, setTotalStudents] = useState(0);
   const [teachers, setTeachers] = useState([]);
 
   // Filters
@@ -54,7 +56,11 @@ export default function StudentTeacher() {
   async function fetchStudents() {
     setLoading(true);
 
-    // 1. Fetch students
+    // 1. Fetch total count (fix for incorrect count)
+    const count = await getTotalStudents();
+    setTotalStudents(count);
+
+    // 2. Fetch students
     const { data: studentsData, error: studentError } = await supabase
       .from("students")
       .select("*")
@@ -66,7 +72,7 @@ export default function StudentTeacher() {
         return;
     }
 
-    // 2. Fetch latest BMI records for status
+    // 3. Fetch latest BMI records for status
     // We fetch all and map them because Supabase doesn't support easy "latest per student" in one query without join/view
     const { data: bmiData, error: bmiError } = await supabase
       .from("bmi_records")
@@ -387,7 +393,7 @@ export default function StudentTeacher() {
               <div className="students-summary-row">
                 <StatCard
                   label="Total Students"
-                  value={students.length}
+                  value={totalStudents}
                   icon={<Users size={20} />}
                   color="blue"
                 />

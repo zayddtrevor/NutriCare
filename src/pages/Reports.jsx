@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "../supabaseClient";
+import { getTotalStudents } from "../utils/studentData";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import {
   Users,
@@ -27,12 +28,22 @@ export default function Reports() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [serverTotalCount, setServerTotalCount] = useState(0);
 
   // Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [grade, setGrade] = useState("All Grades");
   const [section, setSection] = useState("All Sections");
   const [status, setStatus] = useState("All Status");
+
+  // Fetch Total Count on Filter Change
+  useEffect(() => {
+    const fetchCount = async () => {
+      const count = await getTotalStudents({ grade, section });
+      setServerTotalCount(count);
+    };
+    fetchCount();
+  }, [grade, section]);
 
   // Fetch Data Logic
   const fetchData = useCallback(async () => {
@@ -328,7 +339,7 @@ export default function Reports() {
 
       {/* SUMMARY CARDS */}
       <div className="reports-summary">
-        <StatCard label="Total Students" value={loading ? "..." : summary.total} icon={<Users size={20}/>} color="blue" />
+        <StatCard label="Total Students" value={loading ? "..." : serverTotalCount} icon={<Users size={20}/>} color="blue" />
         <StatCard label="Normal" value={loading ? "..." : summary.normal} icon={<CheckCircle size={20}/>} color="green" />
         <StatCard label="Wasted" value={loading ? "..." : summary.wasted} icon={<AlertTriangle size={20}/>} color="yellow" />
         <StatCard label="Severely Wasted" value={loading ? "..." : summary.severelyWasted} icon={<AlertTriangle size={20}/>} color="orange" />

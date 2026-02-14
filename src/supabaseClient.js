@@ -103,10 +103,16 @@ if (supabaseUrl && supabaseAnonKey) {
         data: MOCK_DB[table] || [],
         error: null,
         _order: null,
+        countType: null, // 'exact', 'planned', or 'estimated'
+        head: false
     };
 
     return {
-      select: function() { return this; },
+      select: function(columns = "*", { count = null, head = false } = {}) {
+        query.countType = count;
+        query.head = head;
+        return this;
+      },
       insert: function() { return this; },
       update: function() { return this; },
       delete: function() { return this; },
@@ -157,7 +163,14 @@ if (supabaseUrl && supabaseAnonKey) {
       },
       then: function(resolve, reject) {
         setTimeout(() => {
-          resolve({ data: query.data, error: query.error });
+          const result = { data: query.data, error: query.error };
+          if (query.countType) {
+              result.count = query.data ? query.data.length : 0;
+          }
+          if (query.head) {
+              result.data = null;
+          }
+          resolve(result);
         }, 300); // Simulate delay
       }
     };
