@@ -66,6 +66,8 @@ export default function StudentTeacher() {
         return;
     }
 
+    console.log("Total students fetched:", studentsData.length);
+
     // 2. Fetch latest BMI records for status
     // We fetch all and map them because Supabase doesn't support easy "latest per student" in one query without join/view
     const { data: bmiData, error: bmiError } = await supabase

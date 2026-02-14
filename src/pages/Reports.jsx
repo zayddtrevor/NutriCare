@@ -47,6 +47,8 @@ export default function Reports() {
 
       if (studentsError) throw studentsError;
 
+      console.log("Reports: Students fetched:", studentsData.length);
+
       // 2. Fetch Optional Data in Parallel
       const [bmiRes, attRes, sbfpRes] = await Promise.allSettled([
         supabase.from("bmi_records").select("*").order("created_at", { ascending: false }).range(0, 9999),
