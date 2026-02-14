@@ -32,7 +32,9 @@ export default function FeedingNutrition() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDetailsId, setShowDetailsId] = useState(null);
 
-  const todayKey = format(new Date(), "yyyy-MM-dd");
+  const today = new Date();
+  const todayKey = format(today, "yyyy-MM-dd");
+  const displayDate = format(today, "yyyy-MM-dd (EEEE)");
 
   // Fetch Data
   const fetchData = useCallback(async () => {
@@ -69,13 +71,12 @@ export default function FeedingNutrition() {
         });
       }
 
-      // Fetch Daily Meal (Hardcoded for 2026-02-10 as per request)
-      // Week 2, Tuesday
+      // Fetch Daily Meal (Dynamic)
+      const dayName = format(new Date(), "EEEE");
       const { data: mealData } = await supabase
         .from("nutrition_meals")
         .select("*")
-        .eq("week_number", 2)
-        .eq("day_of_week", "Tuesday")
+        .eq("day_of_week", dayName)
         .maybeSingle();
 
       if (mealData) {
@@ -217,7 +218,7 @@ export default function FeedingNutrition() {
                     <p className="meal-desc">Chicken adobo, brown rice, mixed vegetables (placeholder)</p>
                 </>
             )}
-            <div className="meal-meta">Date: 2026-02-10</div>
+            <div className="meal-meta">Date: {displayDate}</div>
             </div>
             {/* Image Placeholder or Actual Image */}
              <div className="meal-right">
