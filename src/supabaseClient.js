@@ -94,6 +94,61 @@ if (supabaseUrl && supabaseAnonKey) {
               carbohydrates: 5,
               fats: 17,
               image_url: "https://placehold.co/600x400?text=Pork+Menudo"
+          },
+          {
+              id: "meal-003",
+              week_number: 2,
+              day_of_week: "Monday",
+              meal_name: "Chicken Tinola",
+              calories: 150,
+              protein: 12,
+              carbohydrates: 4,
+              fats: 8,
+              image_url: "https://placehold.co/600x400/e0f7fa/006064?text=Chicken+Tinola"
+          },
+          {
+              id: "meal-004",
+              week_number: 2,
+              day_of_week: "Thursday",
+              meal_name: "Munggo Guisado",
+              calories: 180,
+              protein: 10,
+              carbohydrates: 20,
+              fats: 5,
+              image_url: "https://placehold.co/600x400/fff3e0/e65100?text=Munggo+Guisado"
+          },
+          {
+              id: "meal-005",
+              week_number: 2,
+              day_of_week: "Friday",
+              meal_name: "Fried Fish & Veggies",
+              calories: 220,
+              protein: 18,
+              carbohydrates: 10,
+              fats: 12,
+              image_url: "https://placehold.co/600x400/f1f8e9/33691e?text=Fried+Fish"
+          },
+          {
+              id: "meal-006",
+              week_number: 2,
+              day_of_week: "Saturday",
+              meal_name: "Beef Caldereta",
+              calories: 250,
+              protein: 20,
+              carbohydrates: 15,
+              fats: 15,
+              image_url: "https://placehold.co/600x400/ffebee/b71c1c?text=Beef+Caldereta"
+          },
+          {
+              id: "meal-007",
+              week_number: 2,
+              day_of_week: "Sunday",
+              meal_name: "Adobo",
+              calories: 300,
+              protein: 25,
+              carbohydrates: 10,
+              fats: 20,
+              image_url: "https://placehold.co/600x400/efebe9/4e342e?text=Adobo"
           }
       ]
   };
