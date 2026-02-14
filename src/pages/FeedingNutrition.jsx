@@ -119,6 +119,7 @@ export default function FeedingNutrition() {
         };
       });
 
+      console.log("Feeding & Nutrition Count:", normalizedStudents.length);
       setStudents(normalizedStudents);
 
       // Create a map for fast lookup of attendance

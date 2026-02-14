@@ -116,6 +116,7 @@ export default function StudentTeacher() {
     // Sort manually to be safe
     mapped.sort((a, b) => a.name.localeCompare(b.name));
 
+    console.log("Student & Teacher Count:", mapped.length);
     setStudents(mapped);
     setLoading(false);
   }
