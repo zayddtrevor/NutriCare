@@ -106,7 +106,12 @@ if (supabaseUrl && supabaseAnonKey) {
     };
 
     return {
-      select: function() { return this; },
+      select: function(columns, options) {
+        if (options && options.count) {
+          query.count = query.data ? query.data.length : 0;
+        }
+        return this;
+      },
       insert: function() { return this; },
       update: function() { return this; },
       delete: function() { return this; },
@@ -157,7 +162,7 @@ if (supabaseUrl && supabaseAnonKey) {
       },
       then: function(resolve, reject) {
         setTimeout(() => {
-          resolve({ data: query.data, error: query.error });
+          resolve({ data: query.data, error: query.error, count: query.count });
         }, 300); // Simulate delay
       }
     };

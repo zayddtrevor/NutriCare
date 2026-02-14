@@ -50,6 +50,8 @@ export default function FeedingNutrition() {
 
       if (studentsError) throw studentsError;
 
+      console.log("Feeding & Nutrition: Students fetched:", studentsData.length);
+
       // Fetch latest BMI records for status (Nutrition Status is in bmi_records, not students)
       const { data: bmiData } = await supabase
         .from("bmi_records")
