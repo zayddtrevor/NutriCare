@@ -119,6 +119,7 @@ export default function FeedingNutrition() {
         };
       });
 
+      console.log("FeedingNutrition: Students Loaded:", normalizedStudents.length);
       setStudents(normalizedStudents);
 
       // Create a map for fast lookup of attendance

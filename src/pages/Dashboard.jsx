@@ -18,6 +18,8 @@ export default function Dashboard() {
             .select("*", { count: "exact", head: true });
 
         if (studentsError) throw studentsError;
+
+        console.log("Dashboard: Total Students Fetched:", studentsCount);
         setStudentCount(studentsCount);
 
         // Fetch total teachers count

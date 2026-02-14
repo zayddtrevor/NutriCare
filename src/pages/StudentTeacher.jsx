@@ -67,7 +67,7 @@ export default function StudentTeacher() {
     }
 
     // 2. Fetch latest BMI records for status
-    // We fetch all and map them because Supabase doesn't support easy "latest per student" in one query without join/view
+    // We fetch all and map them because Supabase doesn't support using "latest per student" in one query without join/view
     const { data: bmiData, error: bmiError } = await supabase
       .from("bmi_records")
       .select("student_id, nutrition_status, created_at")
@@ -116,6 +116,7 @@ export default function StudentTeacher() {
     // Sort manually to be safe
     mapped.sort((a, b) => a.name.localeCompare(b.name));
 
+    console.log("StudentTeacher: Students Loaded:", mapped.length);
     setStudents(mapped);
     setLoading(false);
   }

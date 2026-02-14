@@ -113,6 +113,7 @@ export default function Reports() {
         };
       });
 
+      console.log("Reports: Students Loaded:", processed.length);
       setStudents(processed);
 
     } catch (err) {
