@@ -51,13 +51,17 @@ export default function StudentTeacher() {
     } else {
       fetchTeachers();
     }
-  }, [activeTab]);
+  }, [activeTab, studentFilterGrade, studentFilterSection, studentFilterGender]);
 
   async function fetchStudents() {
     setLoading(true);
 
     // 1. Fetch total count (fix for incorrect count)
-    const count = await getTotalStudents();
+    const count = await getTotalStudents({
+      grade: studentFilterGrade,
+      section: studentFilterSection,
+      sex: studentFilterGender
+    });
     setTotalStudents(count);
 
     // 2. Fetch students

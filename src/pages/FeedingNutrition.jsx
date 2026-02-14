@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "../supabaseClient";
+import { getTotalStudents } from "../utils/studentData";
 import { AlertCircle, X, Users, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
@@ -24,6 +25,7 @@ export default function FeedingNutrition() {
   const [dailyMeal, setDailyMeal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [totalStudents, setTotalStudents] = useState(0);
 
   // Filters
   const [activeGrade, setActiveGrade] = useState("K1");
@@ -139,6 +141,18 @@ export default function FeedingNutrition() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Fetch Total Count on Filter Change
+  useEffect(() => {
+    const fetchCount = async () => {
+      const count = await getTotalStudents({
+        grade: activeGrade,
+        section: selectedSection
+      });
+      setTotalStudents(count);
+    };
+    fetchCount();
+  }, [activeGrade, selectedSection]);
 
   // Derived Data: Available Sections for Active Grade
   const availableSections = useMemo(() => {
@@ -297,7 +311,7 @@ export default function FeedingNutrition() {
                 <>
                     {/* Stats Summary */}
                     <div className="stats-row">
-                        <StatCard label="Total Students" value={summary.total} icon={<Users size={20}/>} color="blue" />
+                        <StatCard label="Total Students" value={totalStudents} icon={<Users size={20}/>} color="blue" />
                         <StatCard label="Present" value={summary.presentCount} icon={<CheckCircle size={20}/>} color="green" />
                         <StatCard label="Absent" value={summary.absentCount} icon={<XCircle size={20}/>} color="red" />
                     </div>
