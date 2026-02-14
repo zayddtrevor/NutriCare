@@ -32,7 +32,10 @@ export default function FeedingNutrition() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDetailsId, setShowDetailsId] = useState(null);
 
-  const todayKey = format(new Date(), "yyyy-MM-dd");
+  const today = new Date();
+  const todayKey = format(today, "yyyy-MM-dd");
+  const displayDate = format(today, "cccc • MMMM d, yyyy");
+  const currentDayName = format(today, "cccc");
 
   // Fetch Data
   const fetchData = useCallback(async () => {
@@ -69,17 +72,17 @@ export default function FeedingNutrition() {
         });
       }
 
-      // Fetch Daily Meal (Hardcoded for 2026-02-10 as per request)
-      // Week 2, Tuesday
+      // Fetch Daily Meal (Dynamic for current date)
       const { data: mealData } = await supabase
         .from("nutrition_meals")
         .select("*")
-        .eq("week_number", 2)
-        .eq("day_of_week", "Tuesday")
+        .eq("date", todayKey)
         .maybeSingle();
 
       if (mealData) {
         setDailyMeal(mealData);
+      } else {
+        setDailyMeal(null);
       }
 
       // Attempt fetch optional tables (SBFP, Attendance)
@@ -202,7 +205,7 @@ export default function FeedingNutrition() {
 
         {/* Banner */}
         <div className="meal-banner card-fullwidth">
-            <div className="meal-left">
+            <div className="meal-left" style={!(dailyMeal && dailyMeal.image_url) ? { textAlign: 'center', width: '100%' } : {}}>
             <h2 className="meal-title">🍽️ Meal for Today</h2>
             {dailyMeal ? (
                 <>
@@ -213,20 +216,17 @@ export default function FeedingNutrition() {
                 </>
             ) : (
                 <>
-                    <h3 className="meal-name">Rotating Menu — Placeholder</h3>
-                    <p className="meal-desc">Chicken adobo, brown rice, mixed vegetables (placeholder)</p>
+                    <h3 className="meal-name">No meal assigned for today.</h3>
                 </>
             )}
-            <div className="meal-meta">Date: 2026-02-10</div>
+            <div className="meal-meta">{displayDate}</div>
             </div>
-            {/* Image Placeholder or Actual Image */}
+            {/* Image Container - Only if URL exists */}
+            {dailyMeal && dailyMeal.image_url && (
              <div className="meal-right">
-                {dailyMeal && dailyMeal.image_url ? (
-                    <img src={dailyMeal.image_url} alt={dailyMeal.meal_name} className="meal-img" />
-                ) : (
-                    <div className="meal-img-placeholder">Image</div>
-                )}
+                <img src={dailyMeal.image_url} alt={dailyMeal.meal_name} className="meal-img" />
             </div>
+            )}
         </div>
 
         <FilterBar
