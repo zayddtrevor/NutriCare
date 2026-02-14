@@ -39,6 +39,7 @@ export default function FeedingNutrition() {
 
   // Fetch Data
   const fetchData = useCallback(async () => {
+    console.log("FeedingNutrition component loaded");
     setLoading(true);
     setError(null);
     try {
@@ -119,7 +120,7 @@ export default function FeedingNutrition() {
         };
       });
 
-      console.log("Feeding & Nutrition Count:", normalizedStudents.length);
+      console.log("FeedingNutrition Data length:", normalizedStudents.length);
       setStudents(normalizedStudents);
 
       // Create a map for fast lookup of attendance

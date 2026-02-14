@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("Dashboard component loaded");
     const fetchData = async () => {
       try {
         // Fetch total students count
@@ -18,7 +19,7 @@ export default function Dashboard() {
             .select("*", { count: "exact", head: true });
 
         if (studentsError) throw studentsError;
-        console.log("Dashboard Student Count:", studentsCount);
+        console.log("Total students fetched:", studentsCount);
         setStudentCount(studentsCount);
 
         // Fetch total teachers count

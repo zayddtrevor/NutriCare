@@ -36,6 +36,7 @@ export default function Reports() {
 
   // Fetch Data Logic
   const fetchData = useCallback(async () => {
+    console.log("Reports component loaded");
     setLoading(true);
     setError(null);
     try {
@@ -113,7 +114,7 @@ export default function Reports() {
         };
       });
 
-      console.log("Reports Count:", processed.length);
+      console.log("Reports Data length:", processed.length);
       setStudents(processed);
 
     } catch (err) {

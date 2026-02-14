@@ -52,6 +52,7 @@ export default function StudentTeacher() {
   }, [activeTab]);
 
   async function fetchStudents() {
+    console.log("StudentTeacher component loaded");
     setLoading(true);
 
     // 1. Fetch students
@@ -116,7 +117,7 @@ export default function StudentTeacher() {
     // Sort manually to be safe
     mapped.sort((a, b) => a.name.localeCompare(b.name));
 
-    console.log("Student & Teacher Count:", mapped.length);
+    console.log("StudentTeacher Data length:", mapped.length);
     setStudents(mapped);
     setLoading(false);
   }
