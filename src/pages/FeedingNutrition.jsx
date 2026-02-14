@@ -72,16 +72,17 @@ export default function FeedingNutrition() {
         });
       }
 
-      // Fetch Daily Meal (Dynamic for current day)
+      // Fetch Daily Meal (Dynamic for current date)
       const { data: mealData } = await supabase
         .from("nutrition_meals")
         .select("*")
-        .eq("day_of_week", currentDayName)
-        .limit(1)
+        .eq("date", todayKey)
         .maybeSingle();
 
       if (mealData) {
         setDailyMeal(mealData);
+      } else {
+        setDailyMeal(null);
       }
 
       // Attempt fetch optional tables (SBFP, Attendance)
@@ -133,7 +134,7 @@ export default function FeedingNutrition() {
     } finally {
       setLoading(false);
     }
-  }, [todayKey, currentDayName]);
+  }, [todayKey]);
 
   useEffect(() => {
     fetchData();
@@ -215,8 +216,7 @@ export default function FeedingNutrition() {
                 </>
             ) : (
                 <>
-                    <h3 className="meal-name">Rotating Menu — Placeholder</h3>
-                    <p className="meal-desc">Chicken adobo, brown rice, mixed vegetables (placeholder)</p>
+                    <h3 className="meal-name">No meal assigned for today.</h3>
                 </>
             )}
             <div className="meal-meta">{displayDate}</div>
