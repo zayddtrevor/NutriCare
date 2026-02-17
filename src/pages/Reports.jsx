@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { supabase } from "../supabaseClient";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import {
   Users,
@@ -39,82 +38,7 @@ export default function Reports() {
     setLoading(true);
     setError(null);
     try {
-      // 1. Fetch Students
-      const { data: studentsData, error: studentsError } = await supabase
-        .from("students")
-        .select("*")
-        .range(0, 9999);
-
-      if (studentsError) throw studentsError;
-
-      // 2. Fetch Optional Data in Parallel
-      const [bmiRes, attRes, sbfpRes] = await Promise.allSettled([
-        supabase.from("bmi_records").select("*").order("created_at", { ascending: false }).range(0, 9999),
-        supabase.from("attendance").select("*").range(0, 9999),
-        supabase.from("sbfp_beneficiaries").select("student_id").range(0, 9999)
-      ]);
-
-      const bmiList = bmiRes.status === "fulfilled" && bmiRes.value.data ? bmiRes.value.data : [];
-      const attList = attRes.status === "fulfilled" && attRes.value.data ? attRes.value.data : [];
-      const sbfpList = sbfpRes.status === "fulfilled" && sbfpRes.value.data ? sbfpRes.value.data : [];
-
-      // 3. Process Data
-
-      // Map for fast lookup: studentId -> Latest BMI Record
-      const bmiMap = {};
-      bmiList.forEach((r) => {
-        if (r.student_id && !bmiMap[r.student_id]) {
-          bmiMap[r.student_id] = r;
-        }
-      });
-
-      // Map for attendance counts: studentId -> { present: 0, absent: 0 }
-      const attMap = {};
-      attList.forEach((r) => {
-        if (!r.student_id) return;
-        if (!attMap[r.student_id]) {
-          attMap[r.student_id] = { present: 0, absent: 0 };
-        }
-        const statusVal = (r.status || "").toLowerCase();
-        if (statusVal === "present") {
-          attMap[r.student_id].present++;
-        } else if (statusVal === "absent") {
-          attMap[r.student_id].absent++;
-        }
-      });
-
-      const sbfpSet = new Set(sbfpList.map(r => r.student_id));
-
-      const processed = studentsData.map((s) => {
-        const bmiRecord = bmiMap[s.id];
-        const attRecord = attMap[s.id] || { present: 0, absent: 0 };
-
-        const nutritionStatus = bmiRecord?.nutrition_status || s.nutrition_status || s.nutritionStatus || "Unknown";
-        const bmiValue = bmiRecord?.bmi || s.bmi || null;
-
-        const rawGrade = (s.grade_level || "").toString();
-        const normalizedGrade = normalizeGrade(rawGrade);
-        const section = s.section || "Unknown";
-
-        return {
-          id: s.id,
-          name: s.name || s.full_name || "Unknown",
-          gradeLevel: normalizedGrade,
-          rawGrade: rawGrade,
-          section: section,
-          sex: s.sex || null,
-          birthDate: s.birth_date || s.dob || null,
-          gradeSection: `${normalizedGrade} - ${section}`,
-          status: nutritionStatus,
-          bmi: bmiValue ? parseFloat(bmiValue).toFixed(1) : "-",
-          presentDays: attRecord.present,
-          absentDays: attRecord.absent,
-          isSbfp: sbfpSet.has(s.id)
-        };
-      });
-
-      setStudents(processed);
-
+      setStudents([]);
     } catch (err) {
       console.error("Error fetching reports data:", err);
       setError("Failed to load report data. Please check your connection.");

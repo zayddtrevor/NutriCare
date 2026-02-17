@@ -54,69 +54,8 @@ export default function StudentTeacher() {
   async function fetchStudents() {
     setLoading(true);
 
-    // 1. Fetch students
-    const { data: studentsData, error: studentError } = await supabase
-      .from("students")
-      .select("*")
-      .range(0, 9999);
-
-    if (studentError) {
-        console.error("Error fetching students:", studentError);
-        setLoading(false);
-        return;
-    }
-
-    // 2. Fetch latest BMI records for status
-    // We fetch all and map them because Supabase doesn't support easy "latest per student" in one query without join/view
-    const { data: bmiData, error: bmiError } = await supabase
-      .from("bmi_records")
-      .select("student_id, nutrition_status, created_at")
-      .order("created_at", { ascending: false })
-      .range(0, 9999);
-
-    if (bmiError) {
-       console.error("Error fetching BMI records:", bmiError);
-    }
-
-    // Map student_id -> latest status
-    const statusMap = {};
-    if (bmiData) {
-      bmiData.forEach(r => {
-        if (!statusMap[r.student_id]) {
-          statusMap[r.student_id] = r.nutrition_status;
-        }
-      });
-    }
-
-    // Map data to handle variations
-    const mapped = studentsData.map(s => {
-      const rawGrade = s.grade_level || "";
-      const grade = normalizeGrade(rawGrade);
-      const section = s.section || "";
-      const gradeSectionDisplay = (grade && section)
-        ? `${grade} – ${section}`
-        : (grade || section || "Unknown");
-
-      // Use status from BMI record if available, fallback to "Unknown"
-      // Note: s.nutrition_status might not exist in students table anymore per PR feedback
-      const status = statusMap[s.id] || "Unknown";
-
-      return {
-        id: s.id,
-        name: s.name || s.full_name || "Unknown",
-        grade: grade, // Normalized grade
-        rawGrade: rawGrade,
-        section: section,
-        gradeSectionDisplay: gradeSectionDisplay,
-        sex: s.sex || "-",
-        nutritionStatus: status,
-      };
-    });
-
-    // Sort manually to be safe
-    mapped.sort((a, b) => a.name.localeCompare(b.name));
-
-    setStudents(mapped);
+    // Temporarily disabled
+    setStudents([]);
     setLoading(false);
   }
 
@@ -231,21 +170,7 @@ export default function StudentTeacher() {
   // Recalculate Status
   // =========================
   async function handleRecalculate() {
-    if (!window.confirm("This will update nutrition status for students with 'Unknown' status based on their latest BMI records. Continue?")) {
-      return;
-    }
-
-    setIsRecalculating(true);
-    const result = await recalculateNutritionStatus();
-    setIsRecalculating(false);
-
-    if (result.success) {
-      alert(result.message || `Updated ${result.count} students.`);
-      fetchStudents(); // Refresh data
-    } else {
-      console.error("Recalculation failed:", result.error);
-      alert(`Failed to recalculate status: ${result.error?.message || "Unknown error"}`);
-    }
+    alert("This feature is temporarily disabled.");
   }
 
   // =========================

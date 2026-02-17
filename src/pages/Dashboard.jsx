@@ -11,15 +11,6 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch total students count
-        const { count: studentsCount, error: studentsError } =
-          await supabase
-            .from("students")
-            .select("*", { count: "exact", head: true });
-
-        if (studentsError) throw studentsError;
-        setStudentCount(studentsCount);
-
         // Fetch total teachers count
         const { count: teachersCount, error: teachersError } =
           await supabase
