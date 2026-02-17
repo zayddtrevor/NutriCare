@@ -249,6 +249,25 @@ export default function StudentTeacher() {
   }
 
   // =========================
+  // Delete student
+  // =========================
+  async function deleteStudent(student) {
+    if (!window.confirm(`Permanently delete student ${student.name}? This action cannot be undone.`)) return;
+
+    const { error } = await supabase
+      .from("students")
+      .delete()
+      .eq("id", student.id);
+
+    if (error) {
+      console.error("Delete error:", error);
+      alert("Failed to delete student. Please try again.");
+    } else {
+      fetchStudents();
+    }
+  }
+
+  // =========================
   // Activate / Deactivate (Teachers)
   // =========================
   async function toggleActive(teacher) {
@@ -467,15 +486,16 @@ export default function StudentTeacher() {
                 <thead>
                   <tr>
                     <th>Name</th>
-                  <th>Grade & Section</th>
-                  <th>Sex</th>
-                  <th>Nutrition Status</th>
-                </tr>
+                    <th>Grade & Section</th>
+                    <th>Sex</th>
+                    <th>Nutrition Status</th>
+                    <th className="th-actions">Actions</th>
+                  </tr>
               </thead>
               <tbody>
                 {filteredStudents.length === 0 ? (
                   <tr>
-                    <td colSpan="4" style={{ textAlign: "center" }}>
+                    <td colSpan="5" style={{ textAlign: "center" }}>
                       No students found.
                     </td>
                   </tr>
@@ -489,6 +509,15 @@ export default function StudentTeacher() {
                         <span className={`status-badge ${s.nutritionStatus.toLowerCase().replace(/\s/g, '-')}`}>
                           {s.nutritionStatus}
                         </span>
+                      </td>
+                      <td className="cell-actions">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteStudent(s)}
+                        >
+                          Delete
+                        </Button>
                       </td>
                     </tr>
                    ))
