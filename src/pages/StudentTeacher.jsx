@@ -441,7 +441,7 @@ export default function StudentTeacher() {
           <div className="data-table-container">
           {activeTab === "students" && (
             <>
-              <div className="students-summary-row">
+              <div className="students-summary-row stats-section-spacing">
                 <StatCard
                   label="Total Students"
                   value={students.length}
@@ -460,6 +460,25 @@ export default function StudentTeacher() {
                       ))}
                    </div>
                 </div>
+              </div>
+
+              {/* Grade Filter Buttons (Moved below stats) */}
+              <div className="grade-filter-container">
+                <button
+                  className={`grade-btn ${studentFilterGrade === "All" ? "active" : ""}`}
+                  onClick={() => setStudentFilterGrade("All")}
+                >
+                  All Grades
+                </button>
+                {GRADES.map((g) => (
+                  <button
+                    key={g}
+                    className={`grade-btn ${studentFilterGrade === g ? "active" : ""}`}
+                    onClick={() => setStudentFilterGrade(g)}
+                  >
+                    {g}
+                  </button>
+                ))}
               </div>
 
               <FilterBar
@@ -485,17 +504,7 @@ export default function StudentTeacher() {
                     <option value="Obese">Obese</option>
                     <option value="Unknown">Unknown</option>
                   </select>
-                  <select
-                    value={studentFilterGrade}
-                    onChange={(e) => setStudentFilterGrade(e.target.value)}
-                  >
-                    <option value="All">All Grades</option>
-                    {GRADES.map((g) => (
-                      <option key={g} value={g}>
-                        {g}
-                      </option>
-                    ))}
-                  </select>
+                  {/* Grade filter removed as it is now above as buttons */}
                   <select
                     value={studentFilterSection}
                     onChange={(e) => setStudentFilterSection(e.target.value)}
@@ -557,31 +566,35 @@ export default function StudentTeacher() {
 
           {activeTab === "teachers" && (
             <>
-              <div className="teachers-summary-row">
-                <StatCard
-                  label="Total Teachers"
-                  value={teacherStats.total}
-                  icon={<Users size={20} />}
-                  color="blue"
-                />
-                <StatCard
-                  label="Active"
-                  value={teacherStats.active}
-                  icon={<UserCheck size={20} />}
-                  color="green"
-                />
-                <StatCard
-                  label="Inactive"
-                  value={teacherStats.inactive}
-                  icon={<UserX size={20} />}
-                  color="red"
-                />
-                <StatCard
-                  label="Sections Covered"
-                  value={teacherStats.sections}
-                  icon={<BookOpen size={20} />}
-                  color="orange"
-                />
+              <div className="teachers-summary-row stats-section-spacing">
+                <div className="teacher-stat-card tsc-blue">
+                  <div className="tsc-label">Total Teachers</div>
+                  <div className="tsc-number">{teacherStats.total}</div>
+                  <div className="tsc-icon">
+                    <Users size={28} />
+                  </div>
+                </div>
+                <div className="teacher-stat-card tsc-green">
+                  <div className="tsc-label">Active</div>
+                  <div className="tsc-number">{teacherStats.active}</div>
+                  <div className="tsc-icon">
+                    <UserCheck size={28} />
+                  </div>
+                </div>
+                <div className="teacher-stat-card tsc-red">
+                  <div className="tsc-label">Inactive</div>
+                  <div className="tsc-number">{teacherStats.inactive}</div>
+                  <div className="tsc-icon">
+                    <UserX size={28} />
+                  </div>
+                </div>
+                <div className="teacher-stat-card tsc-orange">
+                  <div className="tsc-label">Sections Covered</div>
+                  <div className="tsc-number">{teacherStats.sections}</div>
+                  <div className="tsc-icon">
+                    <BookOpen size={28} />
+                  </div>
+                </div>
               </div>
 
               <FilterBar
