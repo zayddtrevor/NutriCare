@@ -9,7 +9,8 @@ import {
   UserPlus,
   FileText,
   Settings,
-  ArrowUpRight
+  ArrowRight,
+  ChevronRight
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
@@ -56,7 +57,7 @@ const DashboardStatCard = ({ title, value, label, icon: Icon, color, loading }) 
     <div className={`premium-stat-card ${color}`}>
       <div className="stat-card-content">
         <div className={`stat-icon-wrapper icon-${color}`}>
-          <Icon size={32} strokeWidth={1.5} />
+          <Icon size={24} strokeWidth={2} />
         </div>
         <div className="stat-text">
           <span className="stat-label">{title}</span>
@@ -64,7 +65,7 @@ const DashboardStatCard = ({ title, value, label, icon: Icon, color, loading }) 
         </div>
       </div>
       <div className="stat-decoration">
-        <ArrowUpRight size={20} />
+        {/* Subtle decorative element if needed, or keep clean */}
       </div>
     </div>
   );
@@ -189,19 +190,19 @@ const AnalyticsSection = () => {
 const QuickActionPanel = () => {
   const actions = [
     {
-      title: "Manage Students",
+      title: "Go to Student Management",
       icon: Users,
       color: "blue",
-      link: "/student-teacher"
+      link: "/management?tab=students"
     },
     {
-      title: "Manage Teachers",
+      title: "Go to Teacher Management",
       icon: UserPlus,
       color: "green",
-      link: "/student-teacher"
+      link: "/management?tab=teachers"
     },
     {
-      title: "View Reports",
+      title: "Open Reports",
       icon: FileText,
       color: "orange",
       link: "/reports"
@@ -213,10 +214,10 @@ const QuickActionPanel = () => {
       {actions.map((action, idx) => (
         <Link to={action.link} key={idx} className="quick-action-card">
           <div className={`qa-icon icon-${action.color}`}>
-            <action.icon size={24} />
+            <action.icon size={24} strokeWidth={2} />
           </div>
           <span className="qa-title">{action.title}</span>
-          <Settings size={16} className="qa-arrow" />
+          <ChevronRight size={20} className="qa-arrow" />
         </Link>
       ))}
     </div>
@@ -249,11 +250,6 @@ export default function Dashboard() {
         if (!teachersError) setTeacherCount(teachersCount || 0);
 
         // Fetch BMI records count (for "Active Reports")
-        // Using "bmi_records" or whatever table represents the "reports"
-        // Prompt says "Active Reports", current hardcoded was 8.
-        // I'll count bmi_records as a proxy for "Active Reports" activity if appropriate,
-        // or just keep 8 if user really meant it. But "fetched dynamically" was in memory.
-        // I will count bmi_records.
         const { count: bmiTotal, error: bmiError } =
             await supabase
             .from("bmi_records")
@@ -296,12 +292,7 @@ export default function Dashboard() {
           />
           <DashboardStatCard
             title="Active Reports"
-            value={bmiCount > 0 ? bmiCount : 8} // Fallback to 8 if 0 (mock-ish behavior if db empty) or just show count. Prompt says "Active Reports: 8".
-            // If I use dynamic bmiCount, it might be 0.
-            // The user wants "fetched dynamically". I'll use bmiCount but if it's 0 I might want to show 0.
-            // But let's stick to bmiCount. If it's 0, it's 0.
-            // Wait, if I'm using mock data locally, it might be 0.
-            // I'll show bmiCount.
+            value={bmiCount}
             loading={loading}
             icon={BarChart3}
             color="orange"

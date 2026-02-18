@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { Users, UserCheck, UserX, BookOpen, Edit2, RefreshCw, Trash2, Mail, Briefcase, Hash, User, UserPlus } from "lucide-react";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
@@ -11,7 +12,20 @@ import "../components/common/TableStyles.css"; // Import standard table styles
 import "./StudentTeacher.css";
 
 export default function StudentTeacher() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("students");
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "students" || tabParam === "teachers") {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
 
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
@@ -423,13 +437,13 @@ export default function StudentTeacher() {
         <div className="tab-navigation">
           <button
             className={`tab-btn ${activeTab === "students" ? "active-tab" : ""}`}
-            onClick={() => setActiveTab("students")}
+            onClick={() => handleTabChange("students")}
           >
             Students
           </button>
           <button
             className={`tab-btn ${activeTab === "teachers" ? "active-tab" : ""}`}
-            onClick={() => setActiveTab("teachers")}
+            onClick={() => handleTabChange("teachers")}
           >
             Teachers
           </button>
