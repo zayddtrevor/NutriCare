@@ -25,7 +25,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 32px; /* Increased spacing */
+  gap: 32px; /* Consistent spacing */
 }
 
 /* --- 1. Header Section --- */
@@ -341,73 +341,123 @@
   color: white;
 }
 
-/* --- 4. Quick Action Panel --- */
-.quick-actions-grid {
+/* --- 4. Dashboard Bottom Grid (New Section) --- */
+.dashboard-bottom-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px; /* Increased gap */
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
 }
 
-.quick-action-card {
+/* Nutrition Summary Card */
+.nutrition-summary-card {
   background: white;
   border-radius: var(--dash-radius);
   padding: 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
   box-shadow: var(--dash-shadow);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid transparent;
-  cursor: pointer;
-  height: 100%; /* Equal height */
+  height: 100%;
 }
 
-.quick-action-card.hover-lift:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--dash-shadow-hover);
-  border-color: #e2e8f0;
-}
-
-.qa-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.qa-icon.icon-blue { background: #eff6ff; color: #3b82f6; }
-.qa-icon.icon-green { background: #f0fdf4; color: #22c55e; }
-.qa-icon.icon-orange { background: #fff7ed; color: #f97316; }
-
-.qa-text {
-  flex: 1;
+.nutrition-bars {
   display: flex;
   flex-direction: column;
+  gap: 16px;
 }
 
-.qa-title {
-  font-weight: 700;
+.nutrition-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nb-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  font-weight: 500;
   color: var(--dash-text-dark);
-  font-size: 1rem;
-  margin-bottom: 2px;
 }
 
-.qa-subtitle {
-  font-size: 0.8rem;
+.nb-value {
+  font-weight: 600;
   color: var(--dash-text-muted);
 }
 
-.qa-arrow {
-  color: #cbd5e1;
-  transition: transform 0.2s;
+.progress-bg {
+  width: 100%;
+  height: 8px;
+  background-color: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
-.quick-action-card:hover .qa-arrow {
-  transform: translateX(4px);
-  color: var(--dash-primary);
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* Alerts Section */
+.alerts-card {
+  background: white;
+  border-radius: var(--dash-radius);
+  padding: 24px;
+  box-shadow: var(--dash-shadow);
+  height: 100%;
+}
+
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border-left: 4px solid transparent;
+}
+
+.alert-item.critical {
+  background: #fef2f2;
+  border-left-color: #ef4444;
+}
+
+.alert-item.warning {
+  background: #fffbeb;
+  border-left-color: #f59e0b;
+}
+
+.alert-item.info {
+  background: #eff6ff;
+  border-left-color: #3b82f6;
+}
+
+.alert-icon {
+  margin-top: 2px;
+}
+
+.alert-item.critical .alert-icon { color: #ef4444; }
+.alert-item.warning .alert-icon { color: #f59e0b; }
+.alert-item.info .alert-icon { color: #3b82f6; }
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-message {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--dash-text-dark);
+  margin-bottom: 4px;
+}
+
+.alert-time {
+  font-size: 0.8rem;
+  color: var(--dash-text-muted);
 }
 
 /* --- Animations --- */
@@ -448,8 +498,8 @@
     width: 100%;
   }
 
-  .quick-actions-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  .dashboard-bottom-grid {
+    grid-template-columns: 1fr;
     gap: 24px;
   }
 }

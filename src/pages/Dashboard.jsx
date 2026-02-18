@@ -6,18 +6,11 @@ import {
   Users,
   Calendar,
   TrendingUp,
-  UserPlus,
-  FileText,
-  Settings,
-  ArrowRight,
-  ChevronRight,
-  Activity
+  Activity,
+  AlertTriangle
 } from "lucide-react";
-import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -69,7 +62,6 @@ const DashboardHeader = () => {
           <Calendar size={16} />
           <span>{format(today, "MMMM d, yyyy")}</span>
         </div>
-        {/* 'View Reports' button removed as per feedback */}
       </div>
     </div>
   );
@@ -216,45 +208,66 @@ const AnalyticsSection = () => {
   );
 };
 
-const QuickActionPanel = () => {
-  const actions = [
-    {
-      title: "Manage Students",
-      subtitle: "View & edit student records",
-      icon: Users,
-      color: "blue",
-      link: "/management?tab=students"
-    },
-    {
-      title: "Manage Teachers",
-      subtitle: "Add or remove staff",
-      icon: UserPlus,
-      color: "green",
-      link: "/management?tab=teachers"
-    },
-    {
-      title: "View Reports",
-      subtitle: "Check daily analytics",
-      icon: FileText,
-      color: "orange",
-      link: "/reports"
-    }
+const NutritionSummary = () => {
+  // Mock Data for Nutrition Summary
+  const stats = [
+    { label: "Normal", value: 65, color: "#10b981" },
+    { label: "Wasted", value: 15, color: "#f59e0b" },
+    { label: "Severely Wasted", value: 5, color: "#ef4444" },
+    { label: "Overweight", value: 10, color: "#3b82f6" },
+    { label: "Obese", value: 5, color: "#8b5cf6" },
   ];
 
   return (
-    <div className="quick-actions-grid fade-in-more-delayed">
-      {actions.map((action, idx) => (
-        <Link to={action.link} key={idx} className="quick-action-card hover-lift">
-          <div className={`qa-icon icon-${action.color}`}>
-            <action.icon size={24} strokeWidth={2} />
+    <div className="nutrition-summary-card fade-in-more-delayed">
+      <div className="card-header">
+        <h3>Nutrition Summary Snapshot</h3>
+      </div>
+      <div className="nutrition-bars">
+        {stats.map((stat, idx) => (
+          <div key={idx} className="nutrition-bar-item">
+            <div className="nb-label">
+              <span>{stat.label}</span>
+              <span className="nb-value">{stat.value}%</span>
+            </div>
+            <div className="progress-bg">
+              <div
+                className="progress-fill"
+                style={{ width: `${stat.value}%`, backgroundColor: stat.color }}
+              ></div>
+            </div>
           </div>
-          <div className="qa-text">
-            <span className="qa-title">{action.title}</span>
-            <span className="qa-subtitle">{action.subtitle}</span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const AlertsSection = () => {
+  const alerts = [
+    { type: "critical", message: "5 students flagged as Severely Wasted", time: "2h ago" },
+    { type: "warning", message: "Grade 3 has high absence rate today", time: "4h ago" },
+    { type: "info", message: "BMI records missing for 12 students", time: "1d ago" },
+  ];
+
+  return (
+    <div className="alerts-card fade-in-more-delayed">
+      <div className="card-header">
+        <h3>Alerts & Flags</h3>
+      </div>
+      <div className="alerts-list">
+        {alerts.map((alert, idx) => (
+          <div key={idx} className={`alert-item ${alert.type}`}>
+            <div className="alert-icon">
+              <AlertTriangle size={18} />
+            </div>
+            <div className="alert-content">
+              <p className="alert-message">{alert.message}</p>
+              <span className="alert-time">{alert.time}</span>
+            </div>
           </div>
-          <ChevronRight size={20} className="qa-arrow" />
-        </Link>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };
@@ -337,8 +350,11 @@ export default function Dashboard() {
         {/* 3. Analytics Section */}
         <AnalyticsSection />
 
-        {/* 4. Quick Action Panel */}
-        <QuickActionPanel />
+        {/* 4. Health & Alerts (Replaces Quick Action Panel) */}
+        <section className="dashboard-bottom-grid">
+          <NutritionSummary />
+          <AlertsSection />
+        </section>
 
       </div>
     </div>
