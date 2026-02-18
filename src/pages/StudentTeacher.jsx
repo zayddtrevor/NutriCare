@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../supabaseClient";
-import { Users } from "lucide-react";
+import { Users, UserCheck, UserX, BookOpen, Edit2, RefreshCw, Trash2 } from "lucide-react";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import { recalculateNutritionStatus } from "../utils/nutritionUpdater";
 import PageHeader from "../components/common/PageHeader";
@@ -25,6 +25,7 @@ export default function StudentTeacher() {
 
   const [teacherFilterSection, setTeacherFilterSection] = useState("All");
   const [teacherFilterStatus, setTeacherFilterStatus] = useState("All");
+  const [teacherSortBy, setTeacherSortBy] = useState("name-asc");
 
   const [loading, setLoading] = useState(true);
   const [isRecalculating, setIsRecalculating] = useState(false);
@@ -291,6 +292,10 @@ export default function StudentTeacher() {
   // Render
   // =========================
 
+  const getInitials = (firstName, lastName) => {
+    return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
+  };
+
   // Compute unique values for filters (Students)
   const uniqueStudentSections = useMemo(() => {
     if (studentFilterGrade === "All") {
@@ -304,6 +309,15 @@ export default function StudentTeacher() {
 
   // Compute unique values for filters (Teachers)
   const uniqueTeacherSections = [...new Set(teachers.map((t) => t.section).filter(Boolean))].sort();
+
+  // Teacher Summary Stats
+  const teacherStats = useMemo(() => {
+    const total = teachers.length;
+    const active = teachers.filter(t => t.active).length;
+    const inactive = total - active;
+    const sections = new Set(teachers.map(t => t.section).filter(Boolean)).size;
+    return { total, active, inactive, sections };
+  }, [teachers]);
 
   // Filter students
   const filteredStudents = students.filter((s) => {
@@ -325,21 +339,41 @@ export default function StudentTeacher() {
   // Ensure alphabetical sort (already sorted in fetch, but good to ensure)
   filteredStudents.sort((a, b) => a.name.localeCompare(b.name));
 
-  // Filter teachers
-  const filteredTeachers = teachers.filter((t) => {
-    // 1. Search
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      const fullName = `${t.firstName} ${t.lastName}`.toLowerCase();
-      const email = t.email.toLowerCase();
-      const section = t.section.toLowerCase();
-      if (!fullName.includes(q) && !email.includes(q) && !section.includes(q)) return false;
-    }
-    // 2. Filters
-    const matchSection = teacherFilterSection === "All" || t.section === teacherFilterSection;
-    const matchStatus = teacherFilterStatus === "All" || (teacherFilterStatus === "Active" ? t.active : !t.active);
-    return matchSection && matchStatus;
-  });
+  // Filter and Sort teachers
+  const filteredTeachers = useMemo(() => {
+    let result = teachers.filter((t) => {
+      // 1. Search
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const fullName = `${t.firstName} ${t.lastName}`.toLowerCase();
+        const email = t.email.toLowerCase();
+        const section = t.section.toLowerCase();
+        if (!fullName.includes(q) && !email.includes(q) && !section.includes(q)) return false;
+      }
+      // 2. Filters
+      const matchSection = teacherFilterSection === "All" || t.section === teacherFilterSection;
+      const matchStatus = teacherFilterStatus === "All" || (teacherFilterStatus === "Active" ? t.active : !t.active);
+      return matchSection && matchStatus;
+    });
+
+    // 3. Sort
+    result.sort((a, b) => {
+      if (teacherSortBy === "name-asc") {
+        return a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName);
+      } else if (teacherSortBy === "name-desc") {
+        return b.lastName.localeCompare(a.lastName) || b.firstName.localeCompare(a.firstName);
+      } else if (teacherSortBy === "status-active") {
+        // Active first
+        return (b.active === a.active) ? 0 : b.active ? 1 : -1;
+      } else if (teacherSortBy === "status-inactive") {
+        // Inactive first
+        return (a.active === b.active) ? 0 : a.active ? 1 : -1;
+      }
+      return 0;
+    });
+
+    return result;
+  }, [teachers, searchQuery, teacherFilterSection, teacherFilterStatus, teacherSortBy]);
 
   return (
     <div className="student-page">
@@ -500,6 +534,33 @@ export default function StudentTeacher() {
 
           {activeTab === "teachers" && (
             <>
+              <div className="teachers-summary-row">
+                <StatCard
+                  label="Total Teachers"
+                  value={teacherStats.total}
+                  icon={<Users size={20} />}
+                  color="blue"
+                />
+                <StatCard
+                  label="Active"
+                  value={teacherStats.active}
+                  icon={<UserCheck size={20} />}
+                  color="green"
+                />
+                <StatCard
+                  label="Inactive"
+                  value={teacherStats.inactive}
+                  icon={<UserX size={20} />}
+                  color="red"
+                />
+                <StatCard
+                  label="Sections Covered"
+                  value={teacherStats.sections}
+                  icon={<BookOpen size={20} />}
+                  color="orange"
+                />
+              </div>
+
               <FilterBar
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
@@ -507,8 +568,18 @@ export default function StudentTeacher() {
                   setSearchQuery("");
                   setTeacherFilterSection("All");
                   setTeacherFilterStatus("All");
+                  setTeacherSortBy("name-asc");
                 }}
               >
+                  <select
+                    value={teacherSortBy}
+                    onChange={(e) => setTeacherSortBy(e.target.value)}
+                  >
+                    <option value="name-asc">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                    <option value="status-active">Active First</option>
+                    <option value="status-inactive">Inactive First</option>
+                  </select>
                   <select
                     value={teacherFilterSection}
                     onChange={(e) => setTeacherFilterSection(e.target.value)}
@@ -537,6 +608,7 @@ export default function StudentTeacher() {
                     <th>Name</th>
                     <th>Email</th>
                     <th>Section</th>
+                    <th>Joined</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
@@ -544,40 +616,63 @@ export default function StudentTeacher() {
                 <tbody>
                   {filteredTeachers.length === 0 ? (
                     <tr>
-                      <td colSpan="6" style={{ textAlign: "center" }}>
-                        No teachers found.
+                      <td colSpan="7" style={{ textAlign: "center", padding: "40px" }}>
+                        <div className="empty-state">
+                          <div className="empty-icon-bg">
+                            <Users size={40} color="#cbd5e1" />
+                          </div>
+                          <h3>No teachers found</h3>
+                          <p>Try adjusting your filters or add a new teacher.</p>
+                          <Button variant="success" onClick={openAddModal}>
+                            + Add Teacher
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ) : (
                     filteredTeachers.map((t) => (
-                      <tr key={t.uid} className={!t.active ? "inactive" : ""}>
-                      <td>{t.idNumber}</td>
-                      <td>{t.firstName} {t.lastName}</td>
-                      <td>{t.email}</td>
-                      <td>{t.section}</td>
-                      <td>{t.active ? "Active" : "Inactive"}</td>
+                      <tr key={t.uid} className={!t.active ? "inactive-row" : ""}>
+                        <td>{t.idNumber}</td>
+                        <td>
+                          <div className="teacher-name-cell">
+                            <div className={`teacher-avatar avatar-${(t.firstName.length + t.lastName.length) % 5}`}>
+                              {getInitials(t.firstName, t.lastName)}
+                            </div>
+                            <span className="teacher-name-text">
+                              {t.firstName} {t.lastName}
+                            </span>
+                          </div>
+                        </td>
+                        <td>{t.email}</td>
+                        <td>{t.section}</td>
+                        <td>{t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "-"}</td>
+                        <td>
+                          <span className={`status-badge ${t.active ? "active" : "inactive"}`}>
+                            {t.active ? "Active" : "Inactive"}
+                          </span>
+                        </td>
                         <td className="cell-actions">
-                          <Button
-                            variant="primary"
-                            size="sm"
+                          <button
+                            className="btn-icon edit"
                             onClick={() => openEditModal(t)}
+                            title="Edit"
                           >
-                            Edit
-                          </Button>
-                          <Button
-                            variant={t.active ? "warning" : "success"}
-                            size="sm"
+                            <Edit2 size={16} />
+                          </button>
+                          <button
+                            className={`btn-icon toggle ${t.active ? "deactivate" : "activate"}`}
                             onClick={() => toggleActive(t)}
+                            title={t.active ? "Deactivate" : "Activate"}
                           >
-                            {t.active ? "Deactivate" : "Activate"}
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
+                            {t.active ? <UserX size={16} /> : <UserCheck size={16} />}
+                          </button>
+                          <button
+                            className="btn-icon delete"
                             onClick={() => deleteTeacher(t)}
+                            title="Delete"
                           >
-                            Delete
-                          </Button>
+                            <Trash2 size={16} />
+                          </button>
                         </td>
                       </tr>
                     ))
