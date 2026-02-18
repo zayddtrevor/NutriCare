@@ -1,11 +1,9 @@
 .grade-tabs-container {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  overflow-x: auto;
-  padding-bottom: 5px; /* Scrollbar spacing */
-  flex-wrap: nowrap;
-  -webkit-overflow-scrolling: touch;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 20px 0;
 }
 
 .grade-tab {
@@ -17,7 +15,6 @@
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
-  white-space: nowrap;
   font-size: 0.9rem;
 }
 
@@ -32,23 +29,4 @@
   color: white;
   border-color: var(--primary-blue);
   box-shadow: 0 4px 6px rgba(59, 125, 216, 0.3);
-}
-
-/* Scrollbar styling for horizontal scroll */
-.grade-tabs-container::-webkit-scrollbar {
-  height: 6px;
-}
-
-.grade-tabs-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.grade-tabs-container::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 3px;
-}
-
-.grade-tabs-container::-webkit-scrollbar-thumb:hover {
-  background: #aaa;
 }
