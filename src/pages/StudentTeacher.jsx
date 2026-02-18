@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../supabaseClient";
-import { Users, UserCheck, UserX, BookOpen, Edit2, RefreshCw, Trash2 } from "lucide-react";
+import { Users, UserCheck, UserX, BookOpen, Edit2, RefreshCw, Trash2, Mail, Briefcase, Hash, User } from "lucide-react";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import { recalculateNutritionStatus } from "../utils/nutritionUpdater";
 import PageHeader from "../components/common/PageHeader";
@@ -40,6 +40,7 @@ export default function StudentTeacher() {
     email: "",
     section: "",
   });
+  const [emailError, setEmailError] = useState("");
 
   // =========================
   // Fetch Data
@@ -162,6 +163,7 @@ export default function StudentTeacher() {
       email: "",
       section: "",
     });
+    setEmailError("");
     setShowModal(true);
   }
 
@@ -174,16 +176,29 @@ export default function StudentTeacher() {
       email: teacher.email,
       section: teacher.section,
     });
+    setEmailError("");
     setShowModal(true);
   }
 
   function closeModal() {
     setShowModal(false);
     setEditingTeacher(null);
+    setEmailError("");
   }
 
   function handleChange(e) {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    if (name === "email") {
+      // Basic email validation regex
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (value && !emailRegex.test(value)) {
+        setEmailError("Please enter a valid email address.");
+      } else {
+        setEmailError("");
+      }
+    }
   }
 
   // =========================
@@ -191,6 +206,10 @@ export default function StudentTeacher() {
   // =========================
   async function handleSubmit(e) {
     e.preventDefault();
+
+    if (emailError) {
+      return; // Prevent submission if validation fails
+    }
 
     if (editingTeacher) {
       // Update
@@ -377,45 +396,46 @@ export default function StudentTeacher() {
 
   return (
     <div className="student-page">
-      <PageHeader
-        title="Student & Teacher Management"
-        action={
-          <div style={{ display: "flex", gap: "10px" }}>
-            {activeTab === "students" && (
-              <Button
-                variant="outline"
-                onClick={handleRecalculate}
-                disabled={loading || isRecalculating}
-              >
-                {isRecalculating ? "Recalculating..." : "Recalculate Status"}
-              </Button>
-            )}
-            {activeTab === "teachers" && (
-              <Button variant="success" onClick={openAddModal}>+ Add Teacher</Button>
-            )}
-          </div>
-        }
-      />
+      <div className="content-container">
+        <PageHeader
+          title="Student & Teacher Management"
+          action={
+            <div style={{ display: "flex", gap: "10px" }}>
+              {activeTab === "students" && (
+                <Button
+                  variant="outline"
+                  onClick={handleRecalculate}
+                  disabled={loading || isRecalculating}
+                >
+                  {isRecalculating ? "Recalculating..." : "Recalculate Status"}
+                </Button>
+              )}
+              {activeTab === "teachers" && (
+                <Button variant="success" onClick={openAddModal}>+ Add Teacher</Button>
+              )}
+            </div>
+          }
+        />
 
-      <div className="tab-navigation">
-        <button
-          className={`tab-btn ${activeTab === "students" ? "active-tab" : ""}`}
-          onClick={() => setActiveTab("students")}
-        >
-          Students
-        </button>
-        <button
-          className={`tab-btn ${activeTab === "teachers" ? "active-tab" : ""}`}
-          onClick={() => setActiveTab("teachers")}
-        >
-          Teachers
-        </button>
-      </div>
+        <div className="tab-navigation">
+          <button
+            className={`tab-btn ${activeTab === "students" ? "active-tab" : ""}`}
+            onClick={() => setActiveTab("students")}
+          >
+            Students
+          </button>
+          <button
+            className={`tab-btn ${activeTab === "teachers" ? "active-tab" : ""}`}
+            onClick={() => setActiveTab("teachers")}
+          >
+            Teachers
+          </button>
+        </div>
 
-      {loading ? (
-        <div className="table-loading">Loading...</div>
-      ) : (
-        <div className="data-table-container">
+        {loading ? (
+          <div className="table-loading">Loading...</div>
+        ) : (
+          <div className="data-table-container">
           {activeTab === "students" && (
             <>
               <div className="students-summary-row">
@@ -681,70 +701,96 @@ export default function StudentTeacher() {
               </table>
             </>
           )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-card">
-            <div className="modal-header">
-              <h3>{editingTeacher ? "Edit Teacher" : "Add Teacher"}</h3>
-              <button className="close-btn" onClick={closeModal}>✕</button>
+            <div className="modal-header-colored">
+              <div className="modal-title-group">
+                <h3>{editingTeacher ? "Edit Teacher" : "Add New Teacher"}</h3>
+                <p className="modal-subtitle">Enter teacher details below</p>
+              </div>
+              <button className="close-btn-white" onClick={closeModal}>✕</button>
             </div>
 
             <form onSubmit={handleSubmit} className="modal-form">
               <label>
                 ID Number
-                <input
-                  name="idNumber"
-                  placeholder="Teacher ID Number"
-                  value={formData.idNumber}
-                  onChange={handleChange}
-                />
+                <div className="input-with-icon">
+                  <Hash size={18} className="input-icon" />
+                  <input
+                    name="idNumber"
+                    placeholder="Teacher ID Number"
+                    value={formData.idNumber}
+                    onChange={handleChange}
+                  />
+                </div>
               </label>
-              <label>
-                First Name
-                <input
-                  name="firstName"
-                  placeholder="First Name"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
-              <label>
-                Last Name
-                <input
-                  name="lastName"
-                  placeholder="Last Name"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
-                />
-              </label>
+
+              <div className="form-row-2">
+                <label>
+                  First Name
+                  <div className="input-with-icon">
+                    <User size={18} className="input-icon" />
+                    <input
+                      name="firstName"
+                      placeholder="First Name"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </label>
+                <label>
+                  Last Name
+                  <div className="input-with-icon">
+                    <User size={18} className="input-icon" />
+                    <input
+                      name="lastName"
+                      placeholder="Last Name"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </label>
+              </div>
+
               <label>
                 Email
-                <input
-                  name="email"
-                  type="email"
-                  placeholder="Email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
+                <div className="input-with-icon">
+                  <Mail size={18} className="input-icon" />
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="juan.delacruz@gmail.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={emailError ? "input-error" : ""}
+                    required
+                  />
+                </div>
+                {emailError && <span className="error-text">{emailError}</span>}
               </label>
+
               <label>
                 Section
-                <input
-                  name="section"
-                  placeholder="Section"
-                  value={formData.section}
-                  onChange={handleChange}
-                />
+                <div className="input-with-icon">
+                  <Briefcase size={18} className="input-icon" />
+                  <input
+                    name="section"
+                    placeholder="Section"
+                    value={formData.section}
+                    onChange={handleChange}
+                  />
+                </div>
               </label>
 
               <div className="modal-actions">
-                <Button variant="primary" type="submit">Save</Button>
+                <button className="btn-save-premium" type="submit">Save Teacher</button>
                 <Button variant="secondary" type="button" onClick={closeModal}>
                   Cancel
                 </Button>
