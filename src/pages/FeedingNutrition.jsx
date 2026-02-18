@@ -45,13 +45,15 @@ export default function FeedingNutrition() {
     setLoading(true);
     setError(null);
     try {
-      // Fetch Students
-      const { data: studentsData, error: studentsError } = await supabase
+      // Fetch Students (using exact count, removing manual range limit)
+      const { data: studentsData, count: totalCount, error: studentsError } = await supabase
         .from("students")
-        .select("*")
-        .range(0, 9999);
+        .select("*", { count: "exact" });
 
       if (studentsError) throw studentsError;
+
+      console.log("Student Total Count:", totalCount);
+      console.log("Students Fetched Length:", studentsData?.length);
 
       // Fetch latest BMI records for status (Nutrition Status is in bmi_records, not students)
       const { data: bmiData } = await supabase
@@ -79,8 +81,10 @@ export default function FeedingNutrition() {
       const { data: mealData } = await supabase
         .from("nutrition_meals")
         .select("*")
-        .eq("date", todayKey)
+        .eq("day_of_week", currentDayName)
         .maybeSingle();
+
+      console.log("Nutrition meals fetched count:", mealData ? 1 : 0);
 
       if (mealData) {
         setDailyMeal(mealData);
@@ -91,11 +95,12 @@ export default function FeedingNutrition() {
       // Attempt fetch optional tables (SBFP, Attendance)
       // We use Promise.allSettled to not fail if they don't exist
       const [attRes] = await Promise.allSettled([
-        supabase.from("attendance").select("*").eq("date", todayKey) // Assuming a date column
+        supabase.from("attendance").select("*").eq("attendance_date", todayKey)
       ]);
 
       // Attendance structure might vary. If table exists, we use it. If not, empty.
       const attList = attRes.status === "fulfilled" && attRes.value.data ? attRes.value.data : [];
+      console.log("Attendance today count:", attList.length);
 
       // Normalize Students Data
       const normalizedStudents = studentsData.map(s => {

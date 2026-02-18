@@ -86,7 +86,7 @@ const DashboardStatCard = ({ title, value, label, icon: Icon, color, loading }) 
   );
 };
 
-const AnalyticsSection = () => {
+const AnalyticsSection = ({ presentCount }) => {
   // Mock Data for Chart
   const data = [
     { name: 'Mon', students: 120, meals: 110 },
@@ -174,7 +174,7 @@ const AnalyticsSection = () => {
             </div>
             <div className="qs-info">
               <span className="qs-label">Present Today</span>
-              <span className="qs-value">1,642</span>
+              <span className="qs-value">{presentCount || 0}</span>
             </div>
           </div>
           <div className="quick-stat-item hover-effect">
@@ -276,6 +276,7 @@ export default function Dashboard() {
   const [studentCount, setStudentCount] = useState(0);
   const [teacherCount, setTeacherCount] = useState(0);
   const [bmiCount, setBmiCount] = useState(0);
+  const [attendanceCount, setAttendanceCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -288,6 +289,7 @@ export default function Dashboard() {
             .select("*", { count: "exact", head: true });
 
         if (!studentsError) setStudentCount(studentsCount || 0);
+        console.log("Dashboard Student Count:", studentsCount);
 
         // Fetch total teachers count
         const { count: teachersCount, error: teachersError } =
@@ -304,6 +306,17 @@ export default function Dashboard() {
             .select("*", { count: "exact", head: true });
 
         if (!bmiError) setBmiCount(bmiTotal || 0);
+
+        // Fetch attendance count for today
+        const todayKey = format(new Date(), "yyyy-MM-dd");
+        const { count: attCount, error: attError } =
+            await supabase
+            .from("attendance")
+            .select("*", { count: "exact", head: true })
+            .eq("attendance_date", todayKey);
+
+        if (!attError) setAttendanceCount(attCount || 0);
+        console.log("Dashboard Attendance Count:", attCount);
 
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -348,7 +361,7 @@ export default function Dashboard() {
         </section>
 
         {/* 3. Analytics Section */}
-        <AnalyticsSection />
+        <AnalyticsSection presentCount={attendanceCount} />
 
         {/* 4. Health & Alerts (Replaces Quick Action Panel) */}
         <section className="dashboard-bottom-grid">

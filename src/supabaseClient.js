@@ -100,13 +100,23 @@ if (supabaseUrl && supabaseAnonKey) {
 
   const createMockBuilder = (table) => {
     const query = {
-        data: MOCK_DB[table] || [],
+        data: MOCK_DB[table] ? [...MOCK_DB[table]] : [],
         error: null,
         _order: null,
+        countType: null,
+        isHead: false
     };
 
     return {
-      select: function() { return this; },
+      select: function(columns = "*", options = {}) {
+        if (options && options.count) {
+             query.countType = options.count;
+        }
+        if (options && options.head) {
+             query.isHead = true;
+        }
+        return this;
+      },
       insert: function() { return this; },
       update: function() { return this; },
       delete: function() { return this; },
@@ -137,7 +147,7 @@ if (supabaseUrl && supabaseAnonKey) {
         return this;
       },
       limit: function() { return this; },
-      range: function() { return this; }, // Just ignore range for mock to return all
+      range: function() { return this; },
       single: function() {
           if (query.data && query.data.length > 0) {
               query.data = query.data[0];
@@ -157,7 +167,17 @@ if (supabaseUrl && supabaseAnonKey) {
       },
       then: function(resolve, reject) {
         setTimeout(() => {
-          resolve({ data: query.data, error: query.error });
+          let response = { data: query.data, error: query.error };
+
+          if (query.countType === 'exact') {
+              response.count = query.data ? (Array.isArray(query.data) ? query.data.length : 1) : 0;
+          }
+
+          if (query.isHead) {
+              response.data = null;
+          }
+
+          resolve(response);
         }, 300); // Simulate delay
       }
     };
