@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "../supabaseClient";
-import { Users, UserCheck, UserX, BookOpen, Edit2, RefreshCw, Trash2, Mail, Briefcase, Hash, User } from "lucide-react";
+import { Users, UserCheck, UserX, BookOpen, Edit2, RefreshCw, Trash2, Mail, Briefcase, Hash, User, UserPlus } from "lucide-react";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import { recalculateNutritionStatus } from "../utils/nutritionUpdater";
 import PageHeader from "../components/common/PageHeader";
@@ -411,7 +411,10 @@ export default function StudentTeacher() {
                 </Button>
               )}
               {activeTab === "teachers" && (
-                <Button variant="success" onClick={openAddModal}>+ Add Teacher</Button>
+                <button className="btn-add-premium" onClick={openAddModal}>
+                  <UserPlus size={18} />
+                  Add Teacher
+                </button>
               )}
             </div>
           }

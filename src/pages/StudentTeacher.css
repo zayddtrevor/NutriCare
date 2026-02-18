@@ -25,14 +25,14 @@
 
 /* 2.1 Refactor: Centered Content Container */
 .content-container {
-  max-width: 1200px;
+  max-width: 1280px; /* max-w-7xl approx */
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 1.5rem;
 }
 
 @media (max-width: 768px) {
   .student-page {
-    padding: 1.5rem;
+    padding: 1rem;
   }
   .content-container {
     padding: 0;
@@ -74,6 +74,32 @@
   color: white;
 }
 
+.btn-add-premium {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
+  color: white;
+  border: none;
+  border-radius: 12px; /* rounded-xl */
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-add-premium:hover {
+  transform: scale(1.05); /* slightly larger scale up */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  opacity: 1; /* Ensure full opacity */
+}
+
+.btn-add-premium:active {
+  transform: scale(0.98);
+}
+
 .btn:hover {
   transform: translateY(-2px);
   opacity: 0.95;
@@ -87,6 +113,33 @@
 .btn.add.alt {
   background: var(--blue);
   box-shadow: 0 4px var(--blue-dark);
+}
+
+/* Premium Add Button (Teachers Tab) */
+.btn-add-premium {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
+  color: white;
+  border: none;
+  border-radius: 12px; /* rounded-xl */
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-add-premium:hover {
+  transform: scale(1.05); /* slightly larger scale up */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  opacity: 1; /* Ensure full opacity */
+}
+
+.btn-add-premium:active {
+  transform: scale(0.98);
 }
 
 /* Table */
@@ -391,11 +444,12 @@
 
 /* Tabs */
 .tab-navigation {
-  margin-top: 1.5rem;
+  margin-top: 2rem; /* Increased spacing above tabs */
   padding-left: 0;
   border-bottom: 2px solid #e0eeef;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem; /* Increased spacing below tabs */
   display: flex;
+  justify-content: flex-start; /* Or center if desired, currently keep left aligned */
 }
 
 .tab-btn {
@@ -430,12 +484,29 @@
 }
 
 /* Summary Stats */
-.students-summary-row,
-.teachers-summary-row {
+.students-summary-row {
   display: flex;
   gap: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   align-items: stretch;
+}
+
+.teachers-summary-row {
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  flex-wrap: wrap; /* Allow wrapping */
+  gap: 24px;
+  margin-bottom: 32px; /* Increased spacing below stats */
+}
+
+.teachers-summary-row > * {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Shadow-md equivalent */
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.teachers-summary-row > *:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Shadow-lg equivalent */
 }
 
 .grade-sections-summary {
