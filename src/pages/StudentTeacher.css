@@ -18,24 +18,19 @@
 }
 
 .student-page {
-  padding: 2.5rem;
+  padding: 1.5rem;
   background: var(--muted-bg);
   min-height: 100vh;
 }
 
-/* 1. Layout Fix: Centered Content Container */
+/* 1. Layout Fix: Removed Centered Content Container constraints */
 .content-container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 24px;
+  width: 100%;
 }
 
 @media (max-width: 768px) {
   .student-page {
     padding: 1rem;
-  }
-  .content-container {
-    padding: 0;
   }
 }
 
