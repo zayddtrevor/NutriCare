@@ -3,7 +3,7 @@ import { supabase } from "../supabaseClient";
 import { Users } from "lucide-react";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import { recalculateNutritionStatus } from "../utils/nutritionUpdater";
-import { fetchStudentsWithNutrition } from "../services/studentService";
+import { fetchStudentsWithNutrition, fetchTotalStudentCount } from "../services/studentService";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
 import StatCard from "../components/common/StatCard";
@@ -15,6 +15,7 @@ export default function StudentTeacher() {
   const [activeTab, setActiveTab] = useState("students");
 
   const [students, setStudents] = useState([]);
+  const [totalStudentCount, setTotalStudentCount] = useState(0);
   const [teachers, setTeachers] = useState([]);
 
   // Filters
@@ -55,8 +56,12 @@ export default function StudentTeacher() {
   async function fetchStudents() {
     setLoading(true);
     try {
-      const data = await fetchStudentsWithNutrition();
+      const [data, count] = await Promise.all([
+        fetchStudentsWithNutrition(),
+        fetchTotalStudentCount()
+      ]);
       setStudents(data);
+      setTotalStudentCount(count);
     } catch (error) {
       console.error("Error fetching students:", error);
     } finally {
@@ -331,7 +336,7 @@ export default function StudentTeacher() {
               <div className="students-summary-row">
                 <StatCard
                   label="Total Students"
-                  value={students.length}
+                  value={totalStudentCount}
                   icon={<Users size={20} />}
                   color="blue"
                 />

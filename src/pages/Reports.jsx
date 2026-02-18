@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
-import { fetchStudentsWithNutrition, fetchAttendance, fetchSbfpBeneficiaries } from "../services/studentService";
+import { fetchStudentsWithNutrition, fetchAttendance, fetchSbfpBeneficiaries, fetchTotalStudentCount } from "../services/studentService";
 import {
   Users,
   Activity,
@@ -25,6 +25,7 @@ const STATUS_OPTIONS = ["All Status", "Normal", "Wasted", "Severely Wasted", "Ov
 export default function Reports() {
   // Data State
   const [students, setStudents] = useState([]);
+  const [totalStudentCount, setTotalStudentCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -39,11 +40,14 @@ export default function Reports() {
     setLoading(true);
     setError(null);
     try {
-      const [studentsData, attendanceList, sbfpList] = await Promise.all([
+      const [studentsData, attendanceList, sbfpList, totalCount] = await Promise.all([
         fetchStudentsWithNutrition(),
         fetchAttendance(),
-        fetchSbfpBeneficiaries()
+        fetchSbfpBeneficiaries(),
+        fetchTotalStudentCount()
       ]);
+
+      setTotalStudentCount(totalCount);
 
       // Map for attendance counts: studentId -> { present: 0, absent: 0 }
       const attMap = {};
@@ -126,7 +130,10 @@ export default function Reports() {
 
   // -------- SUMMARY STATS --------
   const summary = useMemo(() => {
-    const total = filteredStudents.length;
+    // If filters are active, use filtered count. Otherwise use global count from service.
+    const isFiltered = searchQuery || grade !== "All Grades" || section !== "All Sections" || status !== "All Status";
+    const total = isFiltered ? filteredStudents.length : totalStudentCount;
+
     const normal = filteredStudents.filter(s => (s.status || "").toLowerCase() === "normal").length;
     const wasted = filteredStudents.filter(s => (s.status || "").toLowerCase() === "wasted").length;
     const severelyWasted = filteredStudents.filter(s => (s.status || "").toLowerCase() === "severely wasted").length;
@@ -143,7 +150,7 @@ export default function Reports() {
       obese,
       unknown
     };
-  }, [filteredStudents]);
+  }, [filteredStudents, totalStudentCount, searchQuery, grade, section, status]);
 
   // -------- EXPORT CSV --------
   const escapeCsvField = (field) => {
