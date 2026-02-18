@@ -3,6 +3,7 @@ import { supabase } from "../supabaseClient";
 import { Users } from "lucide-react";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import { recalculateNutritionStatus } from "../utils/nutritionUpdater";
+import { fetchStudentsWithNutrition, fetchTotalStudentCount } from "../services/studentService";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
 import StatCard from "../components/common/StatCard";
@@ -14,6 +15,7 @@ export default function StudentTeacher() {
   const [activeTab, setActiveTab] = useState("students");
 
   const [students, setStudents] = useState([]);
+  const [totalStudentCount, setTotalStudentCount] = useState(0);
   const [teachers, setTeachers] = useState([]);
 
   // Filters
@@ -53,71 +55,18 @@ export default function StudentTeacher() {
 
   async function fetchStudents() {
     setLoading(true);
-
-    // 1. Fetch students
-    const { data: studentsData, error: studentError } = await supabase
-      .from("students")
-      .select("*")
-      .range(0, 9999);
-
-    if (studentError) {
-        console.error("Error fetching students:", studentError);
-        setLoading(false);
-        return;
+    try {
+      const [data, count] = await Promise.all([
+        fetchStudentsWithNutrition(),
+        fetchTotalStudentCount()
+      ]);
+      setStudents(data);
+      setTotalStudentCount(count);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+    } finally {
+      setLoading(false);
     }
-
-    // 2. Fetch latest BMI records for status
-    // We fetch all and map them because Supabase doesn't support easy "latest per student" in one query without join/view
-    const { data: bmiData, error: bmiError } = await supabase
-      .from("bmi_records")
-      .select("student_id, nutrition_status, created_at")
-      .order("created_at", { ascending: false })
-      .range(0, 9999);
-
-    if (bmiError) {
-       console.error("Error fetching BMI records:", bmiError);
-    }
-
-    // Map student_id -> latest status
-    const statusMap = {};
-    if (bmiData) {
-      bmiData.forEach(r => {
-        if (!statusMap[r.student_id]) {
-          statusMap[r.student_id] = r.nutrition_status;
-        }
-      });
-    }
-
-    // Map data to handle variations
-    const mapped = studentsData.map(s => {
-      const rawGrade = s.grade_level || "";
-      const grade = normalizeGrade(rawGrade);
-      const section = s.section || "";
-      const gradeSectionDisplay = (grade && section)
-        ? `${grade} – ${section}`
-        : (grade || section || "Unknown");
-
-      // Use status from BMI record if available, fallback to "Unknown"
-      // Note: s.nutrition_status might not exist in students table anymore per PR feedback
-      const status = statusMap[s.id] || "Unknown";
-
-      return {
-        id: s.id,
-        name: s.name || s.full_name || "Unknown",
-        grade: grade, // Normalized grade
-        rawGrade: rawGrade,
-        section: section,
-        gradeSectionDisplay: gradeSectionDisplay,
-        sex: s.sex || "-",
-        nutritionStatus: status,
-      };
-    });
-
-    // Sort manually to be safe
-    mapped.sort((a, b) => a.name.localeCompare(b.name));
-
-    setStudents(mapped);
-    setLoading(false);
   }
 
   async function fetchTeachers() {
@@ -315,7 +264,7 @@ export default function StudentTeacher() {
       if (!nameMatch && !sectionMatch) return false;
     }
     // 2. Filters
-    const matchGrade = studentFilterGrade === "All" || s.grade === studentFilterGrade;
+    const matchGrade = studentFilterGrade === "All" || s.gradeLevel === studentFilterGrade;
     const matchSection = studentFilterSection === "All" || s.section === studentFilterSection;
     const matchGender = studentFilterGender === "All" || s.sex === studentFilterGender;
     const matchStatus = studentFilterStatus === "All" || (s.nutritionStatus || "").toLowerCase() === studentFilterStatus.toLowerCase();
@@ -387,7 +336,7 @@ export default function StudentTeacher() {
               <div className="students-summary-row">
                 <StatCard
                   label="Total Students"
-                  value={students.length}
+                  value={totalStudentCount}
                   icon={<Users size={20} />}
                   color="blue"
                 />

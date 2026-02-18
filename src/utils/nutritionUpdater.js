@@ -1,4 +1,5 @@
 import { supabase } from "../supabaseClient";
+import { fetchBmiRecords } from "../services/studentService";
 
 /**
  * Recalculates nutrition status for students with 'Unknown' status based on their latest BMI record.
@@ -15,17 +16,7 @@ export async function recalculateNutritionStatus() {
     console.log("Starting nutrition status recalculation...");
 
     // 1. Fetch all BMI records to find the latest for each student
-    // Optimization: Fetch only needed columns and sort by created_at desc
-    const { data: allBmiRecords, error: bmiError } = await supabase
-      .from("bmi_records")
-      .select("id, student_id, bmi, nutrition_status, created_at")
-      .order("created_at", { ascending: false })
-      .range(0, 9999);
-
-    if (bmiError) {
-      console.error("Error fetching BMI records:", bmiError);
-      throw bmiError;
-    }
+    const allBmiRecords = await fetchBmiRecords();
 
     // Map student_id -> latest BMI record
     const latestBmiMap = {};

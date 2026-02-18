@@ -102,11 +102,20 @@ if (supabaseUrl && supabaseAnonKey) {
     const query = {
         data: MOCK_DB[table] || [],
         error: null,
+        count: null,
         _order: null,
     };
 
     return {
-      select: function() { return this; },
+      select: function(columns, options) {
+          if (options && options.count) {
+              query.count = (MOCK_DB[table] || []).length;
+          }
+          if (options && options.head) {
+              query.data = null;
+          }
+          return this;
+      },
       insert: function() { return this; },
       update: function() { return this; },
       delete: function() { return this; },
@@ -157,7 +166,7 @@ if (supabaseUrl && supabaseAnonKey) {
       },
       then: function(resolve, reject) {
         setTimeout(() => {
-          resolve({ data: query.data, error: query.error });
+          resolve({ data: query.data, error: query.error, count: query.count });
         }, 300); // Simulate delay
       }
     };

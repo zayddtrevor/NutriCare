@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { supabase } from "../supabaseClient";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
+import { fetchStudentsWithNutrition, fetchAttendance, fetchSbfpBeneficiaries, fetchTotalStudentCount } from "../services/studentService";
 import {
   Users,
   Activity,
@@ -25,6 +25,7 @@ const STATUS_OPTIONS = ["All Status", "Normal", "Wasted", "Severely Wasted", "Ov
 export default function Reports() {
   // Data State
   const [students, setStudents] = useState([]);
+  const [totalStudentCount, setTotalStudentCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -39,38 +40,18 @@ export default function Reports() {
     setLoading(true);
     setError(null);
     try {
-      // 1. Fetch Students
-      const { data: studentsData, error: studentsError } = await supabase
-        .from("students")
-        .select("*")
-        .range(0, 9999);
-
-      if (studentsError) throw studentsError;
-
-      // 2. Fetch Optional Data in Parallel
-      const [bmiRes, attRes, sbfpRes] = await Promise.allSettled([
-        supabase.from("bmi_records").select("*").order("created_at", { ascending: false }).range(0, 9999),
-        supabase.from("attendance").select("*").range(0, 9999),
-        supabase.from("sbfp_beneficiaries").select("student_id").range(0, 9999)
+      const [studentsData, attendanceList, sbfpList, totalCount] = await Promise.all([
+        fetchStudentsWithNutrition(),
+        fetchAttendance(),
+        fetchSbfpBeneficiaries(),
+        fetchTotalStudentCount()
       ]);
 
-      const bmiList = bmiRes.status === "fulfilled" && bmiRes.value.data ? bmiRes.value.data : [];
-      const attList = attRes.status === "fulfilled" && attRes.value.data ? attRes.value.data : [];
-      const sbfpList = sbfpRes.status === "fulfilled" && sbfpRes.value.data ? sbfpRes.value.data : [];
-
-      // 3. Process Data
-
-      // Map for fast lookup: studentId -> Latest BMI Record
-      const bmiMap = {};
-      bmiList.forEach((r) => {
-        if (r.student_id && !bmiMap[r.student_id]) {
-          bmiMap[r.student_id] = r;
-        }
-      });
+      setTotalStudentCount(totalCount);
 
       // Map for attendance counts: studentId -> { present: 0, absent: 0 }
       const attMap = {};
-      attList.forEach((r) => {
+      attendanceList.forEach((r) => {
         if (!r.student_id) return;
         if (!attMap[r.student_id]) {
           attMap[r.student_id] = { present: 0, absent: 0 };
@@ -86,30 +67,17 @@ export default function Reports() {
       const sbfpSet = new Set(sbfpList.map(r => r.student_id));
 
       const processed = studentsData.map((s) => {
-        const bmiRecord = bmiMap[s.id];
         const attRecord = attMap[s.id] || { present: 0, absent: 0 };
 
-        const nutritionStatus = bmiRecord?.nutrition_status || s.nutrition_status || s.nutritionStatus || "Unknown";
-        const bmiValue = bmiRecord?.bmi || s.bmi || null;
-
-        const rawGrade = (s.grade_level || "").toString();
-        const normalizedGrade = normalizeGrade(rawGrade);
-        const section = s.section || "Unknown";
-
         return {
-          id: s.id,
-          name: s.name || s.full_name || "Unknown",
-          gradeLevel: normalizedGrade,
-          rawGrade: rawGrade,
-          section: section,
-          sex: s.sex || null,
-          birthDate: s.birth_date || s.dob || null,
-          gradeSection: `${normalizedGrade} - ${section}`,
-          status: nutritionStatus,
-          bmi: bmiValue ? parseFloat(bmiValue).toFixed(1) : "-",
+          ...s,
           presentDays: attRecord.present,
           absentDays: attRecord.absent,
-          isSbfp: sbfpSet.has(s.id)
+          isSbfp: sbfpSet.has(s.id),
+          // Use status from service
+          status: s.nutritionStatus,
+          // Use normalized grade/section from service
+          gradeSection: s.gradeSectionDisplay,
         };
       });
 
@@ -162,7 +130,10 @@ export default function Reports() {
 
   // -------- SUMMARY STATS --------
   const summary = useMemo(() => {
-    const total = filteredStudents.length;
+    // If filters are active, use filtered count. Otherwise use global count from service.
+    const isFiltered = searchQuery || grade !== "All Grades" || section !== "All Sections" || status !== "All Status";
+    const total = isFiltered ? filteredStudents.length : totalStudentCount;
+
     const normal = filteredStudents.filter(s => (s.status || "").toLowerCase() === "normal").length;
     const wasted = filteredStudents.filter(s => (s.status || "").toLowerCase() === "wasted").length;
     const severelyWasted = filteredStudents.filter(s => (s.status || "").toLowerCase() === "severely wasted").length;
@@ -179,7 +150,7 @@ export default function Reports() {
       obese,
       unknown
     };
-  }, [filteredStudents]);
+  }, [filteredStudents, totalStudentCount, searchQuery, grade, section, status]);
 
   // -------- EXPORT CSV --------
   const escapeCsvField = (field) => {

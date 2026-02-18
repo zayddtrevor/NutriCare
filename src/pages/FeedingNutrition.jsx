@@ -3,6 +3,7 @@ import { supabase } from "../supabaseClient";
 import { AlertCircle, X, Users, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
+import { fetchStudentsWithNutrition, fetchAttendance } from "../services/studentService";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
 import GradeTabs from "../components/common/GradeTabs";
@@ -42,36 +43,6 @@ export default function FeedingNutrition() {
     setLoading(true);
     setError(null);
     try {
-      // Fetch Students
-      const { data: studentsData, error: studentsError } = await supabase
-        .from("students")
-        .select("*")
-        .range(0, 9999);
-
-      if (studentsError) throw studentsError;
-
-      // Fetch latest BMI records for status (Nutrition Status is in bmi_records, not students)
-      const { data: bmiData } = await supabase
-        .from("bmi_records")
-        .select("student_id, nutrition_status, bmi, weight_kg, height_m, created_at")
-        .order("created_at", { ascending: false })
-        .range(0, 9999);
-
-      // Map student_id -> latest record info
-      const studentBMIMap = {};
-      if (bmiData) {
-        bmiData.forEach(r => {
-          if (!studentBMIMap[r.student_id]) {
-            studentBMIMap[r.student_id] = {
-                status: r.nutrition_status,
-                bmi: r.bmi,
-                weight: r.weight_kg,
-                height: r.height_m
-            };
-          }
-        });
-      }
-
       // Fetch Daily Meal (Dynamic for current date)
       const { data: mealData } = await supabase
         .from("nutrition_meals")
@@ -85,45 +56,16 @@ export default function FeedingNutrition() {
         setDailyMeal(null);
       }
 
-      // Attempt fetch optional tables (SBFP, Attendance)
-      // We use Promise.allSettled to not fail if they don't exist
-      const [attRes] = await Promise.allSettled([
-        supabase.from("attendance").select("*").eq("date", todayKey) // Assuming a date column
-      ]);
+      // Fetch Students with Nutrition Status
+      const studentsData = await fetchStudentsWithNutrition();
+      setStudents(studentsData);
 
-      // Attendance structure might vary. If table exists, we use it. If not, empty.
-      const attList = attRes.status === "fulfilled" && attRes.value.data ? attRes.value.data : [];
-
-      // Normalize Students Data
-      const normalizedStudents = studentsData.map(s => {
-        const rawGrade = (s.grade_level || "").toString();
-        const normalizedGrade = normalizeGrade(rawGrade);
-        const section = (s.section || "").toString();
-
-        // Get info from latest BMI record if available
-        const bmiInfo = studentBMIMap[s.id] || {};
-
-        return {
-          id: s.id,
-          name: s.name || s.full_name || "Unknown",
-          gradeLevel: normalizedGrade,
-          rawGrade: rawGrade,
-          section: section,
-          sex: s.sex || "-",
-          nutritionStatus: bmiInfo.status || s.nutrition_status || s.nutritionStatus || "Unknown",
-          weight: bmiInfo.weight || s.weight,
-          height: bmiInfo.height || s.height,
-          bmi: bmiInfo.bmi || s.bmi,
-          // Helper for display
-          gradeSectionDisplay: `${normalizedGrade} - ${section}`
-        };
-      });
-
-      setStudents(normalizedStudents);
+      // Fetch Attendance for Today
+      const attendanceList = await fetchAttendance(todayKey);
 
       // Create a map for fast lookup of attendance
       const attMap = {};
-      attList.forEach(r => {
+      attendanceList.forEach(r => {
         if(r.student_id) attMap[r.student_id] = r.status || "Present";
       });
       setAttendanceData(attMap);
