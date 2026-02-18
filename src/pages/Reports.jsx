@@ -318,6 +318,59 @@ export default function Reports() {
           </select>
         </FilterBar>
 
+        {/* SUMMARY CARDS */}
+        <div className="reports-summary">
+          <StatCard
+            label="Total Students"
+            value={loading ? "..." : summary.total}
+            icon={<Users size={20}/>}
+            color="blue"
+            className="reports-stat-card rsc-blue"
+          />
+          <StatCard
+            label="Normal"
+            value={loading ? "..." : summary.normal}
+            icon={<CheckCircle size={20}/>}
+            color="green"
+            className="reports-stat-card rsc-green"
+          />
+          <StatCard
+            label="Wasted"
+            value={loading ? "..." : summary.wasted}
+            icon={<AlertTriangle size={20}/>}
+            color="yellow"
+            className="reports-stat-card rsc-yellow"
+          />
+          <StatCard
+            label="Severely Wasted"
+            value={loading ? "..." : summary.severelyWasted}
+            icon={<AlertTriangle size={20}/>}
+            color="orange"
+            className="reports-stat-card rsc-orange"
+          />
+          <StatCard
+            label="Overweight"
+            value={loading ? "..." : summary.overweight}
+            icon={<Activity size={20}/>}
+            color="purple"
+            className="reports-stat-card rsc-purple"
+          />
+          <StatCard
+            label="Obese"
+            value={loading ? "..." : summary.obese}
+            icon={<XCircle size={20}/>}
+            color="red"
+            className="reports-stat-card rsc-red"
+          />
+          <StatCard
+            label="Unknown"
+            value={loading ? "..." : summary.unknown}
+            icon={<Users size={20}/>}
+            color="gray"
+            className="reports-stat-card rsc-gray"
+          />
+        </div>
+
         <GradeTabs
             activeGrade={grade}
             onTabClick={(g) => {
@@ -326,17 +379,6 @@ export default function Reports() {
             }}
             grades={GRADE_OPTIONS}
         />
-
-        {/* SUMMARY CARDS */}
-        <div className="reports-summary">
-          <StatCard label="Total Students" value={loading ? "..." : summary.total} icon={<Users size={20}/>} color="blue" />
-          <StatCard label="Normal" value={loading ? "..." : summary.normal} icon={<CheckCircle size={20}/>} color="green" />
-          <StatCard label="Wasted" value={loading ? "..." : summary.wasted} icon={<AlertTriangle size={20}/>} color="yellow" />
-          <StatCard label="Severely Wasted" value={loading ? "..." : summary.severelyWasted} icon={<AlertTriangle size={20}/>} color="orange" />
-          <StatCard label="Overweight" value={loading ? "..." : summary.overweight} icon={<Activity size={20}/>} color="purple" />
-          <StatCard label="Obese" value={loading ? "..." : summary.obese} icon={<XCircle size={20}/>} color="red" />
-          <StatCard label="Unknown" value={loading ? "..." : summary.unknown} icon={<Users size={20}/>} color="gray" />
-        </div>
 
         {/* TABLE */}
         <div className="data-table-container">
