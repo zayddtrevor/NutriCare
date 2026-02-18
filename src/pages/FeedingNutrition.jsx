@@ -3,6 +3,7 @@ import { supabase } from "../supabaseClient";
 import { AlertCircle, X, Users, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
+import { fetchStudentsWithNutrition, fetchAttendance } from "../services/studentService";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
 import GradeTabs from "../components/common/GradeTabs";
@@ -55,8 +56,19 @@ export default function FeedingNutrition() {
         setDailyMeal(null);
       }
 
-      setStudents([]);
-      setAttendanceData({});
+      // Fetch Students with Nutrition Status
+      const studentsData = await fetchStudentsWithNutrition();
+      setStudents(studentsData);
+
+      // Fetch Attendance for Today
+      const attendanceList = await fetchAttendance(todayKey);
+
+      // Create a map for fast lookup of attendance
+      const attMap = {};
+      attendanceList.forEach(r => {
+        if(r.student_id) attMap[r.student_id] = r.status || "Present";
+      });
+      setAttendanceData(attMap);
 
     } catch (err) {
       console.error("Error fetching feeding data:", err);

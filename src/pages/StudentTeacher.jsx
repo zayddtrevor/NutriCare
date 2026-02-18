@@ -3,6 +3,7 @@ import { supabase } from "../supabaseClient";
 import { Users } from "lucide-react";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
 import { recalculateNutritionStatus } from "../utils/nutritionUpdater";
+import { fetchStudentsWithNutrition } from "../services/studentService";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
 import StatCard from "../components/common/StatCard";
@@ -53,10 +54,14 @@ export default function StudentTeacher() {
 
   async function fetchStudents() {
     setLoading(true);
-
-    // Temporarily disabled
-    setStudents([]);
-    setLoading(false);
+    try {
+      const data = await fetchStudentsWithNutrition();
+      setStudents(data);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function fetchTeachers() {
@@ -170,7 +175,21 @@ export default function StudentTeacher() {
   // Recalculate Status
   // =========================
   async function handleRecalculate() {
-    alert("This feature is temporarily disabled.");
+    if (!window.confirm("This will update nutrition status for students with 'Unknown' status based on their latest BMI records. Continue?")) {
+      return;
+    }
+
+    setIsRecalculating(true);
+    const result = await recalculateNutritionStatus();
+    setIsRecalculating(false);
+
+    if (result.success) {
+      alert(result.message || `Updated ${result.count} students.`);
+      fetchStudents(); // Refresh data
+    } else {
+      console.error("Recalculation failed:", result.error);
+      alert(`Failed to recalculate status: ${result.error?.message || "Unknown error"}`);
+    }
   }
 
   // =========================
@@ -240,7 +259,7 @@ export default function StudentTeacher() {
       if (!nameMatch && !sectionMatch) return false;
     }
     // 2. Filters
-    const matchGrade = studentFilterGrade === "All" || s.grade === studentFilterGrade;
+    const matchGrade = studentFilterGrade === "All" || s.gradeLevel === studentFilterGrade;
     const matchSection = studentFilterSection === "All" || s.section === studentFilterSection;
     const matchGender = studentFilterGender === "All" || s.sex === studentFilterGender;
     const matchStatus = studentFilterStatus === "All" || (s.nutritionStatus || "").toLowerCase() === studentFilterStatus.toLowerCase();

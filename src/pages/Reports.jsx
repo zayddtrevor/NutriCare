@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
+import { fetchStudentsWithNutrition, fetchAttendance, fetchSbfpBeneficiaries } from "../services/studentService";
 import {
   Users,
   Activity,
@@ -38,7 +39,46 @@ export default function Reports() {
     setLoading(true);
     setError(null);
     try {
-      setStudents([]);
+      const [studentsData, attendanceList, sbfpList] = await Promise.all([
+        fetchStudentsWithNutrition(),
+        fetchAttendance(),
+        fetchSbfpBeneficiaries()
+      ]);
+
+      // Map for attendance counts: studentId -> { present: 0, absent: 0 }
+      const attMap = {};
+      attendanceList.forEach((r) => {
+        if (!r.student_id) return;
+        if (!attMap[r.student_id]) {
+          attMap[r.student_id] = { present: 0, absent: 0 };
+        }
+        const statusVal = (r.status || "").toLowerCase();
+        if (statusVal === "present") {
+          attMap[r.student_id].present++;
+        } else if (statusVal === "absent") {
+          attMap[r.student_id].absent++;
+        }
+      });
+
+      const sbfpSet = new Set(sbfpList.map(r => r.student_id));
+
+      const processed = studentsData.map((s) => {
+        const attRecord = attMap[s.id] || { present: 0, absent: 0 };
+
+        return {
+          ...s,
+          presentDays: attRecord.present,
+          absentDays: attRecord.absent,
+          isSbfp: sbfpSet.has(s.id),
+          // Use status from service
+          status: s.nutritionStatus,
+          // Use normalized grade/section from service
+          gradeSection: s.gradeSectionDisplay,
+        };
+      });
+
+      setStudents(processed);
+
     } catch (err) {
       console.error("Error fetching reports data:", err);
       setError("Failed to load report data. Please check your connection.");

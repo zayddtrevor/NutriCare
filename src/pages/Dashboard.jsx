@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { GraduationCap, UserCheck, BarChart3 } from "lucide-react";
 import { supabase } from "../supabaseClient";
+import { fetchTotalStudentCount } from "../services/studentService";
 import "./Dashboard.css";
 
 export default function Dashboard() {
@@ -11,6 +12,10 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch total students count
+        const totalStudents = await fetchTotalStudentCount();
+        setStudentCount(totalStudents);
+
         // Fetch total teachers count
         const { count: teachersCount, error: teachersError } =
           await supabase
