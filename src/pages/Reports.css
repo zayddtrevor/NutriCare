@@ -14,7 +14,7 @@
   font-family: "Inter", sans-serif;
   background-color: var(--bg-color);
   min-height: 100vh;
-  padding: 1.5rem; /* Match Student & Teacher page */
+  padding: 1.5rem;
   padding-bottom: 2rem;
 }
 
@@ -56,86 +56,72 @@
   color: var(--text-primary);
 }
 
-.export-btn {
-  background: var(--primary-blue);
-  border: none;
-  color: white;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-  transition: background 0.2s;
-}
-
-.export-btn:hover {
-  background: #2563eb;
-}
-
-.export-btn:disabled {
-  background: #93c5fd;
-  cursor: not-allowed;
-}
-
 /* ------------ SUMMARY CARDS ------------ */
-.reports-summary {
+.reports-summary-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 24px;
+  margin-bottom: 32px;
+}
+
+.reports-summary-top {
+  display: flex;
+  justify-content: center; /* Center the Total Students card */
+}
+
+.reports-summary-bottom {
   display: flex;
   justify-content: center;
-  gap: 20px;
+  gap: 24px;
   flex-wrap: wrap;
-  margin-top: 24px;
-  margin-bottom: 24px;
 }
 
-.summary-card {
-  background: var(--white);
-  padding: 1.5rem;
+/* Enhanced Stat Card Styles for Reports Page */
+.reports-stat-card {
+  background: white;
+  padding: 1.5rem 1.75rem;
   border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  border: 1px solid rgba(0,0,0,0.03);
-  transition: transform 0.2s;
-  flex: 1;
-  min-width: 200px;
-  max-width: 300px; /* Optional constraint so they don't get too wide individually */
-}
-
-.summary-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.card-header {
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  margin-bottom: 0.8rem;
+  flex-direction: column;
+  min-width: 220px; /* Slightly wider */
+  flex: 1;
+  border-left: 5px solid transparent; /* Accent border placeholder */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.summary-card h3 {
-  margin: 0;
+.reports-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.reports-stat-card .stat-label {
+  font-size: 0.9rem;
   font-weight: 600;
-  font-size: 0.95rem;
   color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
 }
 
-.card-value {
-  font-size: 2rem;
+.reports-stat-card .stat-value {
+  font-size: 2rem; /* Increased size (32px) */
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0;
-  padding-left: 0.2rem;
+  line-height: 1.2;
 }
 
-/* Icons Colors */
-.icon-blue { color: #3b82f6; }
-.icon-green { color: #10b981; }
-.icon-yellow { color: #f59e0b; }
-.icon-orange { color: #f97316; }
-.icon-red { color: #ef4444; }
-.icon-purple { color: #8b5cf6; }
+/* Left Accent Borders */
+.rsc-blue { border-left-color: #3b82f6; }
+.rsc-green { border-left-color: #10b981; }
+.rsc-yellow { border-left-color: #f59e0b; }
+.rsc-orange { border-left-color: #f97316; }
+.rsc-purple { border-left-color: #8b5cf6; }
+.rsc-red { border-left-color: #ef4444; }
+.rsc-gray { border-left-color: #6b7280; }
+
+/* Visual Enhancement: Mini progress line (Optional, simulated with ::after if needed, but border-left covers "Accent border") */
+
 
 /* ------------ TABLE ------------ */
 .reports-table-container {

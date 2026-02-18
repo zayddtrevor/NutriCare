@@ -3,30 +3,33 @@
   justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin: 20px 0;
+  margin: 16px 0; /* Updated margin to match StudentTeacher spacing */
 }
 
 .grade-tab {
   padding: 0.6rem 1.2rem;
   background: white;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-pill); /* Pill style as requested */
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: #666;
   cursor: pointer;
   transition: all 0.2s;
   font-size: 0.9rem;
+  box-shadow: none; /* Reset potential inherited shadow */
 }
 
 .grade-tab:hover:not(.active) {
-  background-color: #eef6ff;
-  color: var(--primary-blue);
-  border-color: #d1e3ff;
+  background-color: #f8f9fa;
+  color: var(--blue-dark, #587db1); /* Fallback to hex if var not global */
+  border-color: var(--blue, #80a4d3);
+  transform: translateY(0); /* StudentTeacher doesn't have lift on hover for grade-btn, only color change */
 }
 
 .grade-tab.active {
-  background-color: var(--primary-blue);
+  background-color: var(--blue, #80a4d3);
   color: white;
-  border-color: var(--primary-blue);
-  box-shadow: 0 4px 6px rgba(59, 125, 216, 0.3);
+  border-color: var(--blue, #80a4d3);
+  box-shadow: 0 4px 6px rgba(128, 164, 211, 0.3);
+  transform: translateY(0);
 }

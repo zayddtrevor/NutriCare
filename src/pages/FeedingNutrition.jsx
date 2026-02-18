@@ -12,10 +12,13 @@ import "../components/common/TableStyles.css";
 import "./FeedingNutrition.css";
 
 // Constants
-const FEEDING_GRADES = GRADES.map(g => ({
-  key: g,
-  label: g.replace("Grade ", "G")
-}));
+const FEEDING_GRADES = [
+    { key: "All Grades", label: "All Grades" },
+    ...GRADES.map(g => ({
+        key: g,
+        label: g
+    }))
+];
 
 export default function FeedingNutrition() {
   // State
@@ -26,7 +29,7 @@ export default function FeedingNutrition() {
   const [error, setError] = useState(null);
 
   // Filters
-  const [activeGrade, setActiveGrade] = useState("K1");
+  const [activeGrade, setActiveGrade] = useState("All Grades");
   const [selectedSection, setSelectedSection] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -142,6 +145,9 @@ export default function FeedingNutrition() {
 
   // Derived Data: Available Sections for Active Grade
   const availableSections = useMemo(() => {
+    if (activeGrade === "All Grades") {
+        return [...new Set(Object.values(SCHOOL_DATA).flat())].sort();
+    }
     return SCHOOL_DATA[activeGrade] || [];
   }, [activeGrade]);
 
@@ -149,8 +155,10 @@ export default function FeedingNutrition() {
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
       // 1. Grade Filter
-      // With normalization, s.gradeLevel is already one of the official keys
-      if (s.gradeLevel !== activeGrade) return false;
+      if (activeGrade !== "All Grades") {
+          // With normalization, s.gradeLevel is already one of the official keys
+          if (s.gradeLevel !== activeGrade) return false;
+      }
 
       // 2. Section Filter
       if (selectedSection !== "All" && s.section !== selectedSection) return false;
@@ -192,7 +200,7 @@ export default function FeedingNutrition() {
   };
 
   const clearFilters = () => {
-    setActiveGrade("K1");
+    setActiveGrade("All Grades");
     setSelectedSection("All");
     setStatusFilter("All");
     setSearchQuery("");
@@ -259,15 +267,6 @@ export default function FeedingNutrition() {
                 </select>
         </FilterBar>
 
-        <GradeTabs
-            activeGrade={activeGrade}
-            onTabClick={(g) => {
-                setActiveGrade(g);
-                setSelectedSection("All");
-            }}
-            grades={FEEDING_GRADES}
-        />
-
         {/* Main Content Area */}
         <div className="content-area">
             {loading ? (
@@ -298,10 +297,37 @@ export default function FeedingNutrition() {
                 <>
                     {/* Stats Summary */}
                     <div className="stats-row">
-                        <StatCard label="Total Students" value={summary.total} icon={<Users size={20}/>} color="blue" />
-                        <StatCard label="Present" value={summary.presentCount} icon={<CheckCircle size={20}/>} color="green" />
-                        <StatCard label="Absent" value={summary.absentCount} icon={<XCircle size={20}/>} color="red" />
+                        <StatCard
+                            label="Total Students"
+                            value={summary.total}
+                            icon={<Users size={20}/>}
+                            color="blue"
+                            className="feeding-stat-card tsc-blue"
+                        />
+                        <StatCard
+                            label="Present"
+                            value={summary.presentCount}
+                            icon={<CheckCircle size={20}/>}
+                            color="green"
+                            className="feeding-stat-card tsc-green"
+                        />
+                        <StatCard
+                            label="Absent"
+                            value={summary.absentCount}
+                            icon={<XCircle size={20}/>}
+                            color="red"
+                            className="feeding-stat-card tsc-red"
+                        />
                     </div>
+
+                    <GradeTabs
+                        activeGrade={activeGrade}
+                        onTabClick={(g) => {
+                            setActiveGrade(g);
+                            setSelectedSection("All");
+                        }}
+                        grades={FEEDING_GRADES}
+                    />
 
                     {/* Table */}
                     <div className="data-table-container">
