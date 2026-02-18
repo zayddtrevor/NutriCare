@@ -298,26 +298,6 @@ export default function Reports() {
           }
         />
 
-        <FilterBar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onReset={() => {
-              setSearchQuery("");
-              setGrade("All Grades");
-              setSection("All Sections");
-              setStatus("All Status");
-            }}
-        >
-          <select value={section} onChange={(e) => setSection(e.target.value)}>
-            <option value="All Sections">All Sections</option>
-            {availableSections.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </FilterBar>
-
         {/* SUMMARY CARDS - Split Layout */}
         <div className="reports-summary-container">
           {/* Top Row: Total Students */}
@@ -386,6 +366,26 @@ export default function Reports() {
             }}
             grades={GRADE_OPTIONS}
         />
+
+        <FilterBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onReset={() => {
+              setSearchQuery("");
+              setGrade("All Grades");
+              setSection("All Sections");
+              setStatus("All Status");
+            }}
+        >
+          <select value={section} onChange={(e) => setSection(e.target.value)}>
+            <option value="All Sections">All Sections</option>
+            {availableSections.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </FilterBar>
 
         {/* TABLE */}
         <div className="data-table-container">

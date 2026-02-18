@@ -72,3 +72,27 @@ button { font-family: inherit; }
 .status-badge.overweight { background-color: #e0f2fe; color: #075985; }
 .status-badge.obese { background-color: #eeddee; color: #862e9c; }
 .status-badge.unknown { background-color: #f3f4f6; color: #6b7280; }
+
+/* Custom Scrollbar (Webkit Browsers) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f2f36; /* sidebar dark */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1f7a8c;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2aa6b6;
+}
+
+/* Firefox Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1f7a8c #0f2f36;
+}
