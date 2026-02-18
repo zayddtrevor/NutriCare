@@ -33,31 +33,22 @@ import "./Dashboard.css";
 
 const DashboardHeader = () => {
   const [greeting, setGreeting] = useState("Good Morning");
+  const [subtext, setSubtext] = useState("Here’s your system summary for today.");
   const today = new Date();
 
   useEffect(() => {
     const hour = today.getHours();
 
-    // Time Divisions:
-    // Early Morning: 5 a.m. – 8 a.m.
-    // Morning: 8 a.m. – 12 p.m. (Sunrise/Late Morning combined)
-    // Noon/Midday: 12 p.m.
-    // Early Afternoon: 12 p.m. – 3 p.m.
-    // Afternoon: 12 p.m. – 5 p.m. (Simplified overlap)
-    // Late Afternoon: 4 p.m. – 6 p.m.
-    // Evening: 5 p.m. – 9 p.m. or 10 p.m.
-    // Night/Late Night: 9 p.m. – 4 a.m.
-    // Midnight: 12 a.m.
-
-    // Simplified logic based on common greetings:
     if (hour >= 5 && hour < 12) {
       setGreeting("Good Morning");
+      setSubtext("Here’s your system summary for today.");
     } else if (hour >= 12 && hour < 17) {
       setGreeting("Good Afternoon");
-    } else if (hour >= 17 && hour < 21) {
-      setGreeting("Good Evening");
+      setSubtext("Here’s what’s happening so far.");
     } else {
-      setGreeting("Good Night"); // Late Night / Early Morning
+      // 17:00 - 04:59 (includes late night/early morning until 5am)
+      setGreeting("Good Evening");
+      setSubtext("Here’s today’s activity overview.");
     }
   }, []);
 
@@ -71,7 +62,7 @@ const DashboardHeader = () => {
             <span className="health-text">System Healthy</span>
           </div>
         </div>
-        <p>Here’s your system summary today</p>
+        <p>{subtext}</p>
       </div>
       <div className="header-right">
         <div className="date-badge">
