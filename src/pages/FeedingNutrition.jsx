@@ -201,6 +201,7 @@ export default function FeedingNutrition() {
 
   return (
     <div className="feeding-nutrition-page">
+      <div className="centered-content">
         <PageHeader title="Feeding & Nutrition" />
 
         {/* Banner */}
@@ -350,6 +351,7 @@ export default function FeedingNutrition() {
                 </>
             )}
         </div>
+      </div>
 
         {/* Modal */}
         {showDetailsId && (

@@ -274,123 +274,125 @@ export default function Reports() {
 
   return (
     <div className="reports-wrapper">
-      <PageHeader
-        title="Reports & Analytics"
-        action={
-          <div style={{ display: "flex", gap: "10px" }}>
-            <Button
-              variant="outline"
-              onClick={downloadTemplate}
-              icon={<FileText size={16} />}
-            >
-              Download Template
-            </Button>
-            <Button
-                variant="primary"
-                onClick={exportCSV}
-                disabled={loading || filteredStudents.length === 0}
-                icon={<Download size={16} />}
-            >
-                Export CSV
-            </Button>
-          </div>
-        }
-      />
+      <div className="centered-content">
+        <PageHeader
+          title="Reports & Analytics"
+          action={
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
+              <Button
+                variant="outline"
+                onClick={downloadTemplate}
+                icon={<FileText size={16} />}
+              >
+                Download Template
+              </Button>
+              <Button
+                  variant="primary"
+                  onClick={exportCSV}
+                  disabled={loading || filteredStudents.length === 0}
+                  icon={<Download size={16} />}
+              >
+                  Export CSV
+              </Button>
+            </div>
+          }
+        />
 
-      <FilterBar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onReset={() => {
-            setSearchQuery("");
-            setGrade("All Grades");
-            setSection("All Sections");
-            setStatus("All Status");
-          }}
-      >
-        <select value={section} onChange={(e) => setSection(e.target.value)}>
-          <option value="All Sections">All Sections</option>
-          {availableSections.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-      </FilterBar>
-
-      <GradeTabs
-          activeGrade={grade}
-          onTabClick={(g) => {
-              setGrade(g);
+        <FilterBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onReset={() => {
+              setSearchQuery("");
+              setGrade("All Grades");
               setSection("All Sections");
-          }}
-          grades={GRADE_OPTIONS}
-      />
+              setStatus("All Status");
+            }}
+        >
+          <select value={section} onChange={(e) => setSection(e.target.value)}>
+            <option value="All Sections">All Sections</option>
+            {availableSections.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
 
-      {/* SUMMARY CARDS */}
-      <div className="reports-summary">
-        <StatCard label="Total Students" value={loading ? "..." : summary.total} icon={<Users size={20}/>} color="blue" />
-        <StatCard label="Normal" value={loading ? "..." : summary.normal} icon={<CheckCircle size={20}/>} color="green" />
-        <StatCard label="Wasted" value={loading ? "..." : summary.wasted} icon={<AlertTriangle size={20}/>} color="yellow" />
-        <StatCard label="Severely Wasted" value={loading ? "..." : summary.severelyWasted} icon={<AlertTriangle size={20}/>} color="orange" />
-        <StatCard label="Overweight" value={loading ? "..." : summary.overweight} icon={<Activity size={20}/>} color="purple" />
-        <StatCard label="Obese" value={loading ? "..." : summary.obese} icon={<XCircle size={20}/>} color="red" />
-        <StatCard label="Unknown" value={loading ? "..." : summary.unknown} icon={<Users size={20}/>} color="gray" />
-      </div>
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </FilterBar>
 
-      {/* TABLE */}
-      <div className="data-table-container">
-        {error && <div className="error-message">{error}</div>}
+        <GradeTabs
+            activeGrade={grade}
+            onTabClick={(g) => {
+                setGrade(g);
+                setSection("All Sections");
+            }}
+            grades={GRADE_OPTIONS}
+        />
 
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Grade & Section</th>
-              <th>Status</th>
-              <th>BMI</th>
-              <th>Present Days</th>
-              <th>Absent Days</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="skeleton-row">
-                  <td><div className="skeleton-bar" style={{ width: '120px' }}></div></td>
-                  <td><div className="skeleton-bar" style={{ width: '100px' }}></div></td>
-                  <td><div className="skeleton-bar" style={{ width: '80px' }}></div></td>
-                  <td><div className="skeleton-bar" style={{ width: '40px' }}></div></td>
-                  <td><div className="skeleton-bar" style={{ width: '30px' }}></div></td>
-                  <td><div className="skeleton-bar" style={{ width: '30px' }}></div></td>
-                </tr>
-              ))
-            ) : filteredStudents.length === 0 ? (
+        {/* SUMMARY CARDS */}
+        <div className="reports-summary">
+          <StatCard label="Total Students" value={loading ? "..." : summary.total} icon={<Users size={20}/>} color="blue" />
+          <StatCard label="Normal" value={loading ? "..." : summary.normal} icon={<CheckCircle size={20}/>} color="green" />
+          <StatCard label="Wasted" value={loading ? "..." : summary.wasted} icon={<AlertTriangle size={20}/>} color="yellow" />
+          <StatCard label="Severely Wasted" value={loading ? "..." : summary.severelyWasted} icon={<AlertTriangle size={20}/>} color="orange" />
+          <StatCard label="Overweight" value={loading ? "..." : summary.overweight} icon={<Activity size={20}/>} color="purple" />
+          <StatCard label="Obese" value={loading ? "..." : summary.obese} icon={<XCircle size={20}/>} color="red" />
+          <StatCard label="Unknown" value={loading ? "..." : summary.unknown} icon={<Users size={20}/>} color="gray" />
+        </div>
+
+        {/* TABLE */}
+        <div className="data-table-container">
+          {error && <div className="error-message">{error}</div>}
+
+          <table className="data-table">
+            <thead>
               <tr>
-                <td colSpan="6" className="empty-state">
-                  <div className="empty-state-content">
-                    <FileText size={48} className="empty-icon" />
-                    <p>No records found matching your filters.</p>
-                  </div>
-                </td>
+                <th>Name</th>
+                <th>Grade & Section</th>
+                <th>Status</th>
+                <th>BMI</th>
+                <th>Present Days</th>
+                <th>Absent Days</th>
               </tr>
-            ) : (
-              filteredStudents.map((s) => (
-                <tr key={s.id}>
-                  <td>{s.name} {s.isSbfp && <span className="sbfp-badge">SBFP</span>}</td>
-                  <td>{s.gradeSection}</td>
-                  <td>
-                    <span className={`status-badge ${s.status.toLowerCase().replace(/\s/g, '-')}`}>
-                      {s.status}
-                    </span>
+            </thead>
+            <tbody>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="skeleton-row">
+                    <td><div className="skeleton-bar" style={{ width: '120px' }}></div></td>
+                    <td><div className="skeleton-bar" style={{ width: '100px' }}></div></td>
+                    <td><div className="skeleton-bar" style={{ width: '80px' }}></div></td>
+                    <td><div className="skeleton-bar" style={{ width: '40px' }}></div></td>
+                    <td><div className="skeleton-bar" style={{ width: '30px' }}></div></td>
+                    <td><div className="skeleton-bar" style={{ width: '30px' }}></div></td>
+                  </tr>
+                ))
+              ) : filteredStudents.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="empty-state">
+                    <div className="empty-state-content">
+                      <FileText size={48} className="empty-icon" />
+                      <p>No records found matching your filters.</p>
+                    </div>
                   </td>
-                  <td>{s.bmi}</td>
-                  <td>{s.presentDays}</td>
-                  <td>{s.absentDays}</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredStudents.map((s) => (
+                  <tr key={s.id}>
+                    <td>{s.name} {s.isSbfp && <span className="sbfp-badge">SBFP</span>}</td>
+                    <td>{s.gradeSection}</td>
+                    <td>
+                      <span className={`status-badge ${s.status.toLowerCase().replace(/\s/g, '-')}`}>
+                        {s.status}
+                      </span>
+                    </td>
+                    <td>{s.bmi}</td>
+                    <td>{s.presentDays}</td>
+                    <td>{s.absentDays}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
