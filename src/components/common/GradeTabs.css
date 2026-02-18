@@ -21,15 +21,15 @@
 
 .grade-tab:hover:not(.active) {
   background-color: #f8f9fa;
-  color: var(--blue-dark, #587db1); /* Fallback to hex if var not global */
-  border-color: var(--blue, #80a4d3);
+  color: var(--blue-dark, #2a5bb0); /* Fallback to hex if var not global */
+  border-color: var(--blue, #3B7DD8);
   transform: translateY(0); /* StudentTeacher doesn't have lift on hover for grade-btn, only color change */
 }
 
 .grade-tab.active {
-  background-color: var(--blue, #80a4d3);
+  background-color: var(--blue, #3B7DD8);
   color: white;
-  border-color: var(--blue, #80a4d3);
-  box-shadow: 0 4px 6px rgba(128, 164, 211, 0.3);
+  border-color: var(--blue, #3B7DD8);
+  box-shadow: 0 4px 6px rgba(59, 125, 216, 0.3);
   transform: translateY(0);
 }

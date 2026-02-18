@@ -7,9 +7,15 @@ import { recalculateNutritionStatus } from "../utils/nutritionUpdater";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
 import StatCard from "../components/common/StatCard";
+import GradeTabs from "../components/common/GradeTabs";
 import Button from "../components/common/Button";
 import "../components/common/TableStyles.css"; // Import standard table styles
 import "./StudentTeacher.css";
+
+const STUDENT_GRADES = [
+  { key: "All", label: "All Grades" },
+  ...GRADES.map(g => ({ key: g, label: g }))
+];
 
 export default function StudentTeacher() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -477,23 +483,11 @@ export default function StudentTeacher() {
               </div>
 
               {/* Grade Filter Buttons (Moved below stats) */}
-              <div className="grade-filter-container">
-                <button
-                  className={`grade-btn ${studentFilterGrade === "All" ? "active" : ""}`}
-                  onClick={() => setStudentFilterGrade("All")}
-                >
-                  All Grades
-                </button>
-                {GRADES.map((g) => (
-                  <button
-                    key={g}
-                    className={`grade-btn ${studentFilterGrade === g ? "active" : ""}`}
-                    onClick={() => setStudentFilterGrade(g)}
-                  >
-                    {g}
-                  </button>
-                ))}
-              </div>
+              <GradeTabs
+                activeGrade={studentFilterGrade}
+                onTabClick={setStudentFilterGrade}
+                grades={STUDENT_GRADES}
+              />
 
               <FilterBar
                 searchQuery={searchQuery}
@@ -581,34 +575,30 @@ export default function StudentTeacher() {
           {activeTab === "teachers" && (
             <>
               <div className="teachers-summary-row stats-section-spacing">
-                <div className="teacher-stat-card tsc-blue">
-                  <div className="tsc-label">Total Teachers</div>
-                  <div className="tsc-number">{teacherStats.total}</div>
-                  <div className="tsc-icon">
-                    <Users size={28} />
-                  </div>
-                </div>
-                <div className="teacher-stat-card tsc-green">
-                  <div className="tsc-label">Active</div>
-                  <div className="tsc-number">{teacherStats.active}</div>
-                  <div className="tsc-icon">
-                    <UserCheck size={28} />
-                  </div>
-                </div>
-                <div className="teacher-stat-card tsc-red">
-                  <div className="tsc-label">Inactive</div>
-                  <div className="tsc-number">{teacherStats.inactive}</div>
-                  <div className="tsc-icon">
-                    <UserX size={28} />
-                  </div>
-                </div>
-                <div className="teacher-stat-card tsc-orange">
-                  <div className="tsc-label">Sections Covered</div>
-                  <div className="tsc-number">{teacherStats.sections}</div>
-                  <div className="tsc-icon">
-                    <BookOpen size={28} />
-                  </div>
-                </div>
+                <StatCard
+                  label="Total Teachers"
+                  value={teacherStats.total}
+                  icon={<Users size={28} />}
+                  color="blue"
+                />
+                <StatCard
+                  label="Active"
+                  value={teacherStats.active}
+                  icon={<UserCheck size={28} />}
+                  color="green"
+                />
+                <StatCard
+                  label="Inactive"
+                  value={teacherStats.inactive}
+                  icon={<UserX size={28} />}
+                  color="red"
+                />
+                <StatCard
+                  label="Sections Covered"
+                  value={teacherStats.sections}
+                  icon={<BookOpen size={28} />}
+                  color="orange"
+                />
               </div>
 
               <FilterBar

@@ -238,35 +238,6 @@ export default function FeedingNutrition() {
             )}
         </div>
 
-        <FilterBar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onReset={clearFilters}
-            isLoading={loading}
-        >
-                <select
-                    value={selectedSection}
-                    onChange={(e) => setSelectedSection(e.target.value)}
-                >
-                    <option value="All">All Sections</option>
-                    {availableSections.map(sec => (
-                        <option key={sec} value={sec}>{sec}</option>
-                    ))}
-                </select>
-                 <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                    <option value="All">All Status</option>
-                    <option value="Normal">Normal</option>
-                    <option value="Wasted">Wasted</option>
-                    <option value="Severely Wasted">Severely Wasted</option>
-                    <option value="Overweight">Overweight</option>
-                    <option value="Obese">Obese</option>
-                    <option value="Unknown">Unknown</option>
-                </select>
-        </FilterBar>
-
         {/* Main Content Area */}
         <div className="content-area">
             {loading ? (
@@ -281,17 +252,6 @@ export default function FeedingNutrition() {
                     <h3>Oops! Something went wrong.</h3>
                     <p>{error}</p>
                     <Button variant="primary" onClick={handleRetry}>Try Again</Button>
-                </div>
-            ) : filteredStudents.length === 0 ? (
-                <div className="empty-state">
-                    <div className="empty-icon">📂</div>
-                    <h3>No students found</h3>
-                    <p>Try adjusting your filters or search query.</p>
-                     {(selectedSection !== "All" || statusFilter !== "All" || searchQuery) && (
-                         <Button variant="outline" className="mt-4" onClick={clearFilters}>
-                             Clear Filters
-                         </Button>
-                     )}
                 </div>
             ) : (
                 <>
@@ -329,8 +289,49 @@ export default function FeedingNutrition() {
                         grades={FEEDING_GRADES}
                     />
 
-                    {/* Table */}
-                    <div className="data-table-container">
+                    <FilterBar
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        onReset={clearFilters}
+                        isLoading={loading}
+                    >
+                            <select
+                                value={selectedSection}
+                                onChange={(e) => setSelectedSection(e.target.value)}
+                            >
+                                <option value="All">All Sections</option>
+                                {availableSections.map(sec => (
+                                    <option key={sec} value={sec}>{sec}</option>
+                                ))}
+                            </select>
+                             <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                            >
+                                <option value="All">All Status</option>
+                                <option value="Normal">Normal</option>
+                                <option value="Wasted">Wasted</option>
+                                <option value="Severely Wasted">Severely Wasted</option>
+                                <option value="Overweight">Overweight</option>
+                                <option value="Obese">Obese</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                    </FilterBar>
+
+                    {filteredStudents.length === 0 ? (
+                        <div className="empty-state">
+                            <div className="empty-icon">📂</div>
+                            <h3>No students found</h3>
+                            <p>Try adjusting your filters or search query.</p>
+                             {(selectedSection !== "All" || statusFilter !== "All" || searchQuery) && (
+                                 <Button variant="outline" className="mt-4" onClick={clearFilters}>
+                                     Clear Filters
+                                 </Button>
+                             )}
+                        </div>
+                    ) : (
+                        /* Table */
+                        <div className="data-table-container">
                         <table className="data-table">
                             <thead>
                                 <tr>
@@ -374,6 +375,7 @@ export default function FeedingNutrition() {
                             </tbody>
                         </table>
                     </div>
+                    )}
                 </>
             )}
         </div>
