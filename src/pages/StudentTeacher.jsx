@@ -441,25 +441,6 @@ export default function StudentTeacher() {
           <div className="data-table-container">
           {activeTab === "students" && (
             <>
-              {/* Grade Filter Buttons */}
-              <div className="grade-filter-container">
-                <button
-                  className={`grade-btn ${studentFilterGrade === "All" ? "active" : ""}`}
-                  onClick={() => setStudentFilterGrade("All")}
-                >
-                  All Grades
-                </button>
-                {GRADES.map((g) => (
-                  <button
-                    key={g}
-                    className={`grade-btn ${studentFilterGrade === g ? "active" : ""}`}
-                    onClick={() => setStudentFilterGrade(g)}
-                  >
-                    {g}
-                  </button>
-                ))}
-              </div>
-
               <div className="students-summary-row stats-section-spacing">
                 <StatCard
                   label="Total Students"
@@ -479,6 +460,25 @@ export default function StudentTeacher() {
                       ))}
                    </div>
                 </div>
+              </div>
+
+              {/* Grade Filter Buttons (Moved below stats) */}
+              <div className="grade-filter-container">
+                <button
+                  className={`grade-btn ${studentFilterGrade === "All" ? "active" : ""}`}
+                  onClick={() => setStudentFilterGrade("All")}
+                >
+                  All Grades
+                </button>
+                {GRADES.map((g) => (
+                  <button
+                    key={g}
+                    className={`grade-btn ${studentFilterGrade === g ? "active" : ""}`}
+                    onClick={() => setStudentFilterGrade(g)}
+                  >
+                    {g}
+                  </button>
+                ))}
               </div>
 
               <FilterBar
