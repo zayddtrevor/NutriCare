@@ -16,7 +16,7 @@ const FEEDING_GRADES = [
     { key: "All Grades", label: "All Grades" },
     ...GRADES.map(g => ({
         key: g,
-        label: g.replace("Grade ", "G")
+        label: g
     }))
 ];
 
@@ -226,9 +226,6 @@ export default function FeedingNutrition() {
             ) : (
                 <>
                     <h3 className="meal-name">No meal assigned for today.</h3>
-                    <p className="meal-desc">
-                        You can assign today’s meal from the admin panel.
-                    </p>
                 </>
             )}
             <div className="meal-meta">{displayDate}</div>

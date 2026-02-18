@@ -57,13 +57,24 @@
 }
 
 /* ------------ SUMMARY CARDS ------------ */
-.reports-summary {
+.reports-summary-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 24px;
+  margin-bottom: 32px;
+}
+
+.reports-summary-top {
+  display: flex;
+  justify-content: center; /* Center the Total Students card */
+}
+
+.reports-summary-bottom {
   display: flex;
   justify-content: center;
   gap: 24px;
   flex-wrap: wrap;
-  margin-top: 24px;
-  margin-bottom: 32px;
 }
 
 /* Enhanced Stat Card Styles for Reports Page */

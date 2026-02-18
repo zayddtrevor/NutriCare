@@ -9,10 +9,10 @@
 .grade-tab {
   padding: 0.6rem 1.2rem;
   background: white;
-  border: 1px solid #e0e0e0; /* Match StudentTeacher border color */
-  border-radius: 20px; /* Match StudentTeacher border-radius */
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
   font-weight: 600;
-  color: #666; /* Match StudentTeacher text color */
+  color: #666;
   cursor: pointer;
   transition: all 0.2s;
   font-size: 0.9rem;
@@ -20,16 +20,16 @@
 }
 
 .grade-tab:hover:not(.active) {
-  background-color: #f8f9fa; /* Light gray background */
-  color: var(--primary-blue); /* Soft blue tint text or background? Prompt says "Hover = soft blue tint". StudentTeacher uses --blue-dark text. */
-  border-color: var(--primary-blue); /* Match StudentTeacher behavior */
-  transform: translateY(-1px); /* Slight lift */
+  background-color: #f8f9fa;
+  color: var(--blue-dark, #587db1); /* Fallback to hex if var not global */
+  border-color: var(--blue, #80a4d3);
+  transform: translateY(0); /* StudentTeacher doesn't have lift on hover for grade-btn, only color change */
 }
 
 .grade-tab.active {
-  background-color: var(--primary-blue); /* Dark blue active state */
+  background-color: var(--blue, #80a4d3);
   color: white;
-  border-color: var(--primary-blue);
-  box-shadow: 0 4px 6px rgba(59, 125, 216, 0.3); /* Subtle glow/shadow */
-  transform: translateY(-1px); /* Slight lift */
+  border-color: var(--blue, #80a4d3);
+  box-shadow: 0 4px 6px rgba(128, 164, 211, 0.3);
+  transform: translateY(0);
 }
