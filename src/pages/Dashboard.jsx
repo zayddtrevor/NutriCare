@@ -7,6 +7,7 @@ import "./Dashboard.css";
 export default function Dashboard() {
   const [studentCount, setStudentCount] = useState(0);
   const [teacherCount, setTeacherCount] = useState(0);
+  const [bmiCount, setBmiCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,6 +25,15 @@ export default function Dashboard() {
 
         if (teachersError) throw teachersError;
         setTeacherCount(teachersCount);
+
+        // Fetch total BMI records count
+        const { count: bmiTotal, error: bmiError } =
+          await supabase
+            .from("bmi_records")
+            .select("*", { count: "exact", head: true });
+
+        if (bmiError) throw bmiError;
+        setBmiCount(bmiTotal);
 
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -52,8 +62,8 @@ export default function Dashboard() {
     },
     {
       id: 3,
-      title: "Active Reports",
-      value: 8,
+      title: "Total BMI Records",
+      value: loading ? "..." : bmiCount,
       color: "orange",
       icon: <BarChart3 />,
     },

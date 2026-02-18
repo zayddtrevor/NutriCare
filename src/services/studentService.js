@@ -16,6 +16,8 @@ export const fetchTotalStudentCount = async () => {
     console.error("Error fetching student count:", error);
     throw error;
   }
+
+  console.log("Supabase Total Student Count:", count);
   return count;
 };
 
@@ -30,6 +32,8 @@ export const fetchStudents = async () => {
     console.error("Error fetching students:", error);
     throw error;
   }
+
+  console.log("Supabase Fetched Student Rows:", data.length);
   return data;
 };
 
