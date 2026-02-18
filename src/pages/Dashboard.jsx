@@ -10,7 +10,8 @@ import {
   FileText,
   Settings,
   ArrowRight,
-  ChevronRight
+  ChevronRight,
+  Activity
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
@@ -31,12 +32,45 @@ import "./Dashboard.css";
 // --- Components ---
 
 const DashboardHeader = () => {
+  const [greeting, setGreeting] = useState("Good Morning");
   const today = new Date();
 
+  useEffect(() => {
+    const hour = today.getHours();
+
+    // Time Divisions:
+    // Early Morning: 5 a.m. – 8 a.m.
+    // Morning: 8 a.m. – 12 p.m. (Sunrise/Late Morning combined)
+    // Noon/Midday: 12 p.m.
+    // Early Afternoon: 12 p.m. – 3 p.m.
+    // Afternoon: 12 p.m. – 5 p.m. (Simplified overlap)
+    // Late Afternoon: 4 p.m. – 6 p.m.
+    // Evening: 5 p.m. – 9 p.m. or 10 p.m.
+    // Night/Late Night: 9 p.m. – 4 a.m.
+    // Midnight: 12 a.m.
+
+    // Simplified logic based on common greetings:
+    if (hour >= 5 && hour < 12) {
+      setGreeting("Good Morning");
+    } else if (hour >= 12 && hour < 17) {
+      setGreeting("Good Afternoon");
+    } else if (hour >= 17 && hour < 21) {
+      setGreeting("Good Evening");
+    } else {
+      setGreeting("Good Night"); // Late Night / Early Morning
+    }
+  }, []);
+
   return (
-    <div className="dashboard-header-card">
+    <div className="dashboard-header-card fade-in">
       <div className="header-left">
-        <h1>Good Morning, Admin</h1>
+        <div className="greeting-wrapper">
+          <h1>{greeting}, Admin!</h1>
+          <div className="system-health-badge" title="All systems operational">
+            <span className="health-dot"></span>
+            <span className="health-text">System Healthy</span>
+          </div>
+        </div>
         <p>Here’s your system summary today</p>
       </div>
       <div className="header-right">
@@ -44,9 +78,7 @@ const DashboardHeader = () => {
           <Calendar size={16} />
           <span>{format(today, "MMMM d, yyyy")}</span>
         </div>
-        <Link to="/reports" className="btn-header-action">
-          View Reports
-        </Link>
+        {/* 'View Reports' button removed as per feedback */}
       </div>
     </div>
   );
@@ -54,7 +86,7 @@ const DashboardHeader = () => {
 
 const DashboardStatCard = ({ title, value, label, icon: Icon, color, loading }) => {
   return (
-    <div className={`premium-stat-card ${color}`}>
+    <div className={`premium-stat-card ${color} fade-in`}>
       <div className="stat-card-content">
         <div className={`stat-icon-wrapper icon-${color}`}>
           <Icon size={24} strokeWidth={2} />
@@ -84,26 +116,26 @@ const AnalyticsSection = () => {
   ];
 
   return (
-    <div className="analytics-container">
+    <div className="analytics-container fade-in-delayed">
       {/* Chart Card */}
       <div className="analytics-card chart-card">
         <div className="card-header">
           <h3>Weekly Overview</h3>
           <div className="legend">
-            <span className="dot students"></span> Students
-            <span className="dot meals"></span> Meals
+            <div className="legend-item"><span className="dot students"></span> Students Logged</div>
+            <div className="legend-item"><span className="dot meals"></span> Meals Served</div>
           </div>
         </div>
         <div className="chart-wrapper">
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={320}>
             <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorStudents" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#349bf0" stopOpacity={0.2}/>
+                  <stop offset="5%" stopColor="#349bf0" stopOpacity={0.3}/>
                   <stop offset="95%" stopColor="#349bf0" stopOpacity={0}/>
                 </linearGradient>
                 <linearGradient id="colorMeals" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#5cbd5f" stopOpacity={0.2}/>
+                  <stop offset="5%" stopColor="#5cbd5f" stopOpacity={0.3}/>
                   <stop offset="95%" stopColor="#5cbd5f" stopOpacity={0}/>
                 </linearGradient>
               </defs>
@@ -122,6 +154,7 @@ const AnalyticsSection = () => {
               />
               <Tooltip
                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }}
               />
               <Area
                 type="monotone"
@@ -130,6 +163,7 @@ const AnalyticsSection = () => {
                 strokeWidth={3}
                 fillOpacity={1}
                 fill="url(#colorStudents)"
+                activeDot={{ r: 6, strokeWidth: 0 }}
               />
               <Area
                 type="monotone"
@@ -138,6 +172,7 @@ const AnalyticsSection = () => {
                 strokeWidth={3}
                 fillOpacity={1}
                 fill="url(#colorMeals)"
+                activeDot={{ r: 6, strokeWidth: 0 }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -150,7 +185,7 @@ const AnalyticsSection = () => {
           <h3>Quick Stats</h3>
         </div>
         <div className="quick-stats-list">
-          <div className="quick-stat-item">
+          <div className="quick-stat-item hover-effect">
             <div className="qs-icon bg-green-light">
               <UserCheck size={20} className="text-green" />
             </div>
@@ -159,7 +194,7 @@ const AnalyticsSection = () => {
               <span className="qs-value">1,642</span>
             </div>
           </div>
-          <div className="quick-stat-item">
+          <div className="quick-stat-item hover-effect">
             <div className="qs-icon bg-red-light">
               <Users size={20} className="text-red" />
             </div>
@@ -168,7 +203,7 @@ const AnalyticsSection = () => {
               <span className="qs-value">48</span>
             </div>
           </div>
-          <div className="quick-stat-item">
+          <div className="quick-stat-item hover-effect">
             <div className="qs-icon bg-purple-light">
               <TrendingUp size={20} className="text-purple" />
             </div>
@@ -179,8 +214,11 @@ const AnalyticsSection = () => {
           </div>
         </div>
 
-        <div className="mini-banner">
-          <p>System is running smoothly.</p>
+        <div className="system-status-banner">
+          <div className="status-icon-bg">
+            <Activity size={16} />
+          </div>
+          <span>System is running smoothly.</span>
         </div>
       </div>
     </div>
@@ -190,19 +228,22 @@ const AnalyticsSection = () => {
 const QuickActionPanel = () => {
   const actions = [
     {
-      title: "Go to Student Management",
+      title: "Manage Students",
+      subtitle: "View & edit student records",
       icon: Users,
       color: "blue",
       link: "/management?tab=students"
     },
     {
-      title: "Go to Teacher Management",
+      title: "Manage Teachers",
+      subtitle: "Add or remove staff",
       icon: UserPlus,
       color: "green",
       link: "/management?tab=teachers"
     },
     {
-      title: "Open Reports",
+      title: "View Reports",
+      subtitle: "Check daily analytics",
       icon: FileText,
       color: "orange",
       link: "/reports"
@@ -210,13 +251,16 @@ const QuickActionPanel = () => {
   ];
 
   return (
-    <div className="quick-actions-grid">
+    <div className="quick-actions-grid fade-in-more-delayed">
       {actions.map((action, idx) => (
-        <Link to={action.link} key={idx} className="quick-action-card">
+        <Link to={action.link} key={idx} className="quick-action-card hover-lift">
           <div className={`qa-icon icon-${action.color}`}>
             <action.icon size={24} strokeWidth={2} />
           </div>
-          <span className="qa-title">{action.title}</span>
+          <div className="qa-text">
+            <span className="qa-title">{action.title}</span>
+            <span className="qa-subtitle">{action.subtitle}</span>
+          </div>
           <ChevronRight size={20} className="qa-arrow" />
         </Link>
       ))}
