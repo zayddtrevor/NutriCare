@@ -23,7 +23,11 @@
   background-color: #f8f9fa;
   color: var(--blue-dark, #2a5bb0); /* Fallback to hex if var not global */
   border-color: var(--blue, #3B7DD8);
-  transform: translateY(0); /* StudentTeacher doesn't have lift on hover for grade-btn, only color change */
+  transform: translateY(-1px);
+}
+
+.grade-tab:active {
+  transform: scale(0.95);
 }
 
 .grade-tab.active {

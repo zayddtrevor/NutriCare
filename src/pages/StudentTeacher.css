@@ -219,30 +219,7 @@
   transform: translateY(-1px);
 }
 
-.people-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.people-table thead th {
-  background: #e3f2fd;
-  color: #495057;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  padding: 0.75rem 1.5rem;
-  border-bottom: 2px solid #dee2e6;
-}
-
-.people-table tbody td {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #f0f0f0;
-  vertical-align: middle;
-  text-align: center;
-}
-
-.people-table tbody tr:hover {
-  background-color: #f8f9fa;
-}
+/* .people-table styles removed as they are redundant with TableStyles.css (.data-table) */
 
 /* Action buttons inside table */
 .actions-cell {
@@ -757,39 +734,7 @@
 .status-badge.obese { background-color: #f3e8ff; color: #6b21a8; }
 .status-badge.unknown { background-color: #f1f5f9; color: #64748b; }
 
-/* 2. Grade Filter Buttons (Centered) */
-.grade-filter-container {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin: 16px 0;
-}
-
-.grade-btn {
-  padding: 0.6rem 1.2rem;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 20px;
-  font-weight: 600;
-  color: #666;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.9rem;
-}
-
-.grade-btn:hover {
-  background-color: #f8f9fa;
-  color: var(--blue-dark);
-  border-color: var(--blue);
-}
-
-.grade-btn.active {
-  background-color: var(--blue);
-  color: white;
-  border-color: var(--blue);
-  box-shadow: 0 4px 6px rgba(128, 164, 211, 0.3);
-}
+/* 2. Grade Filter Buttons (Styles moved to GradeTabs.css) */
 
 /* 3. Teacher Stat Cards (Redesign) */
 .teacher-stat-card {
