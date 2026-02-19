@@ -20,6 +20,7 @@ import {
   Area
 } from "recharts";
 import { supabase } from "../supabaseClient";
+import CountUp from "../components/common/CountUp";
 import "./Dashboard.css";
 
 // --- Components ---
@@ -76,7 +77,21 @@ const DashboardStatCard = ({ title, value, label, icon: Icon, color, loading }) 
         </div>
         <div className="stat-text">
           <span className="stat-label">{title}</span>
-          <h2 className="stat-value">{loading ? "..." : value}</h2>
+          <h2 className="stat-value">
+            {loading ? (
+              <div
+                style={{
+                  width: '80px',
+                  height: '32px',
+                  background: 'rgba(255,255,255,0.25)',
+                  borderRadius: '6px',
+                  animation: 'pulse 1.5s infinite ease-in-out'
+                }}
+              />
+            ) : (
+              <CountUp end={value} duration={2000} />
+            )}
+          </h2>
         </div>
       </div>
       <div className="stat-decoration">

@@ -15,7 +15,7 @@
   --info-cyan: #17a2b8;
 
   /* UI Colors */
-  --bg-color: #f4f7f9;
+  --bg-color: #f7f9fb; /* Updated base */
   --sidebar-bg: #123846;
   --white: #ffffff;
   --border-color: #e0e0e0;
@@ -45,7 +45,13 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html,body,#root { height: 100%; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color: var(--text-dark); background-color: var(--bg-color); }
+html,body,#root {
+  height: 100%;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: var(--text-dark);
+  background: linear-gradient(to bottom, #f7f9fb, #eef2f7); /* Warmer gradient */
+  background-attachment: fixed; /* Ensure gradient covers full scroll */
+}
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; }
 
@@ -73,26 +79,40 @@ button { font-family: inherit; }
 .status-badge.obese { background-color: #eeddee; color: #862e9c; }
 .status-badge.unknown { background-color: #f3f4f6; color: #6b7280; }
 
-/* Custom Scrollbar (Webkit Browsers) */
+/* Pulse Animation */
+@keyframes statusPulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.status-pulse {
+  animation: statusPulse 2s infinite ease-in-out;
+}
+
+/* Custom Scrollbar (Premium Teal) */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
+  height: 10px; /* For horizontal scrollbars */
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f2f36; /* sidebar dark */
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1f7a8c;
+  background: #e6f0f0;
   border-radius: 10px;
 }
 
+::-webkit-scrollbar-thumb {
+  background: #0f766e; /* Teal */
+  border-radius: 10px;
+  border: 2px solid #e6f0f0; /* Creates padding effect */
+}
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #2aa6b6;
+  background: #115e59;
 }
 
 /* Firefox Scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #1f7a8c #0f2f36;
+  scrollbar-color: #0f766e #e6f0f0;
 }
