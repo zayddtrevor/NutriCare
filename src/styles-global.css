@@ -68,21 +68,54 @@ button { font-family: inherit; }
 
 /* Status Badges */
 .status-badge {
-  padding: 0.25rem 0.6rem;
-  border-radius: 12px;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: capitalize;
   display: inline-block;
   white-space: nowrap;
+  letter-spacing: 0.02em;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.05); /* Subtle border */
+  animation: fadeInBadge 0.5s ease-out forwards;
 }
 
-.status-badge.normal { background-color: #d1fae5; color: #065f46; }
-.status-badge.wasted { background-color: #fef3c7; color: #92400e; }
-.status-badge.severely-wasted { background-color: #fee2e2; color: #b91c1c; }
-.status-badge.overweight { background-color: #e0f2fe; color: #075985; }
-.status-badge.obese { background-color: #eeddee; color: #862e9c; }
-.status-badge.unknown { background-color: #f3f4f6; color: #6b7280; }
+/* Color Variants - Pastel with Harmony */
+.status-badge.normal {
+  background-color: #dcfce7;
+  color: #166534;
+  box-shadow: 0 0 0 1px rgba(22, 101, 52, 0.1);
+}
+.status-badge.wasted {
+  background-color: #fef9c3;
+  color: #854d0e;
+  box-shadow: 0 0 0 1px rgba(133, 77, 14, 0.1);
+}
+.status-badge.severely-wasted {
+  background-color: #fee2e2;
+  color: #991b1b;
+  box-shadow: 0 0 0 1px rgba(153, 27, 27, 0.1);
+}
+.status-badge.overweight {
+  background-color: #e0e7ff; /* Indigo-ish */
+  color: #3730a3;
+  box-shadow: 0 0 0 1px rgba(55, 48, 163, 0.1);
+}
+.status-badge.obese {
+  background-color: #f3e8ff;
+  color: #6b21a8;
+  box-shadow: 0 0 0 1px rgba(107, 33, 168, 0.1);
+}
+.status-badge.unknown {
+  background-color: #f3f4f6;
+  color: #4b5563;
+  box-shadow: 0 0 0 1px rgba(75, 85, 99, 0.1);
+}
+
+@keyframes fadeInBadge {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
 
 /* Pulse Animation */
 @keyframes statusPulse {
@@ -97,14 +130,14 @@ button { font-family: inherit; }
 
 /* Global Animations */
 .fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   opacity: 0;
 }
 
 .slide-in {
-  animation: slideIn 0.4s ease-out forwards;
+  animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(15px);
 }
 
 @keyframes fadeIn {
@@ -124,29 +157,29 @@ tbody tr:hover {
   background-color: rgba(59, 130, 246, 0.05) !important; /* Soft blue highlight */
 }
 
-/* Custom Scrollbar (Premium Dark Teal) */
+/* Custom Scrollbar (Polished Modern Look) */
 ::-webkit-scrollbar {
   width: 12px;
   height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #134e4a; /* Very dark teal */
+  background: #f1f5f9; /* Soft light gray */
   border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #99f6e4; /* Soft teal/blue */
+  background: linear-gradient(180deg, #3b82f6, #6366f1); /* Brand Blue -> Indigo */
   border-radius: 6px;
-  border: 3px solid #134e4a; /* Inset effect */
+  border: 3px solid #f1f5f9; /* Inset effect matching track color */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #5eead4; /* Brighter on hover */
+  background: linear-gradient(180deg, #2563eb, #4f46e5); /* Darker on hover */
 }
 
 /* Firefox Scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #99f6e4 #134e4a;
+  scrollbar-color: #3b82f6 #f1f5f9;
 }

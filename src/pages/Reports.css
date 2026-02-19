@@ -33,27 +33,32 @@
 }
 
 /* ------------ BUTTONS ------------ */
+
+/* Secondary: Download Template */
 .btn-download {
   display: flex;
   align-items: center;
   gap: 8px;
   background: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #cbd5e1;
   color: #475569;
-  padding: 0.6rem 1rem;
-  border-radius: 10px;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .btn-download:hover {
   background: #f8fafc;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
   color: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .btn-icon-slide {
@@ -64,6 +69,7 @@
   transform: translateY(2px);
 }
 
+/* Primary: Export CSV (Stronger Visual Hierarchy) */
 .btn-export {
   display: flex;
   align-items: center;
@@ -71,19 +77,23 @@
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: white;
   border: none;
-  padding: 0.6rem 1.25rem;
-  border-radius: 10px;
+  padding: 0.75rem 1.5rem; /* Larger padding */
+  border-radius: 12px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   cursor: pointer;
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -1px rgba(37, 99, 235, 0.1);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-export:hover {
-  transform: scale(1.02);
-  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.1);
   filter: brightness(1.1);
+}
+
+.btn-export:active {
+  transform: translateY(0);
 }
 
 .btn-export:disabled {
@@ -91,6 +101,7 @@
   cursor: not-allowed;
   transform: none;
   filter: grayscale(1);
+  box-shadow: none;
 }
 
 .btn-icon-bounce {
@@ -146,51 +157,15 @@
   flex-wrap: wrap;
 }
 
-/* Enhanced Stat Card Styles for Reports Page */
+/* Enhanced Stat Card Styles for Reports Page - Cleaned up to rely on global StatCard */
 .reports-stat-card {
-  background: white;
-  padding: 1.5rem 1.75rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  display: flex;
-  flex-direction: column;
-  min-width: 220px; /* Slightly wider */
+  min-width: 220px; /* Specific width for reports layout */
   flex: 1;
-  border-left: 5px solid transparent; /* Accent border placeholder */
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.reports-stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-
-.reports-stat-card .stat-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  margin-bottom: 0.5rem;
-}
-
-.reports-stat-card .stat-value {
-  font-size: 2rem; /* Increased size (32px) */
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.2;
-}
-
-/* Left Accent Borders */
-.rsc-blue { border-left-color: #3b82f6; }
-.rsc-green { border-left-color: #10b981; }
-.rsc-yellow { border-left-color: #f59e0b; }
-.rsc-orange { border-left-color: #f97316; }
-.rsc-purple { border-left-color: #8b5cf6; }
-.rsc-red { border-left-color: #ef4444; }
-.rsc-gray { border-left-color: #6b7280; }
-
-/* Visual Enhancement: Mini progress line (Optional, simulated with ::after if needed, but border-left covers "Accent border") */
-
+/* Removed conflicting border-left styles to prefer global border-top */
+/* The rsc classes are now redundant if StatCard handles colors, but kept if needed for specific overrides. */
+/* Currently StatCard.css handles colors via .stat-card-blue etc. */
 
 /* ------------ TABLE ------------ */
 .reports-table-container {
@@ -236,22 +211,8 @@
   border-bottom: none;
 }
 
-/* Badges */
-.status-badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.status-badge.normal { background-color: #dcfce7; color: #166534; }
-.status-badge.wasted { background-color: #fef9c3; color: #854d0e; }
-.status-badge.severely-wasted { background-color: #fee2e2; color: #991b1b; }
-.status-badge.overweight { background-color: #e0f2fe; color: #075985; }
-.status-badge.obese { background-color: #f3e8ff; color: #6b21a8; }
-.status-badge.unknown { background-color: #f3f4f6; color: #4b5563; }
+/* Badges - Now relying mostly on global styles, but kept for specific Report formatting if needed */
+/* Removing duplicates to ensure global styles take precedence */
 
 .sbfp-badge {
   background-color: #2563eb;

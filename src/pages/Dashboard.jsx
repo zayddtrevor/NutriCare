@@ -20,7 +20,7 @@ import {
   Area
 } from "recharts";
 import { supabase } from "../supabaseClient";
-import CountUp from "../components/common/CountUp";
+import CountUp from "react-countup";
 import "./Dashboard.css";
 
 // --- Components ---
@@ -89,7 +89,7 @@ const DashboardStatCard = ({ title, value, label, icon: Icon, color, loading }) 
                 }}
               />
             ) : (
-              <CountUp end={value} duration={2000} />
+              <CountUp end={value} duration={2} separator="," />
             )}
           </h2>
         </div>

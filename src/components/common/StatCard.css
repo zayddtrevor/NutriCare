@@ -2,9 +2,9 @@
   background: white;
   padding: 1.5rem; /* 24px */
   border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   border: 1px solid rgba(0,0,0,0.03);
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   min-width: 150px;
@@ -15,34 +15,56 @@
 
 .stat-card:hover {
   transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .stat-card-label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #6b7280; /* Neutral gray */
+  color: #64748b; /* Neutral gray 500 */
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.5rem;
 }
 
 .stat-card-value {
-  font-size: 2rem; /* ~32px */
-  font-weight: 700;
-  color: #1f2937; /* Dark gray */
+  font-size: 2.25rem; /* ~36px, bigger impact */
+  font-weight: 800;
+  color: #1e293b; /* Slate 800 */
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.1;
+  display: flex;
+  align-items: center;
+}
+
+/* Skeleton Loading */
+.stat-skeleton {
+  height: 2.5rem;
+  width: 60%;
+  background: #e2e8f0;
+  border-radius: 8px;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .5; }
 }
 
 .stat-card-icon {
   position: absolute;
   bottom: 1rem; /* 16px */
   right: 1rem; /* 16px */
-  opacity: 0.15;
+  opacity: 0.1; /* Subtler */
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-card-icon {
+  transform: scale(1.1) rotate(-5deg);
+  opacity: 0.2;
 }
 
 /* Color Variants for Top Border */

@@ -69,30 +69,36 @@
   color: white;
 }
 
+/* POLISHED: Add Teacher Button */
 .btn-add-premium {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%); /* Green Gradient */
   color: white;
   border: none;
-  border-radius: 12px; /* rounded-xl */
+  border-radius: 12px;
   padding: 0.75rem 1.25rem;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2), 0 2px 4px -1px rgba(16, 185, 129, 0.1);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-add-premium:hover {
-  transform: scale(1.05); /* slightly larger scale up */
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  opacity: 1; /* Ensure full opacity */
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3), 0 4px 6px -2px rgba(16, 185, 129, 0.1);
+  filter: brightness(1.1);
+}
+
+.btn-add-premium:hover svg {
+  transform: rotate(15deg) scale(1.1);
+  transition: transform 0.2s ease;
 }
 
 .btn-add-premium:active {
-  transform: scale(0.98);
+  transform: translateY(0);
 }
 
 .btn:hover {
@@ -110,7 +116,7 @@
   box-shadow: 0 4px var(--blue-dark);
 }
 
-/* Recalculate Button Polish */
+/* POLISHED: Recalculate Button */
 .btn-recalculate {
   display: flex;
   align-items: center;
@@ -123,7 +129,7 @@
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
@@ -131,7 +137,8 @@
 
 .btn-recalculate:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+  filter: brightness(1.1);
 }
 
 .btn-recalculate:active {
@@ -146,7 +153,7 @@
 }
 
 .recalc-icon {
-  transition: transform 0.3s ease;
+  transition: transform 0.5s ease;
 }
 
 .btn-recalculate:hover .recalc-icon {
@@ -219,8 +226,6 @@
   transform: translateY(-1px);
 }
 
-/* .people-table styles removed as they are redundant with TableStyles.css (.data-table) */
-
 /* Action buttons inside table */
 .actions-cell {
   display: flex;
@@ -254,7 +259,7 @@
   box-shadow: 0 3px var(--delete-dark);
 }
 
-/* -------- Enhanced Modal Styles (Comment 1, 2, 4) -------- */
+/* -------- Enhanced Modal Styles -------- */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -266,20 +271,19 @@
   align-items: center;
   justify-content: center;
   z-index: 100;
-  animation: fadeIn 0.3s ease-in-out; /* Comment 4 */
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 .modal-card {
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-  width: 480px; /* Slightly wider for new layout */
-  padding: 0; /* Header takes full width now */
+  width: 480px;
+  padding: 0;
   overflow: hidden;
-  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); /* Comment 4 */
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Comment 1: Colored Header */
 .modal-header-colored {
   background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
   padding: 1.5rem 2rem;
@@ -321,7 +325,7 @@
 .modal-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem; /* Comment 2: Increase spacing */
+  gap: 1.25rem;
   padding: 2rem;
 }
 
@@ -334,7 +338,6 @@
   gap: 8px;
 }
 
-/* Comment 2: Icons inside inputs */
 .input-with-icon {
   position: relative;
   display: flex;
@@ -349,8 +352,8 @@
 }
 
 .input-with-icon input {
-  padding: 0.75rem 0.75rem 0.75rem 2.5rem; /* Space for icon */
-  border-radius: 0.5rem; /* Comment 2: rounded-lg (8px) */
+  padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+  border-radius: 0.5rem;
   border: 1px solid #cbd5e1;
   font-size: 0.95rem;
   outline: none;
@@ -358,9 +361,8 @@
   width: 100%;
 }
 
-/* Comment 2: Focus ring */
 .input-with-icon input:focus {
-  border-color: var(--green); /* Teal/Green */
+  border-color: var(--green);
   box-shadow: 0 0 0 3px rgba(111, 201, 168, 0.25);
 }
 
@@ -370,7 +372,6 @@
   gap: 1rem;
 }
 
-/* Comment 3: Error state */
 .input-error {
   border-color: #ef4444 !important;
 }
@@ -381,7 +382,6 @@
   font-weight: 500;
 }
 
-/* Comment 5: Improved Save Button */
 .btn-save-premium {
   background: linear-gradient(to right, var(--green-dark), var(--green));
   color: white;
@@ -393,7 +393,7 @@
   cursor: pointer;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   transition: all 0.2s;
-  flex: 1; /* Full width on mobile if needed, but flex in actions */
+  flex: 1;
 }
 
 .btn-save-premium:hover {
@@ -420,33 +420,24 @@
 
 /* Animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slideIn {
-  from {
-    transform: scale(0.95) translateY(-10px); /* Scale in + fade */
-    opacity: 0;
-  }
-  to {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
+  from { transform: scale(0.95) translateY(-10px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
 }
 
-/* Tabs */
+/* POLISHED: Tabs */
 .tab-navigation {
-  margin-top: 2rem; /* Increased spacing above tabs */
+  margin-top: 2rem;
   padding-left: 0;
-  border-bottom: 2px solid #e0eeef;
-  margin-bottom: 1.5rem; /* Increased spacing below tabs */
+  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 1.5rem;
   display: flex;
-  justify-content: flex-start; /* Or center if desired, currently keep left aligned */
+  justify-content: flex-start;
+  gap: 1rem; /* Spacing between tabs */
 }
 
 .tab-btn {
@@ -456,58 +447,66 @@
   cursor: pointer;
   color: #64748b;
   font-weight: 600;
-  transition: all 0.3s ease-in-out;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 8px 8px 0 0;
-  margin-right: 8px;
   position: relative;
   font-size: 1rem;
   overflow: hidden;
+  opacity: 0.7; /* Inactive muted */
 }
 
 /* Active State Generic */
 .tab-btn.active-tab {
   font-weight: 700;
   z-index: 10;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
+  opacity: 1;
+  box-shadow: 0 -4px 12px rgba(59, 130, 246, 0.05);
 }
 
-/* Specific Active Colors (Students = Blue, Teachers = Green) */
+/* Specific Active Colors */
 .tab-btn:first-child.active-tab {
-  background: #eff6ff; /* Soft Blue */
+  background: linear-gradient(to top, #eff6ff 0%, #f8fafc 100%); /* Soft Blue Gradient */
   color: var(--blue);
 }
 
 .tab-btn:nth-child(2).active-tab {
-  background: #f0fdf4; /* Soft Green */
+  background: linear-gradient(to top, #f0fdf4 0%, #f8fafc 100%); /* Soft Green Gradient */
   color: #16a34a;
 }
 
-/* Animated Underline */
-.tab-btn.active-tab::after {
+/* Animated Underline for ALL tabs (active and hover) */
+.tab-btn::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 3px;
-  animation: slideInTab 0.3s ease-in-out forwards;
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
 }
 
-.tab-btn:first-child.active-tab::after {
+.tab-btn.active-tab::after {
+  transform: scaleX(1);
+}
+
+.tab-btn:hover::after {
+  transform: scaleX(0.5); /* Slight underline on hover */
+}
+
+.tab-btn:first-child::after {
   background-color: var(--blue);
 }
 
-.tab-btn:nth-child(2).active-tab::after {
+.tab-btn:nth-child(2)::after {
   background-color: #16a34a;
 }
 
-@keyframes slideInTab {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
-
-.tab-btn:hover {
-  background: rgba(0,0,0,0.03);
+/* Inactive Hover */
+.tab-btn:not(.active-tab):hover {
+  background: rgba(241, 245, 249, 0.6); /* Light tint */
+  opacity: 0.9;
   color: #334155;
 }
 
@@ -517,26 +516,21 @@
   gap: 20px;
   margin-bottom: 24px;
   align-items: stretch;
-  padding: 0 8px; /* Inset margins */
+  padding: 0 8px;
 }
 
 .teachers-summary-row {
   display: flex;
-  justify-content: center; /* Center horizontally */
-  flex-wrap: wrap; /* Allow wrapping */
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 24px;
-  margin-bottom: 32px; /* Increased spacing below stats */
-  padding: 0 8px; /* Inset margins */
+  margin-bottom: 32px;
+  padding: 0 8px;
 }
 
+/* Updated Teacher Stat Cards to Match Global StatCard Polish */
 .teachers-summary-row > * {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Shadow-md equivalent */
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.teachers-summary-row > *:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Shadow-lg equivalent */
+  /* Ensure they inherit StatCard styles */
 }
 
 .grade-sections-summary {
@@ -601,14 +595,17 @@
   text-transform: capitalize;
 }
 
+/* Use Global Status Badge Styles where possible, but these are for teachers specifically active/inactive */
 .status-badge.active {
   background-color: var(--status-active-bg);
   color: var(--status-active-text);
+  box-shadow: 0 0 0 1px rgba(30, 126, 52, 0.1);
 }
 
 .status-badge.inactive {
   background-color: var(--status-inactive-bg);
   color: var(--status-inactive-text);
+  box-shadow: 0 0 0 1px rgba(217, 48, 37, 0.1);
 }
 
 /* Avatar */
@@ -726,46 +723,25 @@
   margin: 0 0 1.5rem 0;
 }
 
-/* Global status badge fallback colors if not defined in shared CSS */
-.status-badge.normal { background-color: #dcfce7; color: #15803d; }
-.status-badge.wasted { background-color: #fef9c3; color: #854d0e; }
-.status-badge.severely-wasted { background-color: #fee2e2; color: #991b1b; }
-.status-badge.overweight { background-color: #dbeafe; color: #1e40af; }
-.status-badge.obese { background-color: #f3e8ff; color: #6b21a8; }
-.status-badge.unknown { background-color: #f1f5f9; color: #64748b; }
-
-/* 2. Grade Filter Buttons (Styles moved to GradeTabs.css) */
-
 /* 3. Teacher Stat Cards (Redesign) */
 .teacher-stat-card {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-  padding: 20px;
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); /* Match StatCard */
+  padding: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   min-width: 200px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Ensure border-top respects radius if needed, though border-top is usually fine */
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.03);
 }
 
 .teacher-stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.12);
-}
-
-/* Override for Student Stats (using common component but styling here for consistency) */
-.students-summary-row .stat-card {
-  border-radius: 16px;
-  padding: 20px;
-  transition: all 0.2s ease;
-}
-
-.students-summary-row .stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Colored Top Border */
@@ -785,8 +761,8 @@
 }
 
 .tsc-number {
-  font-size: 30px;
-  font-weight: 700;
+  font-size: 2.25rem; /* Match StatCard */
+  font-weight: 800;
   color: #1f2937;
   line-height: 1.2;
 }
@@ -795,11 +771,17 @@
   position: absolute;
   bottom: 16px;
   right: 16px;
-  opacity: 0.15;
-  color: #1f2937; /* Or inherit */
+  opacity: 0.1; /* Subtler */
+  color: #1f2937;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.teacher-stat-card:hover .tsc-icon {
+  transform: scale(1.1) rotate(-5deg);
+  opacity: 0.2;
 }
 
 /* 4. Spacing Helper */
