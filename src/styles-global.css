@@ -3,19 +3,24 @@
   /* Brand Colors */
   --primary-blue: #3B7DD8;
   --primary-blue-hover: #336BC9;
-  --secondary-blue: #80a4d3; /* Legacy/Muted blue */
+  --secondary-blue: #80a4d3;
 
-  /* Status Colors */
-  --success-green: #28a745;
-  --success-green-hover: #218838;
-  --warning-yellow: #ffc107;
-  --warning-yellow-hover: #e0a800;
-  --danger-red: #dc3545;
-  --danger-red-hover: #c82333;
-  --info-cyan: #17a2b8;
+  /* Semantic Colors (System Unified) */
+  --blue: #3b82f6;   /* System / Student / Primary */
+  --green: #10b981;  /* Success / Healthy / Teachers */
+  --orange: #f59e0b; /* Warning / Wasted */
+  --red: #ef4444;    /* Critical / Severe */
+  --purple: #8b5cf6; /* Overweight / Analytics */
+  --gray: #64748b;   /* Unknown / Neutral */
+
+  /* Status Colors (Legacy - mapped if possible or kept for compat) */
+  --success-green: var(--green);
+  --warning-yellow: var(--orange);
+  --danger-red: var(--red);
+  --info-cyan: #06b6d4;
 
   /* UI Colors */
-  --bg-color: #f4f7f9;
+  --bg-color: #f7f9fb; /* Updated base */
   --sidebar-bg: #123846;
   --white: #ffffff;
   --border-color: #e0e0e0;
@@ -45,7 +50,13 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html,body,#root { height: 100%; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color: var(--text-dark); background-color: var(--bg-color); }
+html,body,#root {
+  height: 100%;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: var(--text-dark);
+  background: linear-gradient(to bottom, #f7f9fb, #eef2f7); /* Warmer gradient */
+  background-attachment: fixed; /* Ensure gradient covers full scroll */
+}
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; }
 
@@ -73,26 +84,69 @@ button { font-family: inherit; }
 .status-badge.obese { background-color: #eeddee; color: #862e9c; }
 .status-badge.unknown { background-color: #f3f4f6; color: #6b7280; }
 
-/* Custom Scrollbar (Webkit Browsers) */
+/* Pulse Animation */
+@keyframes statusPulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.status-pulse {
+  animation: statusPulse 2s infinite ease-in-out;
+}
+
+/* Global Animations */
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.slide-in {
+  animation: slideIn 0.4s ease-out forwards;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Table Row Hover Highlight */
+tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+  background-color: rgba(59, 130, 246, 0.05) !important; /* Soft blue highlight */
+}
+
+/* Custom Scrollbar (Premium Dark Teal) */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 12px;
+  height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f2f36; /* sidebar dark */
+  background: #134e4a; /* Very dark teal */
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1f7a8c;
-  border-radius: 10px;
+  background: #99f6e4; /* Soft teal/blue */
+  border-radius: 6px;
+  border: 3px solid #134e4a; /* Inset effect */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2aa6b6;
+  background: #5eead4; /* Brighter on hover */
 }
 
 /* Firefox Scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #1f7a8c #0f2f36;
+  scrollbar-color: #99f6e4 #134e4a;
 }

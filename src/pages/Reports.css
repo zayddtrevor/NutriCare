@@ -32,6 +32,75 @@
   margin: 0;
 }
 
+/* ------------ BUTTONS ------------ */
+.btn-download {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-download:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.btn-icon-slide {
+  transition: transform 0.2s ease;
+}
+
+.btn-download:hover .btn-icon-slide {
+  transform: translateY(2px);
+}
+
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-export:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+  filter: brightness(1.1);
+}
+
+.btn-export:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  filter: grayscale(1);
+}
+
+.btn-icon-bounce {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-export:hover .btn-icon-bounce {
+  transform: translateY(2px);
+}
+
 /* ------------ FILTERS ------------ */
 .reports-filters {
   margin-top: 24px;

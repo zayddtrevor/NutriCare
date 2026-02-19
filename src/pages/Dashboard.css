@@ -119,13 +119,13 @@
   padding: 24px;
   color: #fff; /* Force white text */
   box-shadow: var(--dash-shadow);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   overflow: hidden;
   cursor: default;
 }
 
 .premium-stat-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-6px) scale(1.02);
   box-shadow: var(--dash-shadow-hover);
 }
 
@@ -355,6 +355,12 @@
   padding: 24px;
   box-shadow: var(--dash-shadow);
   height: 100%;
+  transition: all 0.3s ease;
+}
+
+.nutrition-summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.1);
 }
 
 .nutrition-bars {
@@ -403,6 +409,12 @@
   padding: 24px;
   box-shadow: var(--dash-shadow);
   height: 100%;
+  transition: all 0.3s ease;
+}
+
+.alerts-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.1);
 }
 
 .alerts-list {
@@ -419,6 +431,13 @@
   background: #f8fafc;
   border-radius: 12px;
   border-left: 4px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.alert-item:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  cursor: pointer;
 }
 
 .alert-item.critical {

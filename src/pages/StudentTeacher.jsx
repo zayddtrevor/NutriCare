@@ -423,13 +423,14 @@ export default function StudentTeacher() {
           action={
             <div style={{ display: "flex", gap: "10px" }}>
               {activeTab === "students" && (
-                <Button
-                  variant="outline"
+                <button
+                  className={`btn-recalculate ${isRecalculating ? "loading" : ""}`}
                   onClick={handleRecalculate}
                   disabled={loading || isRecalculating}
                 >
+                  <RefreshCw size={16} className={`recalc-icon ${isRecalculating ? "spin" : ""}`} />
                   {isRecalculating ? "Recalculating..." : "Recalculate Status"}
-                </Button>
+                </button>
               )}
               {activeTab === "teachers" && (
                 <button className="btn-add-premium" onClick={openAddModal}>

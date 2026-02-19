@@ -110,6 +110,58 @@
   box-shadow: 0 4px var(--blue-dark);
 }
 
+/* Recalculate Button Polish */
+.btn-recalculate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%); /* Blue -> Indigo */
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-recalculate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-recalculate:active {
+  transform: translateY(0);
+}
+
+.btn-recalculate:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+}
+
+.recalc-icon {
+  transition: transform 0.3s ease;
+}
+
+.btn-recalculate:hover .recalc-icon {
+  transform: rotate(180deg);
+}
+
+.recalc-icon.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* Table */
 .table-card {
   background: white;
@@ -167,30 +219,7 @@
   transform: translateY(-1px);
 }
 
-.people-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.people-table thead th {
-  background: #e3f2fd;
-  color: #495057;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  padding: 0.75rem 1.5rem;
-  border-bottom: 2px solid #dee2e6;
-}
-
-.people-table tbody td {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #f0f0f0;
-  vertical-align: middle;
-  text-align: center;
-}
-
-.people-table tbody tr:hover {
-  background-color: #f8f9fa;
-}
+/* .people-table styles removed as they are redundant with TableStyles.css (.data-table) */
 
 /* Action buttons inside table */
 .actions-cell {
@@ -425,30 +454,61 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  color: #555;
-  font-weight: 500;
-  transition: all 0.2s;
+  color: #64748b;
+  font-weight: 600;
+  transition: all 0.3s ease-in-out;
   border-radius: 8px 8px 0 0;
-  margin-right: 4px;
-  border: 1px solid transparent;
-  border-bottom: none;
-  margin-bottom: -2px;
+  margin-right: 8px;
+  position: relative;
   font-size: 1rem;
+  overflow: hidden;
 }
 
+/* Active State Generic */
 .tab-btn.active-tab {
-  background: white;
-  color: #007bff;
-  font-weight: 600;
-  border-color: #e0eeef;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+  font-weight: 700;
   z-index: 10;
-  border-bottom: 2px solid white;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
+}
+
+/* Specific Active Colors (Students = Blue, Teachers = Green) */
+.tab-btn:first-child.active-tab {
+  background: #eff6ff; /* Soft Blue */
+  color: var(--blue);
+}
+
+.tab-btn:nth-child(2).active-tab {
+  background: #f0fdf4; /* Soft Green */
+  color: #16a34a;
+}
+
+/* Animated Underline */
+.tab-btn.active-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  animation: slideInTab 0.3s ease-in-out forwards;
+}
+
+.tab-btn:first-child.active-tab::after {
+  background-color: var(--blue);
+}
+
+.tab-btn:nth-child(2).active-tab::after {
+  background-color: #16a34a;
+}
+
+@keyframes slideInTab {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
 
 .tab-btn:hover {
-  color: #007bff;
-  background: rgba(0, 123, 255, 0.05);
+  background: rgba(0,0,0,0.03);
+  color: #334155;
 }
 
 /* Summary Stats */
@@ -674,39 +734,7 @@
 .status-badge.obese { background-color: #f3e8ff; color: #6b21a8; }
 .status-badge.unknown { background-color: #f1f5f9; color: #64748b; }
 
-/* 2. Grade Filter Buttons (Centered) */
-.grade-filter-container {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin: 16px 0;
-}
-
-.grade-btn {
-  padding: 0.6rem 1.2rem;
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 20px;
-  font-weight: 600;
-  color: #666;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.9rem;
-}
-
-.grade-btn:hover {
-  background-color: #f8f9fa;
-  color: var(--blue-dark);
-  border-color: var(--blue);
-}
-
-.grade-btn.active {
-  background-color: var(--blue);
-  color: white;
-  border-color: var(--blue);
-  box-shadow: 0 4px 6px rgba(128, 164, 211, 0.3);
-}
+/* 2. Grade Filter Buttons (Styles moved to GradeTabs.css) */
 
 /* 3. Teacher Stat Cards (Redesign) */
 .teacher-stat-card {

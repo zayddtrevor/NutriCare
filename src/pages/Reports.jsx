@@ -278,22 +278,22 @@ export default function Reports() {
         <PageHeader
           title="Reports & Analytics"
           action={
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
-              <Button
-                variant="outline"
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
+              <button
+                className="btn-download"
                 onClick={downloadTemplate}
-                icon={<FileText size={16} />}
               >
+                <FileText size={16} className="btn-icon-slide" />
                 Download Template
-              </Button>
-              <Button
-                  variant="primary"
+              </button>
+              <button
+                  className="btn-export"
                   onClick={exportCSV}
                   disabled={loading || filteredStudents.length === 0}
-                  icon={<Download size={16} />}
               >
+                  <Download size={16} className="btn-icon-bounce" />
                   Export CSV
-              </Button>
+              </button>
             </div>
           }
         />
