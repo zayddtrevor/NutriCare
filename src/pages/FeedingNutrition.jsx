@@ -45,10 +45,11 @@ export default function FeedingNutrition() {
     setLoading(true);
     setError(null);
     try {
-      // Fetch Students (using exact count, removing manual range limit)
+      // Fetch Students (using range to bypass default limit)
       const { data: studentsData, count: totalCount, error: studentsError } = await supabase
         .from("students")
-        .select("*", { count: "exact" });
+        .select("*", { count: "exact" })
+        .range(0, 9999);
 
       if (studentsError) throw studentsError;
 
@@ -78,6 +79,7 @@ export default function FeedingNutrition() {
       }
 
       // Fetch Daily Meal (Dynamic for current date)
+      console.log("Fetching meal for day:", currentDayName);
       const { data: mealData } = await supabase
         .from("nutrition_meals")
         .select("*")
@@ -94,8 +96,9 @@ export default function FeedingNutrition() {
 
       // Attempt fetch optional tables (SBFP, Attendance)
       // We use Promise.allSettled to not fail if they don't exist
+      console.log("Fetching attendance for date:", todayKey);
       const [attRes] = await Promise.allSettled([
-        supabase.from("attendance").select("*").eq("attendance_date", todayKey)
+        supabase.from("attendance").select("*").eq("attendance_date", todayKey).range(0, 9999)
       ]);
 
       // Attendance structure might vary. If table exists, we use it. If not, empty.

@@ -76,10 +76,11 @@ export default function StudentTeacher() {
   async function fetchStudents() {
     setLoading(true);
 
-    // 1. Fetch students (removed manual limit, using default limit but logging exact count)
+    // 1. Fetch students (using range to bypass default limit)
     const { data: studentsData, count: totalCount, error: studentError } = await supabase
       .from("students")
-      .select("*", { count: "exact" });
+      .select("*", { count: "exact" })
+      .range(0, 9999);
 
     if (studentError) {
         console.error("Error fetching students:", studentError);
@@ -88,6 +89,7 @@ export default function StudentTeacher() {
     }
 
     console.log("StudentTeacher Total Count:", totalCount);
+    console.log("StudentTeacher Fetched Length:", studentsData?.length);
 
     // 2. Fetch latest BMI records for status
     // We fetch all and map them because Supabase doesn't support easy "latest per student" in one query without join/view

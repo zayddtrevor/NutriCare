@@ -324,6 +324,8 @@ export default function Dashboard() {
 
         // Fetch attendance count for today
         const todayKey = format(new Date(), "yyyy-MM-dd");
+        console.log("Dashboard fetching attendance for:", todayKey);
+
         const { count: attCount, error: attError } =
             await supabase
             .from("attendance")
