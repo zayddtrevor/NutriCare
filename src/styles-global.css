@@ -159,19 +159,20 @@ tbody tr:hover {
 
 /* Custom Scrollbar (Polished Modern Look) */
 ::-webkit-scrollbar {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 ::-webkit-scrollbar-track {
   background: #f1f5f9; /* Soft light gray */
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #123846; /* Sidebar Dark Green */
-  border-radius: 6px;
-  border: 3px solid #f1f5f9; /* Inset effect matching track color */
+  border-radius: 8px;
+  border: 4px solid #f1f5f9; /* Inset effect matching track color */
+  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
