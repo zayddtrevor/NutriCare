@@ -3,16 +3,21 @@
   /* Brand Colors */
   --primary-blue: #3B7DD8;
   --primary-blue-hover: #336BC9;
-  --secondary-blue: #80a4d3; /* Legacy/Muted blue */
+  --secondary-blue: #80a4d3;
 
-  /* Status Colors */
-  --success-green: #28a745;
-  --success-green-hover: #218838;
-  --warning-yellow: #ffc107;
-  --warning-yellow-hover: #e0a800;
-  --danger-red: #dc3545;
-  --danger-red-hover: #c82333;
-  --info-cyan: #17a2b8;
+  /* Semantic Colors (System Unified) */
+  --blue: #3b82f6;   /* System / Student / Primary */
+  --green: #10b981;  /* Success / Healthy / Teachers */
+  --orange: #f59e0b; /* Warning / Wasted */
+  --red: #ef4444;    /* Critical / Severe */
+  --purple: #8b5cf6; /* Overweight / Analytics */
+  --gray: #64748b;   /* Unknown / Neutral */
+
+  /* Status Colors (Legacy - mapped if possible or kept for compat) */
+  --success-green: var(--green);
+  --warning-yellow: var(--orange);
+  --danger-red: var(--red);
+  --info-cyan: #06b6d4;
 
   /* UI Colors */
   --bg-color: #f7f9fb; /* Updated base */
@@ -90,29 +95,58 @@ button { font-family: inherit; }
   animation: statusPulse 2s infinite ease-in-out;
 }
 
-/* Custom Scrollbar (Premium Teal) */
+/* Global Animations */
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.slide-in {
+  animation: slideIn 0.4s ease-out forwards;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Table Row Hover Highlight */
+tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+  background-color: rgba(59, 130, 246, 0.05) !important; /* Soft blue highlight */
+}
+
+/* Custom Scrollbar (Premium Dark Teal) */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px; /* For horizontal scrollbars */
+  width: 12px;
+  height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #e6f0f0;
-  border-radius: 10px;
+  background: #134e4a; /* Very dark teal */
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #0f766e; /* Teal */
-  border-radius: 10px;
-  border: 2px solid #e6f0f0; /* Creates padding effect */
+  background: #99f6e4; /* Soft teal/blue */
+  border-radius: 6px;
+  border: 3px solid #134e4a; /* Inset effect */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #115e59;
+  background: #5eead4; /* Brighter on hover */
 }
 
 /* Firefox Scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #0f766e #e6f0f0;
+  scrollbar-color: #99f6e4 #134e4a;
 }
