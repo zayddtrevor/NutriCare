@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   GraduationCap,
   UserCheck,
@@ -7,7 +7,8 @@ import {
   Calendar,
   TrendingUp,
   Activity,
-  AlertTriangle
+  AlertTriangle,
+  Info
 } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -21,6 +22,7 @@ import {
 } from "recharts";
 import { supabase } from "../supabaseClient";
 import CountUp from "react-countup";
+import { normalizeNutritionStatus, STATUS_COLORS } from "../utils/nutritionUtils";
 import "./Dashboard.css";
 
 // --- Components ---
@@ -40,7 +42,6 @@ const DashboardHeader = () => {
       setGreeting("Good Afternoon");
       setSubtext("Here’s what’s happening so far.");
     } else {
-      // 17:00 - 04:59 (includes late night/early morning until 5am)
       setGreeting("Good Evening");
       setSubtext("Here’s today’s activity overview.");
     }
@@ -94,15 +95,12 @@ const DashboardStatCard = ({ title, value, label, icon: Icon, color, loading }) 
           </h2>
         </div>
       </div>
-      <div className="stat-decoration">
-        {/* Subtle decorative element if needed, or keep clean */}
-      </div>
     </div>
   );
 };
 
-const AnalyticsSection = ({ presentCount }) => {
-  // Mock Data for Chart
+const AnalyticsSection = ({ presentCount, absentCount }) => {
+  // Mock Data for Chart (kept as mock for now as per scope, but could be dynamic)
   const data = [
     { name: 'Mon', students: 120, meals: 110 },
     { name: 'Tue', students: 132, meals: 125 },
@@ -198,7 +196,7 @@ const AnalyticsSection = ({ presentCount }) => {
             </div>
             <div className="qs-info">
               <span className="qs-label">Absent Today</span>
-              <span className="qs-value">48</span>
+              <span className="qs-value">{absentCount || 0}</span>
             </div>
           </div>
           <div className="quick-stat-item hover-effect">
@@ -223,15 +221,14 @@ const AnalyticsSection = ({ presentCount }) => {
   );
 };
 
-const NutritionSummary = () => {
-  // Mock Data for Nutrition Summary
-  const stats = [
-    { label: "Normal", value: 65, color: "#10b981" },
-    { label: "Wasted", value: 15, color: "#f59e0b" },
-    { label: "Severely Wasted", value: 5, color: "#ef4444" },
-    { label: "Overweight", value: 10, color: "#3b82f6" },
-    { label: "Obese", value: 5, color: "#8b5cf6" },
-  ];
+const NutritionSummary = ({ stats, loading }) => {
+  // Define order and color mapping using STATUS_COLORS
+  const displayOrder = ["Normal", "Wasted", "Severely Wasted", "Overweight", "Obese", "Unknown"];
+
+  // Calculate total for percentages
+  const total = Object.values(stats).reduce((a, b) => a + b, 0) || 1;
+
+  const getPercentage = (val) => Math.round((val / total) * 100);
 
   return (
     <div className="nutrition-summary-card fade-in-more-delayed">
@@ -239,49 +236,87 @@ const NutritionSummary = () => {
         <h3>Nutrition Summary Snapshot</h3>
       </div>
       <div className="nutrition-bars">
-        {stats.map((stat, idx) => (
-          <div key={idx} className="nutrition-bar-item">
-            <div className="nb-label">
-              <span>{stat.label}</span>
-              <span className="nb-value">{stat.value}%</span>
-            </div>
-            <div className="progress-bg">
-              <div
-                className="progress-fill"
-                style={{ width: `${stat.value}%`, backgroundColor: stat.color }}
-              ></div>
-            </div>
-          </div>
-        ))}
+        {loading ? (
+           <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>Loading nutrition data...</div>
+        ) : (
+          displayOrder.map((status) => {
+             const count = stats[status] || 0;
+             const percent = getPercentage(count);
+             // Get color from utils. If not found, default to gray.
+             // STATUS_COLORS returns semantic name (green, red, etc.), but we need hex for style or class.
+             // Dashboard.css uses classes or inline styles?
+             // The previous implementation used inline styles with hex codes.
+             // I'll define a hex map here or use CSS classes.
+             // CSS classes are cleaner: .progress-fill.green
+             const colorName = STATUS_COLORS[status] || "gray";
+
+             // Map semantic names to Hex for inline style (matching previous implementation style)
+             const hexMap = {
+                 green: "#10b981",
+                 yellow: "#f59e0b",
+                 red: "#ef4444",
+                 blue: "#3b82f6",
+                 purple: "#8b5cf6",
+                 gray: "#6b7280"
+             };
+
+             return (
+              <div key={status} className="nutrition-bar-item">
+                <div className="nb-label">
+                  <span>{status}</span>
+                  <span className="nb-value">{percent}%</span>
+                </div>
+                <div className="progress-bg">
+                  <div
+                    className="progress-fill"
+                    style={{ width: `${percent}%`, backgroundColor: hexMap[colorName] }}
+                  ></div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
 };
 
-const AlertsSection = () => {
-  const alerts = [
-    { type: "critical", message: "5 students flagged as Severely Wasted", time: "2h ago" },
-    { type: "warning", message: "Grade 3 has high absence rate today", time: "4h ago" },
-    { type: "info", message: "BMI records missing for 12 students", time: "1d ago" },
-  ];
-
+const HealthRiskAlerts = ({ alerts, lastUpdated }) => {
   return (
     <div className="alerts-card fade-in-more-delayed">
       <div className="card-header">
-        <h3>Alerts & Flags</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h3>Health & Risk Alerts</h3>
+          <span className="live-indicator" title="Live Updates">
+            <span className="live-dot"></span>
+            LIVE
+          </span>
+        </div>
+        <span className="last-updated">Updated {lastUpdated}</span>
       </div>
       <div className="alerts-list">
-        {alerts.map((alert, idx) => (
-          <div key={idx} className={`alert-item ${alert.type}`}>
-            <div className="alert-icon">
-              <AlertTriangle size={18} />
+        {alerts.length === 0 ? (
+           <div className="alert-item info">
+             <div className="alert-icon"><Info size={18} /></div>
+             <div className="alert-content">
+               <p className="alert-message">No critical alerts at the moment.</p>
+             </div>
+           </div>
+        ) : (
+          alerts.map((alert, idx) => (
+            <div key={idx} className={`alert-item ${alert.type} slide-in`}>
+              <div className="alert-icon">
+                {alert.type === 'critical' ? <AlertTriangle size={18} /> :
+                 alert.type === 'warning' ? <AlertTriangle size={18} /> :
+                 <Info size={18} />}
+              </div>
+              <div className="alert-content">
+                <p className="alert-message">{alert.message}</p>
+                <span className="alert-time">{alert.time}</span>
+              </div>
             </div>
-            <div className="alert-content">
-              <p className="alert-message">{alert.message}</p>
-              <span className="alert-time">{alert.time}</span>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
@@ -292,56 +327,131 @@ export default function Dashboard() {
   const [teacherCount, setTeacherCount] = useState(0);
   const [bmiCount, setBmiCount] = useState(0);
   const [attendanceCount, setAttendanceCount] = useState(0);
+  const [absentCount, setAbsentCount] = useState(0);
+
+  const [nutritionStats, setNutritionStats] = useState({ Normal: 0, Wasted: 0, "Severely Wasted": 0, Overweight: 0, Obese: 0, Unknown: 0 });
+  const [alerts, setAlerts] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState("just now");
+
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchDashboardData = useCallback(async () => {
       try {
-        // Fetch total students count
-        const { count: studentsCount, error: studentsError } =
-          await supabase
+        const now = new Date();
+        setLastUpdated(format(now, "h:mm:ss a"));
+
+        // 1. Fetch Basic Counts (Students, Teachers, BMI, Attendance)
+        const [
+            studentsHead,
+            teachersHead,
+            bmiHead,
+            attendanceHead
+        ] = await Promise.all([
+            supabase.from("students").select("*", { count: "exact", head: true }),
+            supabase.from("teachers").select("*", { count: "exact", head: true }),
+            supabase.from("bmi_records").select("*", { count: "exact", head: true }),
+            supabase.from("attendance").select("*", { count: "exact", head: true }).eq("attendance_date", format(now, "yyyy-MM-dd"))
+        ]);
+
+        const totalStudents = studentsHead.count || 0;
+        setStudentCount(totalStudents);
+        setTeacherCount(teachersHead.count || 0);
+        setBmiCount(bmiHead.count || 0);
+
+        const present = attendanceHead.count || 0;
+        setAttendanceCount(present);
+        setAbsentCount(totalStudents - present); // Simple calc
+
+        // 2. Fetch Detailed Data for Nutrition Summary & Alerts
+        // We need all students and their latest BMI to compute accurate summary
+        const { data: studentsData, error: stError } = await supabase
             .from("students")
-            .select("*", { count: "exact", head: true });
+            .select("id, nutrition_status")
+            .range(0, 9999);
 
-        if (!studentsError) setStudentCount(studentsCount || 0);
-        console.log("Dashboard Student Count:", studentsCount);
-
-        // Fetch total teachers count
-        const { count: teachersCount, error: teachersError } =
-          await supabase
-            .from("teachers")
-            .select("*", { count: "exact", head: true });
-
-        if (!teachersError) setTeacherCount(teachersCount || 0);
-
-        // Fetch BMI records count (for "Active Reports")
-        const { count: bmiTotal, error: bmiError } =
-            await supabase
+        const { data: bmiData, error: bmiError } = await supabase
             .from("bmi_records")
-            .select("*", { count: "exact", head: true });
+            .select("student_id, nutrition_status, created_at")
+            .order("created_at", { ascending: false })
+            .range(0, 9999);
 
-        if (!bmiError) setBmiCount(bmiTotal || 0);
+        if (stError) throw stError;
 
-        // Fetch attendance count for today
-        const todayKey = format(new Date(), "yyyy-MM-dd");
-        const { count: attCount, error: attError } =
-            await supabase
-            .from("attendance")
-            .select("*", { count: "exact", head: true })
-            .eq("attendance_date", todayKey);
+        // Map latest BMI
+        const bmiMap = {};
+        if (bmiData) {
+            bmiData.forEach(r => {
+                if (!bmiMap[r.student_id]) bmiMap[r.student_id] = r;
+            });
+        }
 
-        if (!attError) setAttendanceCount(attCount || 0);
-        console.log("Dashboard Attendance Count:", attCount);
+        // Calculate Stats & Alerts
+        const stats = { Normal: 0, Wasted: 0, "Severely Wasted": 0, Overweight: 0, Obese: 0, Unknown: 0 };
+        let severeCount = 0;
+        let missingBmiCount = 0;
+
+        if (studentsData) {
+            studentsData.forEach(s => {
+                const bmiRec = bmiMap[s.id];
+                const rawStatus = bmiRec?.nutrition_status || s.nutrition_status;
+                const status = normalizeNutritionStatus(rawStatus);
+
+                if (stats[status] !== undefined) stats[status]++;
+
+                if (status === "Severely Wasted") severeCount++;
+
+                if (!bmiRec) missingBmiCount++;
+            });
+        }
+
+        setNutritionStats(stats);
+
+        // Generate Alerts
+        const newAlerts = [];
+
+        if (severeCount > 0) {
+            newAlerts.push({
+                type: "critical",
+                message: `${severeCount} students flagged as Severely Wasted`,
+                time: "Live"
+            });
+        }
+
+        if (missingBmiCount > 0) {
+            newAlerts.push({
+                type: "info",
+                message: `BMI records missing for ${missingBmiCount} students`,
+                time: "Live"
+            });
+        }
+
+        if ((totalStudents - present) > 0) {
+             newAlerts.push({
+                type: "warning",
+                message: `${totalStudents - present} students absent today`,
+                time: "Today"
+            });
+        }
+
+        setAlerts(newAlerts);
 
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchData();
   }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+        fetchDashboardData();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchDashboardData]);
 
   return (
     <div className="dashboard-page-premium">
@@ -376,12 +486,12 @@ export default function Dashboard() {
         </section>
 
         {/* 3. Analytics Section */}
-        <AnalyticsSection presentCount={attendanceCount} />
+        <AnalyticsSection presentCount={attendanceCount} absentCount={absentCount} />
 
         {/* 4. Health & Alerts (Replaces Quick Action Panel) */}
         <section className="dashboard-bottom-grid">
-          <NutritionSummary />
-          <AlertsSection />
+          <NutritionSummary stats={nutritionStats} loading={loading} />
+          <HealthRiskAlerts alerts={alerts} lastUpdated={lastUpdated} />
         </section>
 
       </div>

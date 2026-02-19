@@ -17,11 +17,41 @@
   cursor: pointer;
 }
 
+/* Base Active State */
 .stat-card.active {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.0) 100%);
-  border: 2px solid var(--primary-blue, #3b82f6);
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1), 0 4px 6px -2px rgba(59, 130, 246, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border-width: 2px; /* Thicker border to indicate selection */
+}
+
+/* Color-Specific Active States */
+.stat-card.stat-card-blue.active {
+  border-color: var(--primary-blue, #3b82f6);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(255, 255, 255, 0.5) 100%);
+}
+.stat-card.stat-card-green.active {
+  border-color: var(--success-green, #10b981);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(255, 255, 255, 0.5) 100%);
+}
+.stat-card.stat-card-yellow.active {
+  border-color: var(--warning-yellow, #f59e0b);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(255, 255, 255, 0.5) 100%);
+}
+.stat-card.stat-card-red.active {
+  border-color: var(--danger-red, #ef4444);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(255, 255, 255, 0.5) 100%);
+}
+.stat-card.stat-card-purple.active {
+  border-color: #8b5cf6;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(255, 255, 255, 0.5) 100%);
+}
+.stat-card.stat-card-orange.active {
+  border-color: #f97316;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(255, 255, 255, 0.5) 100%);
+}
+.stat-card.stat-card-gray.active {
+  border-color: #6b7280;
+  background: linear-gradient(135deg, rgba(107, 114, 128, 0.08) 0%, rgba(255, 255, 255, 0.5) 100%);
 }
 
 .stat-card:hover {

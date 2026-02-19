@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
+import { normalizeNutritionStatus, STATUS_COLORS } from "../utils/nutritionUtils";
 import {
   Users,
   Activity,
@@ -91,7 +92,8 @@ export default function Reports() {
         const bmiRecord = bmiMap[s.id];
         const attRecord = attMap[s.id] || { present: 0, absent: 0 };
 
-        const nutritionStatus = bmiRecord?.nutrition_status || s.nutrition_status || s.nutritionStatus || "Unknown";
+        const rawStatus = bmiRecord?.nutrition_status || s.nutrition_status || s.nutritionStatus;
+        const nutritionStatus = normalizeNutritionStatus(rawStatus);
         const bmiValue = bmiRecord?.bmi || s.bmi || null;
 
         const rawGrade = (s.grade_level || "").toString();
@@ -182,15 +184,9 @@ export default function Reports() {
   const summary = useMemo(() => {
     const total = filteredStudentsBase.length;
 
-    // Helper for safe comparison
+    // Helper for safe comparison (Status is already normalized)
     const countStatus = (statusLabel) =>
-      filteredStudentsBase.filter(s => (s.status || "").toLowerCase().trim() === statusLabel.toLowerCase().trim()).length;
-
-    // Count unknowns (null, undefined, "-", "Unknown")
-    const unknown = filteredStudentsBase.filter(s => {
-      const st = (s.status || "").toLowerCase().trim();
-      return !st || st === "unknown" || st === "-";
-    }).length;
+      filteredStudentsBase.filter(s => s.status === statusLabel).length;
 
     return {
       total,
@@ -199,7 +195,7 @@ export default function Reports() {
       severelyWasted: countStatus("Severely Wasted"),
       overweight: countStatus("Overweight"),
       obese: countStatus("Obese"),
-      unknown
+      unknown: countStatus("Unknown")
     };
   }, [filteredStudentsBase]);
 
@@ -342,8 +338,7 @@ export default function Reports() {
               icon={<Users size={20}/>}
               color="blue"
               className="reports-stat-card rsc-blue"
-              onClick={() => setStatus("All Status")}
-              isActive={status === "All Status"}
+              // Removed onClick to make non-interactive as requested
             />
           </div>
 
@@ -353,7 +348,7 @@ export default function Reports() {
               label="Normal"
               value={loading && students.length === 0 ? "..." : summary.normal}
               icon={<CheckCircle size={20}/>}
-              color="green"
+              color={STATUS_COLORS["Normal"]}
               className="reports-stat-card rsc-green"
               onClick={() => handleStatusCardClick("Normal")}
               isActive={status === "Normal"}
@@ -362,7 +357,7 @@ export default function Reports() {
               label="Wasted"
               value={loading && students.length === 0 ? "..." : summary.wasted}
               icon={<AlertTriangle size={20}/>}
-              color="yellow"
+              color={STATUS_COLORS["Wasted"]}
               className="reports-stat-card rsc-yellow"
               onClick={() => handleStatusCardClick("Wasted")}
               isActive={status === "Wasted"}
@@ -371,8 +366,8 @@ export default function Reports() {
               label="Severely Wasted"
               value={loading && students.length === 0 ? "..." : summary.severelyWasted}
               icon={<AlertTriangle size={20}/>}
-              color="orange"
-              className="reports-stat-card rsc-orange"
+              color={STATUS_COLORS["Severely Wasted"]}
+              className="reports-stat-card rsc-red"
               onClick={() => handleStatusCardClick("Severely Wasted")}
               isActive={status === "Severely Wasted"}
             />
@@ -380,8 +375,8 @@ export default function Reports() {
               label="Overweight"
               value={loading && students.length === 0 ? "..." : summary.overweight}
               icon={<Activity size={20}/>}
-              color="purple"
-              className="reports-stat-card rsc-purple"
+              color={STATUS_COLORS["Overweight"]}
+              className="reports-stat-card rsc-blue"
               onClick={() => handleStatusCardClick("Overweight")}
               isActive={status === "Overweight"}
             />
@@ -389,8 +384,8 @@ export default function Reports() {
               label="Obese"
               value={loading && students.length === 0 ? "..." : summary.obese}
               icon={<XCircle size={20}/>}
-              color="red"
-              className="reports-stat-card rsc-red"
+              color={STATUS_COLORS["Obese"]}
+              className="reports-stat-card rsc-purple"
               onClick={() => handleStatusCardClick("Obese")}
               isActive={status === "Obese"}
             />
@@ -398,7 +393,7 @@ export default function Reports() {
               label="Unknown"
               value={loading && students.length === 0 ? "..." : summary.unknown}
               icon={<Users size={20}/>}
-              color="gray"
+              color={STATUS_COLORS["Unknown"]}
               className="reports-stat-card rsc-gray"
               onClick={() => handleStatusCardClick("Unknown")}
               isActive={status === "Unknown"}
