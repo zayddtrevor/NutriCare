@@ -159,8 +159,8 @@ tbody tr:hover {
 
 /* Custom Scrollbar (Polished Modern Look) */
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
 }
 
 ::-webkit-scrollbar-track {
@@ -169,17 +169,17 @@ tbody tr:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #3b82f6, #6366f1); /* Brand Blue -> Indigo */
+  background: #123846; /* Sidebar Dark Green */
   border-radius: 6px;
   border: 3px solid #f1f5f9; /* Inset effect matching track color */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #2563eb, #4f46e5); /* Darker on hover */
+  background: #0f2e3a; /* Darker on hover */
 }
 
 /* Firefox Scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #3b82f6 #f1f5f9;
+  scrollbar-color: #123846 #f1f5f9;
 }

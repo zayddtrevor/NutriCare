@@ -13,6 +13,17 @@
   border-top: 4px solid transparent; /* Placeholder for colored border */
 }
 
+.stat-card.clickable {
+  cursor: pointer;
+}
+
+.stat-card.active {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.0) 100%);
+  border: 2px solid var(--primary-blue, #3b82f6);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1), 0 4px 6px -2px rgba(59, 130, 246, 0.05);
+}
+
 .stat-card:hover {
   transform: translateY(-4px) scale(1.02);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);

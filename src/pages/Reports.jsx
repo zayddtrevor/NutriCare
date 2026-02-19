@@ -27,6 +27,7 @@ export default function Reports() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
   // Filter State
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,7 +37,8 @@ export default function Reports() {
 
   // Fetch Data Logic
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    // Only set loading on first load to avoid flickering on auto-refresh
+    if (students.length === 0) setLoading(true);
     setError(null);
     try {
       // 1. Fetch Students
@@ -114,6 +116,7 @@ export default function Reports() {
       });
 
       setStudents(processed);
+      setLastUpdated(new Date());
 
     } catch (err) {
       console.error("Error fetching reports data:", err);
@@ -121,10 +124,17 @@ export default function Reports() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // Remove students.length dependency to avoid infinite loops if logic changes, but students.length check inside is fine
 
   useEffect(() => {
     fetchData();
+
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchData();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [fetchData]);
 
   // -------- FILTERS --------
@@ -135,7 +145,8 @@ export default function Reports() {
     return SCHOOL_DATA[grade] || [];
   }, [grade]);
 
-  const filteredStudents = useMemo(() => {
+  // Level 1: Filter by Grade, Section, and Search Query (Base Dataset for Stats)
+  const filteredStudentsBase = useMemo(() => {
     return students.filter(s => {
       // 1. Search
       if (searchQuery) {
@@ -153,33 +164,53 @@ export default function Reports() {
       // 3. Section
       if (section !== "All Sections" && s.section !== section) return false;
 
-      // 4. Status
-      if (status !== "All Status" && (s.status || "").toLowerCase() !== status.toLowerCase()) return false;
-
       return true;
     });
-  }, [students, grade, section, status, searchQuery]);
+  }, [students, grade, section, searchQuery]);
 
-  // -------- SUMMARY STATS --------
+  // Level 2: Filter by Status (applied to Table only)
+  const finalFilteredStudents = useMemo(() => {
+    if (status === "All Status") return filteredStudentsBase;
+
+    const targetStatus = status.toLowerCase().trim();
+    return filteredStudentsBase.filter(s =>
+      (s.status || "").toLowerCase().trim() === targetStatus
+    );
+  }, [filteredStudentsBase, status]);
+
+  // -------- SUMMARY STATS (Derived from Base, so they don't zero out when status filter is active) --------
   const summary = useMemo(() => {
-    const total = filteredStudents.length;
-    const normal = filteredStudents.filter(s => (s.status || "").toLowerCase() === "normal").length;
-    const wasted = filteredStudents.filter(s => (s.status || "").toLowerCase() === "wasted").length;
-    const severelyWasted = filteredStudents.filter(s => (s.status || "").toLowerCase() === "severely wasted").length;
-    const overweight = filteredStudents.filter(s => (s.status || "").toLowerCase() === "overweight").length;
-    const obese = filteredStudents.filter(s => (s.status || "").toLowerCase() === "obese").length;
-    const unknown = filteredStudents.filter(s => !s.status || s.status === "Unknown" || s.status === "-").length;
+    const total = filteredStudentsBase.length;
+
+    // Helper for safe comparison
+    const countStatus = (statusLabel) =>
+      filteredStudentsBase.filter(s => (s.status || "").toLowerCase().trim() === statusLabel.toLowerCase().trim()).length;
+
+    // Count unknowns (null, undefined, "-", "Unknown")
+    const unknown = filteredStudentsBase.filter(s => {
+      const st = (s.status || "").toLowerCase().trim();
+      return !st || st === "unknown" || st === "-";
+    }).length;
 
     return {
       total,
-      normal,
-      wasted,
-      severelyWasted,
-      overweight,
-      obese,
+      normal: countStatus("Normal"),
+      wasted: countStatus("Wasted"),
+      severelyWasted: countStatus("Severely Wasted"),
+      overweight: countStatus("Overweight"),
+      obese: countStatus("Obese"),
       unknown
     };
-  }, [filteredStudents]);
+  }, [filteredStudentsBase]);
+
+  // -------- HANDLERS --------
+  const handleStatusCardClick = (statusLabel) => {
+    if (status === statusLabel) {
+      setStatus("All Status"); // Toggle off
+    } else {
+      setStatus(statusLabel);
+    }
+  };
 
   // -------- EXPORT CSV --------
   const escapeCsvField = (field) => {
@@ -192,7 +223,7 @@ export default function Reports() {
   };
 
   const exportCSV = () => {
-    if (filteredStudents.length === 0) return;
+    if (finalFilteredStudents.length === 0) return;
 
     const headers = [
       "student_id",
@@ -218,7 +249,7 @@ export default function Reports() {
 
     const csvContent = [
       headers.join(","),
-      ...filteredStudents.map(s => {
+      ...finalFilteredStudents.map(s => {
         return [
           escapeCsvField(s.id),
           escapeCsvField(cleanValue(s.name)),
@@ -279,6 +310,9 @@ export default function Reports() {
           title="Reports & Analytics"
           action={
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
+              <div className="last-updated" style={{ fontSize: '0.8rem', color: '#64748b', marginRight: '8px' }}>
+                Updated: {lastUpdated.toLocaleTimeString()}
+              </div>
               <button
                 className="btn-download"
                 onClick={downloadTemplate}
@@ -289,7 +323,7 @@ export default function Reports() {
               <button
                   className="btn-export"
                   onClick={exportCSV}
-                  disabled={loading || filteredStudents.length === 0}
+                  disabled={loading || finalFilteredStudents.length === 0}
               >
                   <Download size={16} className="btn-icon-bounce" />
                   Export CSV
@@ -304,10 +338,12 @@ export default function Reports() {
           <div className="reports-summary-top">
             <StatCard
               label="Total Students"
-              value={loading ? "..." : summary.total}
+              value={loading && students.length === 0 ? "..." : summary.total}
               icon={<Users size={20}/>}
               color="blue"
               className="reports-stat-card rsc-blue"
+              onClick={() => setStatus("All Status")}
+              isActive={status === "All Status"}
             />
           </div>
 
@@ -315,45 +351,57 @@ export default function Reports() {
           <div className="reports-summary-bottom">
             <StatCard
               label="Normal"
-              value={loading ? "..." : summary.normal}
+              value={loading && students.length === 0 ? "..." : summary.normal}
               icon={<CheckCircle size={20}/>}
               color="green"
               className="reports-stat-card rsc-green"
+              onClick={() => handleStatusCardClick("Normal")}
+              isActive={status === "Normal"}
             />
             <StatCard
               label="Wasted"
-              value={loading ? "..." : summary.wasted}
+              value={loading && students.length === 0 ? "..." : summary.wasted}
               icon={<AlertTriangle size={20}/>}
               color="yellow"
               className="reports-stat-card rsc-yellow"
+              onClick={() => handleStatusCardClick("Wasted")}
+              isActive={status === "Wasted"}
             />
             <StatCard
               label="Severely Wasted"
-              value={loading ? "..." : summary.severelyWasted}
+              value={loading && students.length === 0 ? "..." : summary.severelyWasted}
               icon={<AlertTriangle size={20}/>}
               color="orange"
               className="reports-stat-card rsc-orange"
+              onClick={() => handleStatusCardClick("Severely Wasted")}
+              isActive={status === "Severely Wasted"}
             />
             <StatCard
               label="Overweight"
-              value={loading ? "..." : summary.overweight}
+              value={loading && students.length === 0 ? "..." : summary.overweight}
               icon={<Activity size={20}/>}
               color="purple"
               className="reports-stat-card rsc-purple"
+              onClick={() => handleStatusCardClick("Overweight")}
+              isActive={status === "Overweight"}
             />
             <StatCard
               label="Obese"
-              value={loading ? "..." : summary.obese}
+              value={loading && students.length === 0 ? "..." : summary.obese}
               icon={<XCircle size={20}/>}
               color="red"
               className="reports-stat-card rsc-red"
+              onClick={() => handleStatusCardClick("Obese")}
+              isActive={status === "Obese"}
             />
             <StatCard
               label="Unknown"
-              value={loading ? "..." : summary.unknown}
+              value={loading && students.length === 0 ? "..." : summary.unknown}
               icon={<Users size={20}/>}
               color="gray"
               className="reports-stat-card rsc-gray"
+              onClick={() => handleStatusCardClick("Unknown")}
+              isActive={status === "Unknown"}
             />
           </div>
         </div>
@@ -403,7 +451,7 @@ export default function Reports() {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
+              {loading && students.length === 0 ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="skeleton-row">
                     <td><div className="skeleton-bar" style={{ width: '120px' }}></div></td>
@@ -414,7 +462,7 @@ export default function Reports() {
                     <td><div className="skeleton-bar" style={{ width: '30px' }}></div></td>
                   </tr>
                 ))
-              ) : filteredStudents.length === 0 ? (
+              ) : finalFilteredStudents.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="empty-state">
                     <div className="empty-state-content">
@@ -424,7 +472,7 @@ export default function Reports() {
                   </td>
                 </tr>
               ) : (
-                filteredStudents.map((s) => (
+                finalFilteredStudents.map((s) => (
                   <tr key={s.id}>
                     <td>{s.name} {s.isSbfp && <span className="sbfp-badge">SBFP</span>}</td>
                     <td>{s.gradeSection}</td>
