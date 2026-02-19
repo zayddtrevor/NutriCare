@@ -162,64 +162,13 @@
 }
 
 /* Enhanced Stat Card Styles for Feeding Page */
+/* Cleaned up to rely on Global StatCard styles */
 .feeding-stat-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  display: flex;
-  flex-direction: column;
   min-width: 200px;
   flex: 1;
-  position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  overflow: hidden;
 }
 
-.feeding-stat-card:hover {
-  transform: translateY(-4px); /* Hover lift animation */
-  box-shadow: 0 10px 24px rgba(0,0,0,0.12);
-}
-
-/* Top Gradient Borders */
-.tsc-blue {
-  border-top: 4px solid #3b82f6;
-  background: linear-gradient(to bottom, #eff6ff 0%, #ffffff 15%);
-}
-.tsc-green {
-  border-top: 4px solid #10b981;
-  background: linear-gradient(to bottom, #ecfdf5 0%, #ffffff 15%);
-}
-.tsc-red {
-  border-top: 4px solid #ef4444;
-  background: linear-gradient(to bottom, #fef2f2 0%, #ffffff 15%);
-}
-
-.feeding-stat-card .stat-label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  color: #64748b;
-  text-transform: uppercase;
-}
-
-.feeding-stat-card .stat-value {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-top: 0.5rem;
-  color: #1e293b;
-}
-
-/* Icon opacity effect */
-.feeding-stat-card .stat-icon {
-  opacity: 0.8;
-  transition: opacity 0.2s;
-}
-
-.feeding-stat-card:hover .stat-icon {
-  opacity: 1;
-  transform: scale(1.1);
-}
+/* .tsc-* classes removed to allow StatCard global colors (stat-card-blue, etc.) to apply */
 
 
 /* Table */
@@ -258,23 +207,7 @@
   background-color: #f8fafc;
 }
 
-/* Status Badges */
-.status-badge {
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: capitalize;
-  display: inline-block;
-}
-
-.status-badge.normal { background-color: #dcfce7; color: #166534; }
-.status-badge.wasted { background-color: #fef9c3; color: #854d0e; }
-.status-badge.severely-wasted { background-color: #fee2e2; color: #991b1b; }
-.status-badge.overweight { background-color: #e0f2fe; color: #075985; }
-.status-badge.obese { background-color: #f3e8ff; color: #6b21a8; }
-.status-badge.unknown { background-color: #f1f5f9; color: #475569; }
-
+/* Status Badges - Rely on global styles mostly */
 .attendance-present { color: var(--success-green); font-weight: 600; display: flex; align-items: center; gap: 4px; }
 .attendance-absent { color: #94a3b8; }
 
