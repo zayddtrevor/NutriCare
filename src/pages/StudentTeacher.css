@@ -262,8 +262,8 @@
 /* -------- Enhanced Modal Styles -------- */
 .modal-card {
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   width: 480px;
   padding: 0;
   overflow: hidden;
@@ -271,23 +271,23 @@
 
 .modal-header-colored {
   background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
-  padding: 1.5rem 2rem;
+  padding: 1.25rem 2rem;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   color: white;
 }
 
 .modal-title-group h3 {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: white;
 }
 
 .modal-subtitle {
-  margin: 4px 0 0 0;
-  font-size: 0.9rem;
+  margin: 2px 0 0 0;
+  font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
 }
@@ -297,9 +297,12 @@
   border: none;
   cursor: pointer;
   color: rgba(255, 255, 255, 0.8);
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   transition: color 0.2s;
   padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .close-btn-white:hover {
@@ -311,7 +314,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  padding: 2rem;
+  padding: 1.5rem 2rem;
 }
 
 .modal-form label {
