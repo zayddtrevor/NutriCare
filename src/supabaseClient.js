@@ -183,6 +183,8 @@ if (supabaseUrl && supabaseAnonKey) {
     };
   };
 
+  const authListeners = new Set();
+
   supabase = {
     from: (table) => createMockBuilder(table),
     auth: {
@@ -191,7 +193,18 @@ if (supabaseUrl && supabaseAnonKey) {
         error: null
       }),
       onAuthStateChange: (callback) => {
-        return { data: { subscription: { unsubscribe: () => {} } } };
+        authListeners.add(callback);
+        // Immediately call with current session
+        setTimeout(() => callback('INITIAL_SESSION', mockSession), 0);
+        return {
+          data: {
+            subscription: {
+              unsubscribe: () => {
+                authListeners.delete(callback);
+              }
+            }
+          }
+        };
       },
       signInWithPassword: ({ email, password }) => {
         return new Promise((resolve) => {
@@ -199,6 +212,7 @@ if (supabaseUrl && supabaseAnonKey) {
             if (email && password) {
                const session = { user: { email }, access_token: "mock_token" };
                saveSession(session);
+               authListeners.forEach(cb => cb('SIGNED_IN', session));
                resolve({ data: { session }, error: null });
             } else {
                resolve({ data: { session: null }, error: { message: "Invalid credentials" } });
@@ -208,6 +222,7 @@ if (supabaseUrl && supabaseAnonKey) {
       },
       signOut: () => {
         saveSession(null);
+        authListeners.forEach(cb => cb('SIGNED_OUT', null));
         return Promise.resolve({ error: null });
       },
     }

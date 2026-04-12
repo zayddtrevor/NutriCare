@@ -1,23 +1,8 @@
-import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import { useAuth } from "../context/AuthContext";
 
 export default function RequireAuth({ children }) {
-  const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState(null);
-
-  useEffect(() => {
-    const getSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      setSession(session);
-      setLoading(false);
-    };
-
-    getSession();
-  }, []);
+  const { session, loading } = useAuth();
 
   if (loading) {
     return (
