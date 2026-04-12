@@ -432,12 +432,6 @@ export default function StudentTeacher() {
                   {isRecalculating ? "Recalculating..." : "Recalculate Status"}
                 </button>
               )}
-              {activeTab === "teachers" && (
-                <button className="btn-add-premium" onClick={openAddModal}>
-                  <UserPlus size={18} />
-                  Add Teacher
-                </button>
-              )}
             </div>
           }
         />
@@ -664,10 +658,7 @@ export default function StudentTeacher() {
                             <Users size={40} color="#cbd5e1" />
                           </div>
                           <h3>No teachers found</h3>
-                          <p>Try adjusting your filters or add a new teacher.</p>
-                          <Button variant="success" onClick={openAddModal}>
-                            + Add Teacher
-                          </Button>
+                          <p>Try adjusting your filters.</p>
                         </div>
                       </td>
                     </tr>

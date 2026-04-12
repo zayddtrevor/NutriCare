@@ -260,9 +260,9 @@ const NutritionSummary = () => {
 
 const AlertsSection = () => {
   const alerts = [
-    { type: "critical", message: "5 students flagged as Severely Wasted", time: "2h ago" },
-    { type: "warning", message: "Grade 3 has high absence rate today", time: "4h ago" },
-    { type: "info", message: "BMI records missing for 12 students", time: "1d ago" },
+    { type: "critical", message: "5 students flagged as Severely Wasted" },
+    { type: "warning", message: "Grade 3 has high absence rate today" },
+    { type: "info", message: "BMI records missing for 12 students" },
   ];
 
   return (
@@ -278,7 +278,6 @@ const AlertsSection = () => {
             </div>
             <div className="alert-content">
               <p className="alert-message">{alert.message}</p>
-              <span className="alert-time">{alert.time}</span>
             </div>
           </div>
         ))}
