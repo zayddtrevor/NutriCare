@@ -10,6 +10,7 @@ import StatCard from "../components/common/StatCard";
 import GradeTabs from "../components/common/GradeTabs";
 import Button from "../components/common/Button";
 import Modal from "../components/common/Modal";
+import AlertModal from "../components/common/AlertModal";
 import "../components/common/TableStyles.css"; // Import standard table styles
 import "./StudentTeacher.css";
 
@@ -62,6 +63,35 @@ export default function StudentTeacher() {
     section: "",
   });
   const [emailError, setEmailError] = useState("");
+
+  // Alert Modal State
+  const [alertConfig, setAlertConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+    onConfirm: () => {},
+  });
+
+  const showAlert = (title, message, type = "info") => {
+    setAlertConfig({
+      isOpen: true,
+      title,
+      message,
+      type,
+      onConfirm: () => {},
+    });
+  };
+
+  const showConfirm = (title, message, onConfirm) => {
+    setAlertConfig({
+      isOpen: true,
+      title,
+      message,
+      type: "confirm",
+      onConfirm,
+    });
+  };
 
   // =========================
   // Fetch Data
@@ -273,21 +303,23 @@ export default function StudentTeacher() {
   // Recalculate Status
   // =========================
   async function handleRecalculate() {
-    if (!window.confirm("This will update nutrition status for students with 'Unknown' status based on their latest BMI records. Continue?")) {
-      return;
-    }
+    showConfirm(
+      "Recalculate Status",
+      "This will update nutrition status for students with 'Unknown' status based on their latest BMI records. Continue?",
+      async () => {
+        setIsRecalculating(true);
+        const result = await recalculateNutritionStatus();
+        setIsRecalculating(false);
 
-    setIsRecalculating(true);
-    const result = await recalculateNutritionStatus();
-    setIsRecalculating(false);
-
-    if (result.success) {
-      alert(result.message || `Updated ${result.count} students.`);
-      fetchStudents(); // Refresh data
-    } else {
-      console.error("Recalculation failed:", result.error);
-      alert(`Failed to recalculate status: ${result.error?.message || "Unknown error"}`);
-    }
+        if (result.success) {
+          showAlert("Success", result.message || `Updated ${result.count} students.`, "success");
+          fetchStudents(); // Refresh data
+        } else {
+          console.error("Recalculation failed:", result.error);
+          showAlert("Error", `Failed to recalculate status: ${result.error?.message || "Unknown error"}`, "error");
+        }
+      }
+    );
   }
 
   // =========================
@@ -316,8 +348,10 @@ export default function StudentTeacher() {
   // =========================
   async function deleteTeacher(teacher) {
     if (teacher.active) {
-      alert(
-        "The account you selected is still active. Please deactivate the account first and wait 30 days before proceeding with deletion."
+      showAlert(
+        "Action Blocked",
+        "The account you selected is still active. Please deactivate the account first and wait 30 days before proceeding with deletion.",
+        "warning"
       );
       return;
     }
@@ -329,23 +363,24 @@ export default function StudentTeacher() {
       (1000 * 60 * 60 * 24);
 
     if (daysSinceDeactivated < 30) {
-      alert("The account was recently deactivated. You must wait 30 days before permanently deleting this account.");
+      showAlert("Notice", "The account was recently deactivated. You must wait 30 days before permanently deleting this account.", "info");
       return;
     }
     */
 
-    if (!window.confirm("Permanently delete this teacher?")) return;
+    showConfirm("Confirm Deletion", "Permanently delete this teacher?", async () => {
+      const { error } = await supabase
+        .from("teachers")
+        .delete()
+        .eq("id", teacher.uid);
 
-    const { error } = await supabase
-      .from("teachers")
-      .delete()
-      .eq("id", teacher.uid);
-
-    if (error) {
-      console.error("Delete error:", error);
-    } else {
-      fetchTeachers();
-    }
+      if (error) {
+        console.error("Delete error:", error);
+        showAlert("Error", "Failed to delete teacher. Please try again.", "error");
+      } else {
+        fetchTeachers();
+      }
+    });
   }
 
   // =========================
@@ -830,6 +865,15 @@ export default function StudentTeacher() {
           </form>
         </div>
       </Modal>
+
+      <AlertModal
+        isOpen={alertConfig.isOpen}
+        onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })}
+        onConfirm={alertConfig.onConfirm}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+      />
     </div>
   );
 }
