@@ -9,6 +9,7 @@ import FilterBar from "../components/common/FilterBar";
 import StatCard from "../components/common/StatCard";
 import GradeTabs from "../components/common/GradeTabs";
 import Button from "../components/common/Button";
+import Modal from "../components/common/Modal";
 import "../components/common/TableStyles.css"; // Import standard table styles
 import "./StudentTeacher.css";
 
@@ -718,100 +719,98 @@ export default function StudentTeacher() {
         )}
       </div>
 
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <div className="modal-header-colored">
-              <div className="modal-title-group">
-                <h3>{editingTeacher ? "Edit Teacher" : "Add New Teacher"}</h3>
-                <p className="modal-subtitle">Enter teacher details below</p>
-              </div>
-              <button className="close-btn-white" onClick={closeModal}>✕</button>
+      <Modal isOpen={showModal} onClose={closeModal}>
+        <div className="modal-card">
+          <div className="modal-header-colored">
+            <div className="modal-title-group">
+              <h3>{editingTeacher ? "Edit Teacher" : "Add New Teacher"}</h3>
+              <p className="modal-subtitle">Enter teacher details below</p>
             </div>
+            <button className="close-btn-white" onClick={closeModal}>✕</button>
+          </div>
 
-            <form onSubmit={handleSubmit} className="modal-form">
-              <label>
-                ID Number
-                <div className="input-with-icon">
-                  <Hash size={18} className="input-icon" />
-                  <input
-                    name="idNumber"
-                    placeholder="Teacher ID Number"
-                    value={formData.idNumber}
-                    onChange={handleChange}
-                  />
-                </div>
-              </label>
-
-              <div className="form-row-2">
-                <label>
-                  First Name
-                  <div className="input-with-icon">
-                    <User size={18} className="input-icon" />
-                    <input
-                      name="firstName"
-                      placeholder="First Name"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </label>
-                <label>
-                  Last Name
-                  <div className="input-with-icon">
-                    <User size={18} className="input-icon" />
-                    <input
-                      name="lastName"
-                      placeholder="Last Name"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </label>
+          <form onSubmit={handleSubmit} className="modal-form">
+            <label>
+              ID Number
+              <div className="input-with-icon">
+                <Hash size={18} className="input-icon" />
+                <input
+                  name="idNumber"
+                  placeholder="Teacher ID Number"
+                  value={formData.idNumber}
+                  onChange={handleChange}
+                />
               </div>
+            </label>
 
+            <div className="form-row-2">
               <label>
-                Email
+                First Name
                 <div className="input-with-icon">
-                  <Mail size={18} className="input-icon" />
+                  <User size={18} className="input-icon" />
                   <input
-                    name="email"
-                    type="email"
-                    placeholder="juan.delacruz@gmail.com"
-                    value={formData.email}
+                    name="firstName"
+                    placeholder="First Name"
+                    value={formData.firstName}
                     onChange={handleChange}
-                    className={emailError ? "input-error" : ""}
                     required
                   />
                 </div>
-                {emailError && <span className="error-text">{emailError}</span>}
               </label>
-
               <label>
-                Section
+                Last Name
                 <div className="input-with-icon">
-                  <Briefcase size={18} className="input-icon" />
+                  <User size={18} className="input-icon" />
                   <input
-                    name="section"
-                    placeholder="Section"
-                    value={formData.section}
+                    name="lastName"
+                    placeholder="Last Name"
+                    value={formData.lastName}
                     onChange={handleChange}
+                    required
                   />
                 </div>
               </label>
+            </div>
 
-              <div className="modal-actions">
-                <button className="btn-save-premium" type="submit">Save Teacher</button>
-                <Button variant="secondary" type="button" onClick={closeModal}>
-                  Cancel
-                </Button>
+            <label>
+              Email
+              <div className="input-with-icon">
+                <Mail size={18} className="input-icon" />
+                <input
+                  name="email"
+                  type="email"
+                  placeholder="juan.delacruz@gmail.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={emailError ? "input-error" : ""}
+                  required
+                />
               </div>
-            </form>
-          </div>
+              {emailError && <span className="error-text">{emailError}</span>}
+            </label>
+
+            <label>
+              Section
+              <div className="input-with-icon">
+                <Briefcase size={18} className="input-icon" />
+                <input
+                  name="section"
+                  placeholder="Section"
+                  value={formData.section}
+                  onChange={handleChange}
+                />
+              </div>
+            </label>
+
+            <div className="modal-actions">
+              <button className="btn-save-premium" type="submit">Save Teacher</button>
+              <Button variant="secondary" type="button" onClick={closeModal}>
+                Cancel
+              </Button>
+            </div>
+          </form>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }
