@@ -40,6 +40,14 @@ export default function FeedingNutrition() {
   const displayDate = format(today, "cccc • MMMM d, yyyy");
   const currentDayName = format(today, "cccc");
 
+  const getCurrentWeekNumber = () => {
+    const day = today.getDate();
+    if (day <= 7) return 1;
+    if (day <= 14) return 2;
+    if (day <= 21) return 3;
+    return 4;
+  };
+
   // Fetch Data
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -77,19 +85,27 @@ export default function FeedingNutrition() {
         });
       }
 
-      // Fetch Daily Meal (Dynamic for current date)
-      const { data: mealData } = await supabase
-        .from("nutrition_meals")
-        .select("*")
-        .eq("day_of_week", currentDayName)
-        .maybeSingle();
+      // Fetch Daily Meal (Dynamic for current date and week)
+      const weekNumber = getCurrentWeekNumber();
 
-      console.log("Nutrition meals fetched count:", mealData ? 1 : 0);
-
-      if (mealData) {
-        setDailyMeal(mealData);
-      } else {
+      // If weekend, skip fetching
+      if (currentDayName === "Saturday" || currentDayName === "Sunday") {
         setDailyMeal(null);
+      } else {
+        const { data: mealData } = await supabase
+          .from("nutrition_meals")
+          .select("*")
+          .eq("day_of_week", currentDayName)
+          .eq("week_number", weekNumber)
+          .maybeSingle();
+
+        console.log("Nutrition meals fetched count:", mealData ? 1 : 0);
+
+        if (mealData) {
+          setDailyMeal(mealData);
+        } else {
+          setDailyMeal(null);
+        }
       }
 
       // Attempt fetch optional tables (SBFP, Attendance)
