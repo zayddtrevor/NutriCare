@@ -8,6 +8,7 @@ import FilterBar from "../components/common/FilterBar";
 import GradeTabs from "../components/common/GradeTabs";
 import StatCard from "../components/common/StatCard";
 import Button from "../components/common/Button";
+import Modal from "../components/common/Modal";
 import "../components/common/TableStyles.css";
 import "./FeedingNutrition.css";
 
@@ -403,31 +404,29 @@ export default function FeedingNutrition() {
       </div>
 
         {/* Modal */}
-        {showDetailsId && (
-            <div className="modal-overlay" onClick={() => setShowDetailsId(null)}>
-                <div className="modal-content" onClick={e => e.stopPropagation()}>
-                    <div className="modal-header">
-                        <h3>Student Details</h3>
-                        <Button variant="secondary" size="sm" onClick={() => setShowDetailsId(null)} icon={<X size={16} />} />
-                    </div>
-                    {(() => {
-                        const s = students.find(st => st.id === showDetailsId);
-                        if(!s) return null;
-                        return (
-                            <div className="modal-body">
-                                <p><strong>Name:</strong> {s.name}</p>
-                                <p><strong>Grade & Section:</strong> {s.gradeSectionDisplay}</p>
-                                <p><strong>Sex:</strong> {s.sex}</p>
-                                <p><strong>Nutrition Status:</strong> {s.nutritionStatus}</p>
-                                <p><strong>Height:</strong> {s.height ? `${s.height} cm` : "-"}</p>
-                                <p><strong>Weight:</strong> {s.weight ? `${s.weight} kg` : "-"}</p>
-                                <p><strong>BMI:</strong> {s.bmi || "-"}</p>
-                            </div>
-                        );
-                    })()}
+        <Modal isOpen={!!showDetailsId} onClose={() => setShowDetailsId(null)}>
+            <div className="modal-content">
+                <div className="modal-header">
+                    <h3>Student Details</h3>
+                    <Button variant="secondary" size="sm" onClick={() => setShowDetailsId(null)} icon={<X size={16} />} />
                 </div>
+                {(() => {
+                    const s = students.find(st => st.id === showDetailsId);
+                    if(!s) return null;
+                    return (
+                        <div className="modal-body">
+                            <p><strong>Name:</strong> {s.name}</p>
+                            <p><strong>Grade & Section:</strong> {s.gradeSectionDisplay}</p>
+                            <p><strong>Sex:</strong> {s.sex}</p>
+                            <p><strong>Nutrition Status:</strong> {s.nutritionStatus}</p>
+                            <p><strong>Height:</strong> {s.height ? `${s.height} cm` : "-"}</p>
+                            <p><strong>Weight:</strong> {s.weight ? `${s.weight} kg` : "-"}</p>
+                            <p><strong>BMI:</strong> {s.bmi || "-"}</p>
+                        </div>
+                    );
+                })()}
             </div>
-        )}
+        </Modal>
     </div>
   );
 }

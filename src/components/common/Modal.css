@@ -1,0 +1,58 @@
+.modal-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000; /* Higher than sidebar and other elements */
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 40; /* Requirement: Overlay z-40 */
+  backdrop-filter: blur(2px);
+  animation: modalFadeIn 0.3s ease-in-out forwards;
+}
+
+.modal-content-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50; /* Requirement: Modal z-50 */
+  pointer-events: none; /* Allows clicks to reach the backdrop if needed, though we stopPropagation on container */
+}
+
+.modal-container {
+  pointer-events: auto; /* Re-enable for the actual modal */
+  z-index: 50;
+  max-width: 95%;
+  max-height: 95vh;
+  display: flex;
+  animation: modalFadeIn 0.3s ease-in-out forwards;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
