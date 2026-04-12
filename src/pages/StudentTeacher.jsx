@@ -315,6 +315,25 @@ export default function StudentTeacher() {
   // Delete teacher
   // =========================
   async function deleteTeacher(teacher) {
+    if (teacher.active) {
+      alert(
+        "The account you selected is still active. Please deactivate the account first and wait 30 days before proceeding with deletion."
+      );
+      return;
+    }
+
+    // Future Logic: 30-day waiting period
+    /*
+    const daysSinceDeactivated =
+      (new Date() - new Date(teacher.deactivatedAt)) /
+      (1000 * 60 * 60 * 24);
+
+    if (daysSinceDeactivated < 30) {
+      alert("The account was recently deactivated. You must wait 30 days before permanently deleting this account.");
+      return;
+    }
+    */
+
     if (!window.confirm("Permanently delete this teacher?")) return;
 
     const { error } = await supabase
