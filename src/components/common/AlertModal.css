@@ -1,0 +1,43 @@
+.alert-modal-content {
+  padding: 2rem;
+  text-align: center;
+  max-width: 400px;
+  background: white;
+  border-radius: var(--radius-lg);
+}
+
+.alert-icon-container {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.alert-icon.info { color: var(--blue); }
+.alert-icon.warning { color: var(--orange); }
+.alert-icon.error { color: var(--red); }
+.alert-icon.success { color: var(--green); }
+.alert-icon.confirm { color: var(--purple); }
+
+.alert-modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 0.75rem;
+}
+
+.alert-modal-message {
+  font-size: 1rem;
+  color: var(--gray-600);
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.alert-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.alert-modal-actions button {
+  min-width: 100px;
+}

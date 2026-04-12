@@ -99,6 +99,10 @@ if (supabaseUrl && supabaseAnonKey) {
   };
 
   const createMockBuilder = (table) => {
+    let operation = 'select'; // 'select', 'insert', 'update', 'delete'
+    let payload = null;
+    let filters = [];
+
     const query = {
         data: MOCK_DB[table] ? [...MOCK_DB[table]] : [],
         error: null,
@@ -109,6 +113,7 @@ if (supabaseUrl && supabaseAnonKey) {
 
     return {
       select: function(columns = "*", options = {}) {
+        operation = 'select';
         if (options && options.count) {
              query.countType = options.count;
         }
@@ -117,11 +122,23 @@ if (supabaseUrl && supabaseAnonKey) {
         }
         return this;
       },
-      insert: function() { return this; },
-      update: function() { return this; },
-      delete: function() { return this; },
+      insert: function(data) {
+        operation = 'insert';
+        payload = data;
+        return this;
+      },
+      update: function(data) {
+        operation = 'update';
+        payload = data;
+        return this;
+      },
+      delete: function() {
+        operation = 'delete';
+        return this;
+      },
       eq: function(col, val) {
-          if (query.data) {
+          filters.push({ col, val });
+          if (query.data && operation === 'select') {
               query.data = query.data.filter(item => item[col] == val);
           }
           return this;
@@ -167,6 +184,34 @@ if (supabaseUrl && supabaseAnonKey) {
       },
       then: function(resolve, reject) {
         setTimeout(() => {
+          if (operation === 'insert') {
+            const newItems = Array.isArray(payload) ? payload : [payload];
+            newItems.forEach(item => {
+              const newItem = { id: Math.floor(Math.random() * 10000), ...item };
+              MOCK_DB[table].push(newItem);
+            });
+            resolve({ data: newItems, error: null });
+            return;
+          }
+
+          if (operation === 'update') {
+            MOCK_DB[table] = MOCK_DB[table].map(item => {
+              const match = filters.every(f => item[f.col] == f.val);
+              return match ? { ...item, ...payload } : item;
+            });
+            resolve({ data: null, error: null });
+            return;
+          }
+
+          if (operation === 'delete') {
+            MOCK_DB[table] = MOCK_DB[table].filter(item => {
+              const match = filters.every(f => item[f.col] == f.val);
+              return !match;
+            });
+            resolve({ data: null, error: null });
+            return;
+          }
+
           let response = { data: query.data, error: query.error };
 
           if (query.countType === 'exact') {
