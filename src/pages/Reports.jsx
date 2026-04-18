@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "../supabaseClient";
-import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
+import { SCHOOL_DATA, GRADES, normalizeGrade, SCHOOL_METADATA } from "../constants/schoolData";
 import {
   Users,
   Activity,
@@ -106,6 +106,9 @@ export default function Reports() {
           section: section,
           sex: s.sex || null,
           birthDate: s.birth_date || s.dob || null,
+          weighingDate: bmiRecord?.created_at || null,
+          weight: bmiRecord?.weight_kg || s.weight || null,
+          height: bmiRecord?.height_m || s.height || null,
           gradeSection: `${normalizedGrade} - ${section}`,
           status: nutritionStatus,
           bmi: bmiValue ? parseFloat(bmiValue).toFixed(1) : "-",
@@ -212,7 +215,37 @@ export default function Reports() {
     }
   };
 
-  // -------- EXPORT CSV --------
+  // -------- HELPERS --------
+  const calculateAge = (birthDate, weighingDate) => {
+    if (!birthDate || !weighingDate) return "";
+    const birth = new Date(birthDate);
+    const weigh = new Date(weighingDate);
+
+    let years = weigh.getFullYear() - birth.getFullYear();
+    let months = weigh.getMonth() - birth.getMonth();
+
+    if (weigh.getDate() < birth.getDate()) {
+      months--;
+    }
+
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    return `${years}.${months.toString().padStart(2, '0')}`;
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
+    const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+    const dd = d.getDate().toString().padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${mm}/${dd}/${yyyy}`;
+  };
+
   const escapeCsvField = (field) => {
     if (field === null || field === undefined) return "";
     const stringField = String(field);
@@ -222,55 +255,71 @@ export default function Reports() {
     return stringField;
   };
 
-  const exportCSV = () => {
-    if (finalFilteredStudents.length === 0) return;
-
-    const headers = [
-      "student_id",
-      "full_name",
-      "grade",
-      "section",
-      "sex",
-      "birth_date",
-      "bmi",
-      "nutrition_status",
-      "present_days",
-      "absent_days",
-      "report_date"
+  const generateSbfpCsv = (dataRows = []) => {
+    const headerRows = [
+      ["SBFP Form 1 (2024)"],
+      ["", "", "", "", "", "Department of Education"],
+      ["", "", "", "", "", "Master List Beneficiaries for School-Based Feeding Program (SBFP) ( SY 2025-2026)"],
+      [""],
+      [`Division: ${SCHOOL_METADATA.division}`, "", "", "", "", "", `Name of Principal : ${SCHOOL_METADATA.principalName}`],
+      [`City/ Municipality/Barangay : ${SCHOOL_METADATA.division}/${SCHOOL_METADATA.district}`, "", "", "", "", "", `Name of Feeding Focal Person : ${SCHOOL_METADATA.focalPerson}`],
+      [`Name of School / School District : ${SCHOOL_METADATA.schoolName}`],
+      [`School ID Number: ${SCHOOL_METADATA.schoolId}`],
+      [""],
+      [
+        "No.",
+        "Name",
+        "Sex",
+        "Grade/ Section",
+        "Date of Birth (MM/DD/YYYY)",
+        "Date of Weighing / Measuring (MM/DD/YYYY)",
+        "Age in Years / Months",
+        "Weight (Kg)",
+        "Height (cm)",
+        "BMI for 6 y.o. and above",
+        "Nutritional Status (NS)",
+        "",
+        "Parent's consent for milk? (yes or no)",
+        "Participation in 4Ps (yes or no)",
+        "Beneficiary of SBFP in Previous Years (yes or no)"
+      ],
+      [
+        "", "", "", "", "", "", "", "", "", "", "BMI-A", "HFA"
+      ]
     ];
 
+    const bodyRows = dataRows.map((s, index) => [
+      index + 1,
+      s.name,
+      s.sex,
+      `${s.gradeLevel} - ${s.section}`,
+      formatDate(s.birthDate),
+      formatDate(s.weighingDate),
+      calculateAge(s.birthDate, s.weighingDate),
+      s.weight ? parseFloat(s.weight).toFixed(2) : "",
+      s.height ? (parseFloat(s.height) > 3 ? parseFloat(s.height).toFixed(2) : (parseFloat(s.height) * 100).toFixed(2)) : "", // handle m vs cm
+      s.bmi || "",
+      s.status || "",
+      "Normal", // HFA default
+      "YES",
+      "NO",
+      s.isSbfp ? "YES" : "NO"
+    ]);
+
+    const allRows = [...headerRows, ...bodyRows];
+    return allRows.map(row => row.map(escapeCsvField).join(",")).join("\n");
+  };
+
+  // -------- EXPORT CSV --------
+  const exportCSV = () => {
+    if (finalFilteredStudents.length === 0) return;
+    const csvContent = generateSbfpCsv(finalFilteredStudents);
     const reportDate = new Date().toISOString().slice(0, 10);
-
-    // Helper to clean placeholders for CSV export
-    const cleanValue = (val) => {
-      if (val === "-" || val === "Unknown" || val === "?") return "";
-      return val;
-    };
-
-    const csvContent = [
-      headers.join(","),
-      ...finalFilteredStudents.map(s => {
-        return [
-          escapeCsvField(s.id),
-          escapeCsvField(cleanValue(s.name)),
-          escapeCsvField(cleanValue(s.gradeLevel)),
-          escapeCsvField(cleanValue(s.section)),
-          escapeCsvField(cleanValue(s.sex)),
-          escapeCsvField(cleanValue(s.birthDate)),
-          escapeCsvField(cleanValue(s.bmi)),
-          escapeCsvField(cleanValue(s.status)),
-          escapeCsvField(s.presentDays),
-          escapeCsvField(s.absentDays),
-          escapeCsvField(reportDate)
-        ].join(",");
-      })
-    ].join("\n");
-
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `NutriCare_Report_${reportDate}.csv`);
+    link.setAttribute("download", `SBFP_Form1_Report_${reportDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -278,26 +327,12 @@ export default function Reports() {
 
   // -------- DOWNLOAD TEMPLATE --------
   const downloadTemplate = () => {
-    const headers = [
-      "student_id",
-      "full_name",
-      "grade",
-      "section",
-      "sex",
-      "birth_date",
-      "bmi",
-      "nutrition_status",
-      "present_days",
-      "absent_days",
-      "report_date"
-    ];
-
-    const csvContent = headers.join(",");
+    const csvContent = generateSbfpCsv([]);
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "NutriCare_Report_Template.csv");
+    link.setAttribute("download", "SBFP_Form1_Template.csv");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
