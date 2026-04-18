@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 import { supabase } from "../supabaseClient";
-import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
+import { SCHOOL_DATA, GRADES, normalizeGrade, SCHOOL_METADATA } from "../constants/schoolData";
 import {
   Users,
   Activity,
@@ -106,6 +108,9 @@ export default function Reports() {
           section: section,
           sex: s.sex || null,
           birthDate: s.birth_date || s.dob || null,
+          weighingDate: bmiRecord?.created_at || null,
+          weight: bmiRecord?.weight_kg || s.weight || null,
+          height: bmiRecord?.height_m || s.height || null,
           gradeSection: `${normalizedGrade} - ${section}`,
           status: nutritionStatus,
           bmi: bmiValue ? parseFloat(bmiValue).toFixed(1) : "-",
@@ -212,95 +217,199 @@ export default function Reports() {
     }
   };
 
-  // -------- EXPORT CSV --------
-  const escapeCsvField = (field) => {
-    if (field === null || field === undefined) return "";
-    const stringField = String(field);
-    if (stringField.includes(",") || stringField.includes('"') || stringField.includes("\n")) {
-      return `"${stringField.replace(/"/g, '""')}"`;
+  // -------- HELPERS --------
+  const calculateAge = (birthDate, weighingDate) => {
+    if (!birthDate || !weighingDate) return "";
+    const birth = new Date(birthDate);
+    const weigh = new Date(weighingDate);
+
+    let years = weigh.getFullYear() - birth.getFullYear();
+    let months = weigh.getMonth() - birth.getMonth();
+
+    if (weigh.getDate() < birth.getDate()) {
+      months--;
     }
-    return stringField;
+
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    return `${years}.${months.toString().padStart(2, '0')}`;
   };
 
-  const exportCSV = () => {
-    if (finalFilteredStudents.length === 0) return;
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
+    const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+    const dd = d.getDate().toString().padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${mm}/${dd}/${yyyy}`;
+  };
 
-    const headers = [
-      "student_id",
-      "full_name",
-      "grade",
-      "section",
-      "sex",
-      "birth_date",
-      "bmi",
-      "nutrition_status",
-      "present_days",
-      "absent_days",
-      "report_date"
+  const generateSbfpExcel = async (dataRows = []) => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("SBFP Form 1");
+
+    // Set Column Widths
+    worksheet.columns = [
+      { width: 5 },  // No.
+      { width: 30 }, // Name
+      { width: 8 },  // Sex
+      { width: 20 }, // Grade/Section
+      { width: 15 }, // Birth Date
+      { width: 15 }, // Weighing Date
+      { width: 12 }, // Age
+      { width: 12 }, // Weight
+      { width: 12 }, // Height
+      { width: 15 }, // BMI
+      { width: 15 }, // BMI-A
+      { width: 15 }, // HFA
+      { width: 20 }, // Milk Consent
+      { width: 20 }, // 4Ps
+      { width: 25 }, // Previous Beneficiary
     ];
 
-    const reportDate = new Date().toISOString().slice(0, 10);
+    // --- Headers ---
+    worksheet.mergeCells("A1:O1");
+    worksheet.getCell("A1").value = "SBFP Form 1 (2024)";
+    worksheet.getCell("A1").font = { bold: true, size: 14 };
 
-    // Helper to clean placeholders for CSV export
-    const cleanValue = (val) => {
-      if (val === "-" || val === "Unknown" || val === "?") return "";
-      return val;
-    };
+    worksheet.mergeCells("F2:J2");
+    worksheet.getCell("F2").value = "Department of Education";
+    worksheet.getCell("F2").alignment = { horizontal: "center" };
 
-    const csvContent = [
-      headers.join(","),
-      ...finalFilteredStudents.map(s => {
-        return [
-          escapeCsvField(s.id),
-          escapeCsvField(cleanValue(s.name)),
-          escapeCsvField(cleanValue(s.gradeLevel)),
-          escapeCsvField(cleanValue(s.section)),
-          escapeCsvField(cleanValue(s.sex)),
-          escapeCsvField(cleanValue(s.birthDate)),
-          escapeCsvField(cleanValue(s.bmi)),
-          escapeCsvField(cleanValue(s.status)),
-          escapeCsvField(s.presentDays),
-          escapeCsvField(s.absentDays),
-          escapeCsvField(reportDate)
-        ].join(",");
-      })
-    ].join("\n");
+    worksheet.mergeCells("D3:L3");
+    worksheet.getCell("D3").value = "Master List Beneficiaries for School-Based Feeding Program (SBFP) ( SY 2025-2026)";
+    worksheet.getCell("D3").alignment = { horizontal: "center" };
+    worksheet.getCell("D3").font = { bold: true };
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `NutriCare_Report_${reportDate}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Metadata Row 1
+    worksheet.mergeCells("A5:D5");
+    worksheet.getCell("A5").value = `Division: ${SCHOOL_METADATA.division}`;
+    worksheet.mergeCells("I5:O5");
+    worksheet.getCell("I5").value = `Name of Principal : ${SCHOOL_METADATA.principalName}`;
+
+    // Metadata Row 2
+    worksheet.mergeCells("A6:F6");
+    worksheet.getCell("A6").value = `City/ Municipality/Barangay : ${SCHOOL_METADATA.division}/${SCHOOL_METADATA.district}`;
+    worksheet.mergeCells("I6:O6");
+    worksheet.getCell("I6").value = `Name of Feeding Focal Person : ${SCHOOL_METADATA.focalPerson}`;
+
+    // Metadata Row 3
+    worksheet.mergeCells("A7:F7");
+    worksheet.getCell("A7").value = `Name of School / School District : ${SCHOOL_METADATA.schoolName}`;
+
+    // Metadata Row 4
+    worksheet.mergeCells("A8:F8");
+    worksheet.getCell("A8").value = `School ID Number: ${SCHOOL_METADATA.schoolId}`;
+
+    // --- Table Headers ---
+    const tableHeaderRow1 = 10;
+    const tableHeaderRow2 = 11;
+
+    const headers = [
+      "No.", "Name", "Sex", "Grade/ Section", "Date of Birth (MM/DD/YYYY)",
+      "Date of Weighing / Measuring (MM/DD/YYYY)", "Age in Years / Months",
+      "Weight (Kg)", "Height (cm)", "BMI for 6 y.o. and above", "Nutritional Status (NS)", "",
+      "Parent's consent for milk? (yes or no)", "Participation in 4Ps (yes or no)",
+      "Beneficiary of SBFP in Previous Years (yes or no)"
+    ];
+
+    headers.forEach((h, i) => {
+      const col = i + 1;
+      const cell = worksheet.getCell(tableHeaderRow1, col);
+      cell.value = h;
+      cell.font = { bold: true };
+      cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" }
+      };
+
+      // Merge vertical for single-line headers
+      if (h !== "Nutritional Status (NS)" && h !== "") {
+        worksheet.mergeCells(tableHeaderRow1, col, tableHeaderRow2, col);
+      }
+    });
+
+    // Sub-headers for Nutritional Status
+    worksheet.mergeCells(tableHeaderRow1, 11, tableHeaderRow1, 12); // NS spans 2 columns
+    worksheet.getCell(tableHeaderRow2, 11).value = "BMI-A";
+    worksheet.getCell(tableHeaderRow2, 12).value = "HFA";
+    [11, 12].forEach(col => {
+      const cell = worksheet.getCell(tableHeaderRow2, col);
+      cell.font = { bold: true };
+      cell.alignment = { horizontal: "center" };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" }
+      };
+    });
+
+    // --- Data Rows ---
+    dataRows.forEach((s, i) => {
+      const rowIndex = 12 + i;
+      const rowData = [
+        i + 1,
+        s.name,
+        s.sex,
+        `${s.gradeLevel} - ${s.section}`,
+        formatDate(s.birthDate),
+        formatDate(s.weighingDate),
+        calculateAge(s.birthDate, s.weighingDate),
+        s.weight ? parseFloat(s.weight).toFixed(2) : "",
+        s.height ? (parseFloat(s.height) > 3 ? parseFloat(s.height).toFixed(2) : (parseFloat(s.height) * 100).toFixed(2)) : "",
+        s.bmi || "",
+        s.status || "",
+        "Normal",
+        "YES",
+        "NO",
+        s.isSbfp ? "YES" : "NO"
+      ];
+
+      rowData.forEach((val, colIdx) => {
+        const cell = worksheet.getCell(rowIndex, colIdx + 1);
+        cell.value = val;
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" }
+        };
+        cell.alignment = { vertical: "middle", horizontal: colIdx === 1 ? "left" : "center" };
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    return new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  };
+
+  // -------- EXPORT EXCEL --------
+  const exportExcel = async () => {
+    if (finalFilteredStudents.length === 0) return;
+    try {
+      const blob = await generateSbfpExcel(finalFilteredStudents);
+      const reportDate = new Date().toISOString().slice(0, 10);
+      saveAs(blob, `SBFP_Form1_Report_${reportDate}.xlsx`);
+    } catch (err) {
+      console.error("Excel export failed:", err);
+    }
   };
 
   // -------- DOWNLOAD TEMPLATE --------
-  const downloadTemplate = () => {
-    const headers = [
-      "student_id",
-      "full_name",
-      "grade",
-      "section",
-      "sex",
-      "birth_date",
-      "bmi",
-      "nutrition_status",
-      "present_days",
-      "absent_days",
-      "report_date"
-    ];
-
-    const csvContent = headers.join(",");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "NutriCare_Report_Template.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const downloadTemplate = async () => {
+    try {
+      const blob = await generateSbfpExcel([]);
+      saveAs(blob, "SBFP_Form1_Template.xlsx");
+    } catch (err) {
+      console.error("Template download failed:", err);
+    }
   };
 
   return (
@@ -318,15 +427,15 @@ export default function Reports() {
                 onClick={downloadTemplate}
               >
                 <FileText size={16} className="btn-icon-slide" />
-                Download Template
+                Download Template (.xlsx)
               </button>
               <button
                   className="btn-export"
-                  onClick={exportCSV}
+                  onClick={exportExcel}
                   disabled={loading || finalFilteredStudents.length === 0}
               >
                   <Download size={16} className="btn-icon-bounce" />
-                  Export CSV
+                  Export Excel
               </button>
             </div>
           }

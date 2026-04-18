@@ -26,6 +26,16 @@ export const SCHOOL_DATA = {
   ]
 };
 
+// School Metadata for Reports
+export const SCHOOL_METADATA = {
+  schoolName: "BAGONG NAYON 1 ELEMENTARY SCHOOL DLC I-A",
+  schoolId: "109319",
+  division: "ANTIPOLO CITY",
+  district: "BAGONG NAYON",
+  principalName: "DR. FERDINAND B. MILLAN",
+  focalPerson: "ANNA MAY D. CABANAS"
+};
+
 // Export keys for convenience
 export const GRADES = Object.keys(SCHOOL_DATA);
 
