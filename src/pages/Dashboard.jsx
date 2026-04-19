@@ -313,13 +313,17 @@ export default function Dashboard() {
 
         if (!teachersError) setTeacherCount(teachersCount || 0);
 
-        // Fetch BMI records count (for "Active Reports")
-        const { count: bmiTotal, error: bmiError } =
+        // Fetch BMI records count (for "Active Reports") - Unique students with BMI records
+        const { data: bmiData, error: bmiError } =
             await supabase
             .from("bmi_records")
-            .select("*", { count: "exact", head: true });
+            .select("student_id")
+            .range(0, 9999);
 
-        if (!bmiError) setBmiCount(bmiTotal || 0);
+        if (!bmiError && bmiData) {
+          const uniqueBmiCount = new Set(bmiData.map(r => r.student_id)).size;
+          setBmiCount(uniqueBmiCount);
+        }
 
         // Fetch attendance count for today
         const todayKey = format(new Date(), "yyyy-MM-dd");
