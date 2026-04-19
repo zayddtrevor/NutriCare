@@ -26,7 +26,10 @@ const STATUS_OPTIONS = ["All Status", "Normal", "Wasted", "Severely Wasted", "Ov
 
 export default function Reports() {
   // Data State
-  const [students, setStudents] = useState([]);
+  const [rawStudents, setRawStudents] = useState([]);
+  const [rawBmiRecords, setRawBmiRecords] = useState([]);
+  const [rawAttendance, setRawAttendance] = useState([]);
+  const [rawSbfpSet, setRawSbfpSet] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(new Date());
@@ -40,7 +43,7 @@ export default function Reports() {
   // Fetch Data Logic
   const fetchData = useCallback(async () => {
     // Only set loading on first load to avoid flickering on auto-refresh
-    if (students.length === 0) setLoading(true);
+    if (rawStudents.length === 0) setLoading(true);
     setError(null);
     try {
       // 1. Fetch Students
@@ -62,65 +65,10 @@ export default function Reports() {
       const attList = attRes.status === "fulfilled" && attRes.value.data ? attRes.value.data : [];
       const sbfpList = sbfpRes.status === "fulfilled" && sbfpRes.value.data ? sbfpRes.value.data : [];
 
-      // 3. Process Data
-
-      // Map for fast lookup: studentId -> Latest BMI Record
-      const bmiMap = {};
-      bmiList.forEach((r) => {
-        if (r.student_id && !bmiMap[r.student_id]) {
-          bmiMap[r.student_id] = r;
-        }
-      });
-
-      // Map for attendance counts: studentId -> { present: 0, absent: 0 }
-      const attMap = {};
-      attList.forEach((r) => {
-        if (!r.student_id) return;
-        if (!attMap[r.student_id]) {
-          attMap[r.student_id] = { present: 0, absent: 0 };
-        }
-        const statusVal = (r.status || "").toLowerCase();
-        if (statusVal === "present") {
-          attMap[r.student_id].present++;
-        } else if (statusVal === "absent") {
-          attMap[r.student_id].absent++;
-        }
-      });
-
-      const sbfpSet = new Set(sbfpList.map(r => r.student_id));
-
-      const processed = studentsData.map((s) => {
-        const bmiRecord = bmiMap[s.id];
-        const attRecord = attMap[s.id] || { present: 0, absent: 0 };
-
-        const nutritionStatus = bmiRecord?.nutrition_status || s.nutrition_status || s.nutritionStatus || "Unknown";
-        const bmiValue = bmiRecord?.bmi || s.bmi || null;
-
-        const rawGrade = (s.grade_level || "").toString();
-        const normalizedGrade = normalizeGrade(rawGrade);
-        const section = s.section || "Unknown";
-
-        return {
-          id: s.id,
-          name: s.name || s.full_name || "Unknown",
-          gradeLevel: normalizedGrade,
-          rawGrade: rawGrade,
-          section: section,
-          sex: s.sex || null,
-          birthDate: s.birth_date || s.dob || null,
-          weighingDate: bmiRecord?.created_at || null,
-          weight: bmiRecord?.weight_kg || s.weight || null,
-          height: bmiRecord?.height_m || s.height || null,
-          gradeSection: `${normalizedGrade} - ${section}`,
-          status: nutritionStatus,
-          bmi: bmiValue ? parseFloat(bmiValue).toFixed(1) : "-",
-          presentDays: attRecord.present,
-          absentDays: attRecord.absent,
-          isSbfp: sbfpSet.has(s.id)
-        };
-      });
-
-      setStudents(processed);
+      setRawStudents(studentsData);
+      setRawBmiRecords(bmiList);
+      setRawAttendance(attList);
+      setRawSbfpSet(new Set(sbfpList.map(r => r.student_id)));
       setLastUpdated(new Date());
 
     } catch (err) {
@@ -129,7 +77,7 @@ export default function Reports() {
     } finally {
       setLoading(false);
     }
-  }, []); // Remove students.length dependency to avoid infinite loops if logic changes, but students.length check inside is fine
+  }, [rawStudents.length]);
 
   useEffect(() => {
     fetchData();
@@ -142,6 +90,66 @@ export default function Reports() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
+  // -------- DATA PROCESSING --------
+  const processedStudents = useMemo(() => {
+    // 1. Map for multi-phase BMI lookup: studentId -> { baseline, midline, endline, latest }
+    const bmiMap = {};
+
+    // Sort rawBmiRecords by created_at ascending to process oldest first (later ones overwrite)
+    const sortedBmi = [...rawBmiRecords].sort((a, b) =>
+        new Date(a.created_at) - new Date(b.created_at)
+    );
+
+    sortedBmi.forEach((r) => {
+      if (!r.student_id) return;
+      if (!bmiMap[r.student_id]) {
+        bmiMap[r.student_id] = { baseline: "-", midline: "-", endline: "-", latest: null };
+      }
+
+      const phase = (r.phase || "").toLowerCase();
+      const bmiVal = r.bmi ? parseFloat(r.bmi).toFixed(1) : "-";
+
+      if (phase === "baseline") bmiMap[r.student_id].baseline = bmiVal;
+      else if (phase === "midline") bmiMap[r.student_id].midline = bmiVal;
+      else if (phase === "endline") bmiMap[r.student_id].endline = bmiVal;
+
+      bmiMap[r.student_id].latest = r;
+    });
+
+    // 2. Map students to reporting format
+    return rawStudents.map((s) => {
+      const bmiInfo = bmiMap[s.id] || { baseline: "-", midline: "-", endline: "-", latest: null };
+      const latestBmi = bmiInfo.latest;
+
+      const nutritionStatus = latestBmi?.nutrition_status || s.nutrition_status || s.nutritionStatus || "Unknown";
+      const bmiValue = latestBmi?.bmi || s.bmi || null;
+
+      const rawGrade = (s.grade_level || "").toString();
+      const normalizedGrade = normalizeGrade(rawGrade);
+      const sectionName = s.section || "Unknown";
+
+      return {
+        id: s.id,
+        name: s.name || s.full_name || "Unknown",
+        gradeLevel: normalizedGrade,
+        rawGrade: rawGrade,
+        section: sectionName,
+        sex: s.sex || null,
+        birthDate: s.birth_date || s.dob || null,
+        weighingDate: latestBmi?.created_at || null,
+        weight: latestBmi?.weight_kg || s.weight || null,
+        height: latestBmi?.height_m || s.height || null,
+        gradeSection: `${normalizedGrade} - ${sectionName}`,
+        status: nutritionStatus,
+        bmi: bmiValue ? parseFloat(bmiValue).toFixed(1) : "-",
+        baselineBmi: bmiInfo.baseline,
+        midlineBmi: bmiInfo.midline,
+        endlineBmi: bmiInfo.endline,
+        isSbfp: rawSbfpSet.has(s.id)
+      };
+    });
+  }, [rawStudents, rawBmiRecords, rawSbfpSet]);
+
   // -------- FILTERS --------
   const availableSections = useMemo(() => {
     if (grade === "All Grades") {
@@ -152,7 +160,7 @@ export default function Reports() {
 
   // Level 1: Filter by Grade, Section, and Search Query (Base Dataset for Stats)
   const filteredStudentsBase = useMemo(() => {
-    return students.filter(s => {
+    return processedStudents.filter(s => {
       // 1. Search
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -171,7 +179,7 @@ export default function Reports() {
 
       return true;
     });
-  }, [students, grade, section, searchQuery]);
+  }, [processedStudents, grade, section, searchQuery]);
 
   // Level 2: Filter by Status (applied to Table only)
   const finalFilteredStudents = useMemo(() => {
@@ -260,10 +268,13 @@ export default function Reports() {
       { width: 20 }, // Grade/Section
       { width: 15 }, // Birth Date
       { width: 15 }, // Weighing Date
+      { width: 12 }, // Baseline BMI
+      { width: 12 }, // Midline BMI
+      { width: 12 }, // Endline BMI
       { width: 12 }, // Age
       { width: 12 }, // Weight
       { width: 12 }, // Height
-      { width: 15 }, // BMI
+      { width: 15 }, // BMI (Latest)
       { width: 15 }, // BMI-A
       { width: 15 }, // HFA
       { width: 20 }, // Milk Consent
@@ -272,7 +283,7 @@ export default function Reports() {
     ];
 
     // --- Headers ---
-    worksheet.mergeCells("A1:O1");
+    worksheet.mergeCells("A1:R1");
     worksheet.getCell("A1").value = "SBFP Form 1 (2024)";
     worksheet.getCell("A1").font = { bold: true, size: 14 };
 
@@ -288,13 +299,13 @@ export default function Reports() {
     // Metadata Row 1
     worksheet.mergeCells("A5:D5");
     worksheet.getCell("A5").value = `Division: ${SCHOOL_METADATA.division}`;
-    worksheet.mergeCells("I5:O5");
+    worksheet.mergeCells("I5:R5");
     worksheet.getCell("I5").value = `Name of Principal : ${SCHOOL_METADATA.principalName}`;
 
     // Metadata Row 2
     worksheet.mergeCells("A6:F6");
     worksheet.getCell("A6").value = `City/ Municipality/Barangay : ${SCHOOL_METADATA.division}/${SCHOOL_METADATA.district}`;
-    worksheet.mergeCells("I6:O6");
+    worksheet.mergeCells("I6:R5");
     worksheet.getCell("I6").value = `Name of Feeding Focal Person : ${SCHOOL_METADATA.focalPerson}`;
 
     // Metadata Row 3
@@ -311,7 +322,7 @@ export default function Reports() {
 
     const headers = [
       "No.", "Name", "Sex", "Grade/ Section", "Date of Birth (MM/DD/YYYY)",
-      "Date of Weighing / Measuring (MM/DD/YYYY)", "Age in Years / Months",
+      "Date of Weighing / Measuring (MM/DD/YYYY)", "Baseline BMI", "Midline BMI", "Endline BMI", "Age in Years / Months",
       "Weight (Kg)", "Height (cm)", "BMI for 6 y.o. and above", "Nutritional Status (NS)", "",
       "Parent's consent for milk? (yes or no)", "Participation in 4Ps (yes or no)",
       "Beneficiary of SBFP in Previous Years (yes or no)"
@@ -337,10 +348,10 @@ export default function Reports() {
     });
 
     // Sub-headers for Nutritional Status
-    worksheet.mergeCells(tableHeaderRow1, 11, tableHeaderRow1, 12); // NS spans 2 columns
-    worksheet.getCell(tableHeaderRow2, 11).value = "BMI-A";
-    worksheet.getCell(tableHeaderRow2, 12).value = "HFA";
-    [11, 12].forEach(col => {
+    worksheet.mergeCells(tableHeaderRow1, 14, tableHeaderRow1, 15); // NS spans 2 columns
+    worksheet.getCell(tableHeaderRow2, 14).value = "BMI-A";
+    worksheet.getCell(tableHeaderRow2, 15).value = "HFA";
+    [14, 15].forEach(col => {
       const cell = worksheet.getCell(tableHeaderRow2, col);
       cell.font = { bold: true };
       cell.alignment = { horizontal: "center" };
@@ -362,6 +373,9 @@ export default function Reports() {
         `${s.gradeLevel} - ${s.section}`,
         formatDate(s.birthDate),
         formatDate(s.weighingDate),
+        s.baselineBmi,
+        s.midlineBmi,
+        s.endlineBmi,
         calculateAge(s.birthDate, s.weighingDate),
         s.weight ? parseFloat(s.weight).toFixed(2) : "",
         s.height ? (parseFloat(s.height) > 3 ? parseFloat(s.height).toFixed(2) : (parseFloat(s.height) * 100).toFixed(2)) : "",
@@ -447,7 +461,7 @@ export default function Reports() {
           <div className="reports-summary-top">
             <StatCard
               label="Total Students"
-              value={loading && students.length === 0 ? "..." : summary.total}
+              value={loading && rawStudents.length === 0 ? "..." : summary.total}
               icon={<Users size={20}/>}
               color="blue"
               className="reports-stat-card rsc-blue"
@@ -460,7 +474,7 @@ export default function Reports() {
           <div className="reports-summary-bottom">
             <StatCard
               label="Normal"
-              value={loading && students.length === 0 ? "..." : summary.normal}
+              value={loading && rawStudents.length === 0 ? "..." : summary.normal}
               icon={<CheckCircle size={20}/>}
               color="green"
               className="reports-stat-card rsc-green"
@@ -469,7 +483,7 @@ export default function Reports() {
             />
             <StatCard
               label="Wasted"
-              value={loading && students.length === 0 ? "..." : summary.wasted}
+              value={loading && rawStudents.length === 0 ? "..." : summary.wasted}
               icon={<AlertTriangle size={20}/>}
               color="yellow"
               className="reports-stat-card rsc-yellow"
@@ -478,7 +492,7 @@ export default function Reports() {
             />
             <StatCard
               label="Severely Wasted"
-              value={loading && students.length === 0 ? "..." : summary.severelyWasted}
+              value={loading && rawStudents.length === 0 ? "..." : summary.severelyWasted}
               icon={<AlertTriangle size={20}/>}
               color="orange"
               className="reports-stat-card rsc-orange"
@@ -487,7 +501,7 @@ export default function Reports() {
             />
             <StatCard
               label="Overweight"
-              value={loading && students.length === 0 ? "..." : summary.overweight}
+              value={loading && rawStudents.length === 0 ? "..." : summary.overweight}
               icon={<Activity size={20}/>}
               color="purple"
               className="reports-stat-card rsc-purple"
@@ -496,7 +510,7 @@ export default function Reports() {
             />
             <StatCard
               label="Obese"
-              value={loading && students.length === 0 ? "..." : summary.obese}
+              value={loading && rawStudents.length === 0 ? "..." : summary.obese}
               icon={<XCircle size={20}/>}
               color="red"
               className="reports-stat-card rsc-red"
@@ -505,7 +519,7 @@ export default function Reports() {
             />
             <StatCard
               label="Unknown"
-              value={loading && students.length === 0 ? "..." : summary.unknown}
+              value={loading && rawStudents.length === 0 ? "..." : summary.unknown}
               icon={<Users size={20}/>}
               color="gray"
               className="reports-stat-card rsc-gray"
@@ -554,21 +568,23 @@ export default function Reports() {
                 <th>Name</th>
                 <th>Grade & Section</th>
                 <th>Status</th>
+                <th>Baseline BMI</th>
+                <th>Midline BMI</th>
+                <th>Endline BMI</th>
                 <th>BMI</th>
-                <th>Present Days</th>
-                <th>Absent Days</th>
               </tr>
             </thead>
             <tbody>
-              {loading && students.length === 0 ? (
+              {loading && rawStudents.length === 0 ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="skeleton-row">
                     <td><div className="skeleton-bar" style={{ width: '120px' }}></div></td>
                     <td><div className="skeleton-bar" style={{ width: '100px' }}></div></td>
                     <td><div className="skeleton-bar" style={{ width: '80px' }}></div></td>
+                    <td><div className="skeleton-bar" style={{ width: '50px' }}></div></td>
+                    <td><div className="skeleton-bar" style={{ width: '50px' }}></div></td>
+                    <td><div className="skeleton-bar" style={{ width: '50px' }}></div></td>
                     <td><div className="skeleton-bar" style={{ width: '40px' }}></div></td>
-                    <td><div className="skeleton-bar" style={{ width: '30px' }}></div></td>
-                    <td><div className="skeleton-bar" style={{ width: '30px' }}></div></td>
                   </tr>
                 ))
               ) : finalFilteredStudents.length === 0 ? (
@@ -590,9 +606,10 @@ export default function Reports() {
                         {s.status}
                       </span>
                     </td>
+                    <td>{s.baselineBmi}</td>
+                    <td>{s.midlineBmi}</td>
+                    <td>{s.endlineBmi}</td>
                     <td>{s.bmi}</td>
-                    <td>{s.presentDays}</td>
-                    <td>{s.absentDays}</td>
                   </tr>
                 ))
               )}

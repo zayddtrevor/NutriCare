@@ -70,7 +70,20 @@ if (supabaseUrl && supabaseAnonKey) {
         { id: 2, teacher_id_number: "T-002", first_name: "Maria", last_name: "Santos", email: "maria@school.edu", section: "MASAYAHIN", active: true }
       ],
       attendance: [],
-      bmi_records: [],
+      bmi_records: STUDENTS.slice(0, 50).map((s, idx) => {
+          const phases = ['baseline', 'midline', 'endline'];
+          const phase = phases[idx % 3];
+          return {
+              id: 5000 + idx,
+              student_id: s.id,
+              height_m: (parseFloat(s.height) / 100).toFixed(2),
+              weight_kg: s.weight,
+              bmi: s.bmi,
+              nutrition_status: s.nutrition_status,
+              phase: phase,
+              created_at: new Date(Date.now() - (idx * 3600000)).toISOString()
+          };
+      }),
       sbfp_beneficiaries: [],
       nutrition_meals: [
           {
