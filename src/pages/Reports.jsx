@@ -305,7 +305,7 @@ export default function Reports() {
     // Metadata Row 2
     worksheet.mergeCells("A6:F6");
     worksheet.getCell("A6").value = `City/ Municipality/Barangay : ${SCHOOL_METADATA.division}/${SCHOOL_METADATA.district}`;
-    worksheet.mergeCells("I6:R5");
+    worksheet.mergeCells("I6:R6");
     worksheet.getCell("I6").value = `Name of Feeding Focal Person : ${SCHOOL_METADATA.focalPerson}`;
 
     // Metadata Row 3
