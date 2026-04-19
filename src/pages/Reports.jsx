@@ -420,7 +420,8 @@ export default function Reports() {
   const downloadTemplate = async () => {
     try {
       const blob = await generateSbfpExcel([]);
-      saveAs(blob, "SBFP_Form1_Template.xlsx");
+      const reportDate = new Date().toISOString().slice(0, 10);
+      saveAs(blob, `SBFP_Form1_Template_${reportDate}.xlsx`);
     } catch (err) {
       console.error("Template download failed:", err);
     }
