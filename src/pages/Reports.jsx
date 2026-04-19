@@ -39,7 +39,6 @@ export default function Reports() {
   const [grade, setGrade] = useState("All Grades");
   const [section, setSection] = useState("All Sections");
   const [status, setStatus] = useState("All Status");
-  const [selectedPhase, setSelectedPhase] = useState("All Phases");
 
   // Fetch Data Logic
   const fetchData = useCallback(async () => {
@@ -92,50 +91,38 @@ export default function Reports() {
   }, [fetchData]);
 
   // -------- DATA PROCESSING --------
-  const availablePhases = useMemo(() => {
-    const phases = rawBmiRecords
-      .map(r => r.phase)
-      .filter(p => p && p.trim() !== "");
-    return ["All Phases", ...new Set(phases)].sort();
-  }, [rawBmiRecords]);
-
   const processedStudents = useMemo(() => {
-    // 1. Map for fast lookup: studentId -> Latest BMI Record (optionally filtered by phase)
+    // 1. Map for multi-phase BMI lookup: studentId -> { baseline, midline, endline, latest }
     const bmiMap = {};
-    rawBmiRecords.forEach((r) => {
+
+    // Sort rawBmiRecords by created_at ascending to process oldest first (later ones overwrite)
+    const sortedBmi = [...rawBmiRecords].sort((a, b) =>
+        new Date(a.created_at) - new Date(b.created_at)
+    );
+
+    sortedBmi.forEach((r) => {
       if (!r.student_id) return;
-
-      // If a phase is selected, only consider records for that phase
-      if (selectedPhase !== "All Phases" && r.phase !== selectedPhase) return;
-
-      // Since rawBmiRecords is ordered by created_at DESC, the first one we see is the latest
       if (!bmiMap[r.student_id]) {
-        bmiMap[r.student_id] = r;
+        bmiMap[r.student_id] = { baseline: "-", midline: "-", endline: "-", latest: null };
       }
+
+      const phase = (r.phase || "").toLowerCase();
+      const bmiVal = r.bmi ? parseFloat(r.bmi).toFixed(1) : "-";
+
+      if (phase === "baseline") bmiMap[r.student_id].baseline = bmiVal;
+      else if (phase === "midline") bmiMap[r.student_id].midline = bmiVal;
+      else if (phase === "endline") bmiMap[r.student_id].endline = bmiVal;
+
+      bmiMap[r.student_id].latest = r;
     });
 
-    // 2. Map for attendance counts: studentId -> { present: 0, absent: 0 }
-    const attMap = {};
-    rawAttendance.forEach((r) => {
-      if (!r.student_id) return;
-      if (!attMap[r.student_id]) {
-        attMap[r.student_id] = { present: 0, absent: 0 };
-      }
-      const statusVal = (r.status || "").toLowerCase();
-      if (statusVal === "present") {
-        attMap[r.student_id].present++;
-      } else if (statusVal === "absent") {
-        attMap[r.student_id].absent++;
-      }
-    });
-
-    // 3. Map students to reporting format
+    // 2. Map students to reporting format
     return rawStudents.map((s) => {
-      const bmiRecord = bmiMap[s.id];
-      const attRecord = attMap[s.id] || { present: 0, absent: 0 };
+      const bmiInfo = bmiMap[s.id] || { baseline: "-", midline: "-", endline: "-", latest: null };
+      const latestBmi = bmiInfo.latest;
 
-      const nutritionStatus = bmiRecord?.nutrition_status || s.nutrition_status || s.nutritionStatus || "Unknown";
-      const bmiValue = bmiRecord?.bmi || s.bmi || null;
+      const nutritionStatus = latestBmi?.nutrition_status || s.nutrition_status || s.nutritionStatus || "Unknown";
+      const bmiValue = latestBmi?.bmi || s.bmi || null;
 
       const rawGrade = (s.grade_level || "").toString();
       const normalizedGrade = normalizeGrade(rawGrade);
@@ -149,19 +136,19 @@ export default function Reports() {
         section: sectionName,
         sex: s.sex || null,
         birthDate: s.birth_date || s.dob || null,
-        weighingDate: bmiRecord?.created_at || null,
-        weight: bmiRecord?.weight_kg || s.weight || null,
-        height: bmiRecord?.height_m || s.height || null,
+        weighingDate: latestBmi?.created_at || null,
+        weight: latestBmi?.weight_kg || s.weight || null,
+        height: latestBmi?.height_m || s.height || null,
         gradeSection: `${normalizedGrade} - ${sectionName}`,
         status: nutritionStatus,
         bmi: bmiValue ? parseFloat(bmiValue).toFixed(1) : "-",
-        presentDays: attRecord.present,
-        absentDays: attRecord.absent,
-        isSbfp: rawSbfpSet.has(s.id),
-        phase: bmiRecord?.phase || "N/A"
+        baselineBmi: bmiInfo.baseline,
+        midlineBmi: bmiInfo.midline,
+        endlineBmi: bmiInfo.endline,
+        isSbfp: rawSbfpSet.has(s.id)
       };
     });
-  }, [rawStudents, rawBmiRecords, rawAttendance, rawSbfpSet, selectedPhase]);
+  }, [rawStudents, rawBmiRecords, rawSbfpSet]);
 
   // -------- FILTERS --------
   const availableSections = useMemo(() => {
@@ -281,11 +268,13 @@ export default function Reports() {
       { width: 20 }, // Grade/Section
       { width: 15 }, // Birth Date
       { width: 15 }, // Weighing Date
-      { width: 12 }, // Phase
+      { width: 12 }, // Baseline BMI
+      { width: 12 }, // Midline BMI
+      { width: 12 }, // Endline BMI
       { width: 12 }, // Age
       { width: 12 }, // Weight
       { width: 12 }, // Height
-      { width: 15 }, // BMI
+      { width: 15 }, // BMI (Latest)
       { width: 15 }, // BMI-A
       { width: 15 }, // HFA
       { width: 20 }, // Milk Consent
@@ -294,7 +283,7 @@ export default function Reports() {
     ];
 
     // --- Headers ---
-    worksheet.mergeCells("A1:P1");
+    worksheet.mergeCells("A1:R1");
     worksheet.getCell("A1").value = "SBFP Form 1 (2024)";
     worksheet.getCell("A1").font = { bold: true, size: 14 };
 
@@ -310,13 +299,13 @@ export default function Reports() {
     // Metadata Row 1
     worksheet.mergeCells("A5:D5");
     worksheet.getCell("A5").value = `Division: ${SCHOOL_METADATA.division}`;
-    worksheet.mergeCells("I5:P5");
+    worksheet.mergeCells("I5:R5");
     worksheet.getCell("I5").value = `Name of Principal : ${SCHOOL_METADATA.principalName}`;
 
     // Metadata Row 2
     worksheet.mergeCells("A6:F6");
     worksheet.getCell("A6").value = `City/ Municipality/Barangay : ${SCHOOL_METADATA.division}/${SCHOOL_METADATA.district}`;
-    worksheet.mergeCells("I6:P6");
+    worksheet.mergeCells("I6:R5");
     worksheet.getCell("I6").value = `Name of Feeding Focal Person : ${SCHOOL_METADATA.focalPerson}`;
 
     // Metadata Row 3
@@ -333,7 +322,7 @@ export default function Reports() {
 
     const headers = [
       "No.", "Name", "Sex", "Grade/ Section", "Date of Birth (MM/DD/YYYY)",
-      "Date of Weighing / Measuring (MM/DD/YYYY)", "Phase", "Age in Years / Months",
+      "Date of Weighing / Measuring (MM/DD/YYYY)", "Baseline BMI", "Midline BMI", "Endline BMI", "Age in Years / Months",
       "Weight (Kg)", "Height (cm)", "BMI for 6 y.o. and above", "Nutritional Status (NS)", "",
       "Parent's consent for milk? (yes or no)", "Participation in 4Ps (yes or no)",
       "Beneficiary of SBFP in Previous Years (yes or no)"
@@ -359,10 +348,10 @@ export default function Reports() {
     });
 
     // Sub-headers for Nutritional Status
-    worksheet.mergeCells(tableHeaderRow1, 12, tableHeaderRow1, 13); // NS spans 2 columns
-    worksheet.getCell(tableHeaderRow2, 12).value = "BMI-A";
-    worksheet.getCell(tableHeaderRow2, 13).value = "HFA";
-    [12, 13].forEach(col => {
+    worksheet.mergeCells(tableHeaderRow1, 14, tableHeaderRow1, 15); // NS spans 2 columns
+    worksheet.getCell(tableHeaderRow2, 14).value = "BMI-A";
+    worksheet.getCell(tableHeaderRow2, 15).value = "HFA";
+    [14, 15].forEach(col => {
       const cell = worksheet.getCell(tableHeaderRow2, col);
       cell.font = { bold: true };
       cell.alignment = { horizontal: "center" };
@@ -384,7 +373,9 @@ export default function Reports() {
         `${s.gradeLevel} - ${s.section}`,
         formatDate(s.birthDate),
         formatDate(s.weighingDate),
-        s.phase || "N/A",
+        s.baselineBmi,
+        s.midlineBmi,
+        s.endlineBmi,
         calculateAge(s.birthDate, s.weighingDate),
         s.weight ? parseFloat(s.weight).toFixed(2) : "",
         s.height ? (parseFloat(s.height) > 3 ? parseFloat(s.height).toFixed(2) : (parseFloat(s.height) * 100).toFixed(2)) : "",
@@ -555,13 +546,8 @@ export default function Reports() {
               setGrade("All Grades");
               setSection("All Sections");
               setStatus("All Status");
-              setSelectedPhase("All Phases");
             }}
         >
-          <select value={selectedPhase} onChange={(e) => setSelectedPhase(e.target.value)}>
-            {availablePhases.map((p) => <option key={p} value={p}>{p}</option>)}
-          </select>
-
           <select value={section} onChange={(e) => setSection(e.target.value)}>
             <option value="All Sections">All Sections</option>
             {availableSections.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -582,10 +568,10 @@ export default function Reports() {
                 <th>Name</th>
                 <th>Grade & Section</th>
                 <th>Status</th>
-                <th>Phase</th>
+                <th>Baseline BMI</th>
+                <th>Midline BMI</th>
+                <th>Endline BMI</th>
                 <th>BMI</th>
-                <th>Present Days</th>
-                <th>Absent Days</th>
               </tr>
             </thead>
             <tbody>
@@ -595,10 +581,10 @@ export default function Reports() {
                     <td><div className="skeleton-bar" style={{ width: '120px' }}></div></td>
                     <td><div className="skeleton-bar" style={{ width: '100px' }}></div></td>
                     <td><div className="skeleton-bar" style={{ width: '80px' }}></div></td>
-                    <td><div className="skeleton-bar" style={{ width: '60px' }}></div></td>
+                    <td><div className="skeleton-bar" style={{ width: '50px' }}></div></td>
+                    <td><div className="skeleton-bar" style={{ width: '50px' }}></div></td>
+                    <td><div className="skeleton-bar" style={{ width: '50px' }}></div></td>
                     <td><div className="skeleton-bar" style={{ width: '40px' }}></div></td>
-                    <td><div className="skeleton-bar" style={{ width: '30px' }}></div></td>
-                    <td><div className="skeleton-bar" style={{ width: '30px' }}></div></td>
                   </tr>
                 ))
               ) : finalFilteredStudents.length === 0 ? (
@@ -620,10 +606,10 @@ export default function Reports() {
                         {s.status}
                       </span>
                     </td>
-                    <td>{s.phase}</td>
+                    <td>{s.baselineBmi}</td>
+                    <td>{s.midlineBmi}</td>
+                    <td>{s.endlineBmi}</td>
                     <td>{s.bmi}</td>
-                    <td>{s.presentDays}</td>
-                    <td>{s.absentDays}</td>
                   </tr>
                 ))
               )}
