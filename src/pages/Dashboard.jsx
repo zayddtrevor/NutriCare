@@ -20,6 +20,7 @@ import {
   Area
 } from "recharts";
 import { supabase } from "../supabaseClient";
+import { getPHDate } from "../constants/schoolData";
 import CountUp from "react-countup";
 import "./Dashboard.css";
 
@@ -28,7 +29,7 @@ import "./Dashboard.css";
 const DashboardHeader = () => {
   const [greeting, setGreeting] = useState("Good Morning");
   const [subtext, setSubtext] = useState("Here’s your system summary for today.");
-  const today = new Date();
+  const today = getPHDate();
 
   useEffect(() => {
     const hour = today.getHours();
@@ -326,7 +327,7 @@ export default function Dashboard() {
         }
 
         // Fetch attendance count for today
-        const todayKey = format(new Date(), "yyyy-MM-dd");
+        const todayKey = format(getPHDate(), "yyyy-MM-dd");
         const { count: attCount, error: attError } =
             await supabase
             .from("attendance")

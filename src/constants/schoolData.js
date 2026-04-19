@@ -52,3 +52,22 @@ export const normalizeGrade = (dbGrade) => {
   if (g === "6" || g === "GRADE 6" || g === "G6") return "Grade 6";
   return dbGrade || "Unknown";
 };
+
+/**
+ * Gets the current date/time adjusted to Philippine Time (UTC+8).
+ * Ensures consistent date logic regardless of the environment's system timezone.
+ */
+export const getPHDate = () => {
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  return new Date(utc + (3600000 * 8));
+};
+
+/**
+ * Gets the current date in Philippine Time as a YYYY-MM-DD string.
+ * This is safe for filenames and database queries.
+ */
+export const getPHDateString = () => {
+  // Returns 'YYYY-MM-DD' in Asia/Manila timezone
+  return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Manila' }).format(new Date());
+};

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { supabase } from "../supabaseClient";
-import { SCHOOL_DATA, GRADES, normalizeGrade, SCHOOL_METADATA } from "../constants/schoolData";
+import { SCHOOL_DATA, GRADES, normalizeGrade, SCHOOL_METADATA, getPHDate, getPHDateString } from "../constants/schoolData";
 import {
   Users,
   Activity,
@@ -32,7 +32,7 @@ export default function Reports() {
   const [rawSbfpSet, setRawSbfpSet] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [lastUpdated, setLastUpdated] = useState(getPHDate());
 
   // Filter State
   const [searchQuery, setSearchQuery] = useState("");
@@ -69,7 +69,7 @@ export default function Reports() {
       setRawBmiRecords(bmiList);
       setRawAttendance(attList);
       setRawSbfpSet(new Set(sbfpList.map(r => r.student_id)));
-      setLastUpdated(new Date());
+      setLastUpdated(getPHDate());
 
     } catch (err) {
       console.error("Error fetching reports data:", err);
@@ -409,7 +409,7 @@ export default function Reports() {
     if (finalFilteredStudents.length === 0) return;
     try {
       const blob = await generateSbfpExcel(finalFilteredStudents);
-      const reportDate = new Date().toISOString().slice(0, 10);
+      const reportDate = getPHDateString();
       saveAs(blob, `SBFP_Form1_Report_${reportDate}.xlsx`);
     } catch (err) {
       console.error("Excel export failed:", err);
@@ -420,7 +420,7 @@ export default function Reports() {
   const downloadTemplate = async () => {
     try {
       const blob = await generateSbfpExcel([]);
-      const reportDate = new Date().toISOString().slice(0, 10);
+      const reportDate = getPHDateString();
       saveAs(blob, `SBFP_Form1_Template_${reportDate}.xlsx`);
     } catch (err) {
       console.error("Template download failed:", err);

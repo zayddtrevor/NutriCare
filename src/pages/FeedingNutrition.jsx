@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 import { AlertCircle, X, Users, CheckCircle, XCircle } from "lucide-react";
 import { format } from "date-fns";
-import { SCHOOL_DATA, GRADES, normalizeGrade } from "../constants/schoolData";
+import { SCHOOL_DATA, GRADES, normalizeGrade, getPHDate } from "../constants/schoolData";
 import PageHeader from "../components/common/PageHeader";
 import FilterBar from "../components/common/FilterBar";
 import GradeTabs from "../components/common/GradeTabs";
@@ -36,7 +36,7 @@ export default function FeedingNutrition() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDetailsId, setShowDetailsId] = useState(null);
 
-  const today = new Date();
+  const today = getPHDate();
   const todayKey = format(today, "yyyy-MM-dd");
   const displayDate = format(today, "cccc • MMMM d, yyyy");
   const currentDayName = format(today, "cccc");
