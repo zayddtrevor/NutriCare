@@ -108,12 +108,16 @@
 
 /* --- 2. Stat Cards --- */
 .dashboard-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 32px; /* Increased gap */
 }
 
 .premium-stat-card {
+  min-width: 340px;
+  flex: 1;
+  max-width: 500px;
   position: relative;
   border-radius: 20px; /* Increased radius */
   padding: 24px;
