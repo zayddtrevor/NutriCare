@@ -110,8 +110,6 @@ const AnalyticsSection = ({ presentCount }) => {
     { name: 'Wed', students: 101, meals: 98 },
     { name: 'Thu', students: 134, meals: 130 },
     { name: 'Fri', students: 150, meals: 145 },
-    { name: 'Sat', students: 80,  meals: 75 },
-    { name: 'Sun', students: 90,  meals: 85 },
   ];
 
   return (
@@ -369,13 +367,6 @@ export default function Dashboard() {
             loading={loading}
             icon={UserCheck}
             color="blue"
-          />
-          <DashboardStatCard
-            title="Active Reports"
-            value={bmiCount}
-            loading={loading}
-            icon={BarChart3}
-            color="orange"
           />
         </section>
 
