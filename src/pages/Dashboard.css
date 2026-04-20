@@ -13,7 +13,7 @@
 
 .dashboard-page-premium {
   background-color: var(--dash-bg);
-  min-height: 100vh;
+  /* min-height: 100vh; */ /* Removed to prevent unnecessary scrolling */
   padding: 1.5rem;
   padding-bottom: 2rem;
   font-family: 'Inter', sans-serif;
@@ -114,6 +114,14 @@
   gap: 32px; /* Increased gap */
 }
 
+.dashboard-stats-grid.centered {
+  justify-content: center;
+}
+
+.dashboard-stats-grid.centered .premium-stat-card {
+  flex: 0 1 450px;
+}
+
 .premium-stat-card {
   min-width: 340px;
   flex: 1;
@@ -195,9 +203,17 @@
   pointer-events: none;
 }
 
-/* --- 3. Analytics Section --- */
+/* --- 3. Content Sections --- */
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+  align-items: stretch;
+}
+
 .analytics-container {
   display: flex;
+  flex-direction: column;
   gap: 32px; /* Increased gap */
   align-items: stretch;
 }
@@ -212,11 +228,7 @@
 }
 
 .chart-card {
-  flex: 7; /* 70% width */
-}
-
-.stats-list-card {
-  flex: 3; /* 30% width */
+  flex: 1;
 }
 
 .card-header {
@@ -226,11 +238,19 @@
   margin-bottom: 24px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
 .card-header h3 {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--dash-text-dark);
+  margin: 0;
 }
+
 
 .legend {
   display: flex;
@@ -257,100 +277,9 @@
 .chart-wrapper {
   flex: 1;
   min-height: 320px;
+  margin-top: 10px;
 }
 
-/* Quick Stats List */
-.quick-stats-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  flex: 1;
-}
-
-.quick-stat-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 12px;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-}
-
-.quick-stat-item.hover-effect:hover {
-  background: #f1f5f9;
-  transform: translateX(4px);
-  border-color: #e2e8f0;
-}
-
-.qs-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px; /* Rounded square vs circle */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.bg-green-light { background-color: #dcfce7; }
-.text-green { color: #16a34a; }
-
-.bg-red-light { background-color: #fee2e2; }
-.text-red { color: #dc2626; }
-
-.bg-purple-light { background-color: #f3e8ff; }
-.text-purple { color: #9333ea; }
-
-.qs-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.qs-label {
-  font-size: 0.85rem;
-  color: var(--dash-text-muted);
-  font-weight: 500;
-}
-
-.qs-value {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--dash-text-dark);
-}
-
-/* System Status Banner */
-.system-status-banner {
-  margin-top: auto;
-  padding: 12px 16px;
-  background: #f0fdf4; /* Green background */
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #166534;
-  font-size: 0.9rem;
-  font-weight: 600;
-  border: 1px solid #bbf7d0;
-}
-
-.status-icon-bg {
-  width: 24px;
-  height: 24px;
-  background: #22c55e;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-}
-
-/* --- 4. Dashboard Bottom Grid (New Section) --- */
-.dashboard-bottom-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-}
 
 /* Nutrition Summary Card */
 .nutrition-summary-card {
@@ -376,15 +305,35 @@
 .nutrition-bar-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.nutrition-bar-item:hover {
+  background-color: #f8fafc;
 }
 
 .nb-label {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--dash-text-dark);
+}
+
+.nb-label-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nb-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nb-value {
@@ -394,94 +343,36 @@
 
 .progress-bg {
   width: 100%;
-  height: 8px;
+  height: 10px;
   background-color: #f1f5f9;
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .progress-fill {
   height: 100%;
-  border-radius: 4px;
-  transition: width 0.5s ease;
+  border-radius: 6px;
+  transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
 }
 
-/* Alerts Section */
-.alerts-card {
-  background: white;
-  border-radius: var(--dash-radius);
-  padding: 24px;
-  box-shadow: var(--dash-shadow);
-  height: 100%;
-  transition: all 0.3s ease;
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+  animation: shine 2s infinite;
 }
 
-.alerts-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+@keyframes shine {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
 }
 
-.alerts-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.alert-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 12px;
-  border-left: 4px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.alert-item:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  cursor: pointer;
-}
-
-.alert-item.critical {
-  background: #fef2f2;
-  border-left-color: #ef4444;
-}
-
-.alert-item.warning {
-  background: #fffbeb;
-  border-left-color: #f59e0b;
-}
-
-.alert-item.info {
-  background: #eff6ff;
-  border-left-color: #3b82f6;
-}
-
-.alert-icon {
-  margin-top: 2px;
-}
-
-.alert-item.critical .alert-icon { color: #ef4444; }
-.alert-item.warning .alert-icon { color: #f59e0b; }
-.alert-item.info .alert-icon { color: #3b82f6; }
-
-.alert-content {
-  flex: 1;
-}
-
-.alert-message {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--dash-text-dark);
-  margin-bottom: 4px;
-}
-
-.alert-time {
-  font-size: 0.8rem;
-  color: var(--dash-text-muted);
-}
 
 /* --- Animations --- */
 .fade-in {
@@ -511,19 +402,19 @@
     gap: 24px;
   }
 
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
   .analytics-container {
     flex-direction: column;
     gap: 24px;
   }
 
-  .chart-card, .stats-list-card {
+  .chart-card {
     flex: auto;
     width: 100%;
-  }
-
-  .dashboard-bottom-grid {
-    grid-template-columns: 1fr;
-    gap: 24px;
   }
 }
 

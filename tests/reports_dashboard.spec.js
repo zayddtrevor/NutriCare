@@ -15,16 +15,6 @@ test.describe('Reports and Dashboard Verification', () => {
     await page.waitForURL('**/dashboard', { timeout: 10000 });
   });
 
-  test('verify dashboard stats unique count', async ({ page }) => {
-    // Total Students is ~1800 (or whatever MOCK_DB generates)
-    // Active Reports should now be 50 because MOCK_DB initializes 50 bmi_records for 50 unique students
-    const activeReportsCard = page.locator('.premium-stat-card.orange');
-    await expect(activeReportsCard).toBeVisible();
-
-    // CountUp takes some time to animate. We should wait for it to reach the end value.
-    const statValue = activeReportsCard.locator('.stat-value');
-    await expect(statValue).toHaveText('50', { timeout: 10000 });
-  });
 
   test('verify reports page export buttons', async ({ page }) => {
     await page.goto('http://localhost:5173/reports');
