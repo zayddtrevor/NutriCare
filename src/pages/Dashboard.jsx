@@ -20,6 +20,7 @@ import {
   Area
 } from "recharts";
 import { supabase } from "../supabaseClient";
+import { getPHDate, getPHDateString } from "../utils/dateUtils";
 import CountUp from "react-countup";
 import "./Dashboard.css";
 
@@ -28,7 +29,7 @@ import "./Dashboard.css";
 const DashboardHeader = () => {
   const [greeting, setGreeting] = useState("Good Morning");
   const [subtext, setSubtext] = useState("Here’s your system summary for today.");
-  const today = new Date();
+  const today = getPHDate();
 
   useEffect(() => {
     const hour = today.getHours();
@@ -109,8 +110,6 @@ const AnalyticsSection = ({ presentCount }) => {
     { name: 'Wed', students: 101, meals: 98 },
     { name: 'Thu', students: 134, meals: 130 },
     { name: 'Fri', students: 150, meals: 145 },
-    { name: 'Sat', students: 80,  meals: 75 },
-    { name: 'Sun', students: 90,  meals: 85 },
   ];
 
   return (
@@ -326,7 +325,7 @@ export default function Dashboard() {
         }
 
         // Fetch attendance count for today
-        const todayKey = format(new Date(), "yyyy-MM-dd");
+        const todayKey = getPHDateString();
         const { count: attCount, error: attError } =
             await supabase
             .from("attendance")
@@ -368,13 +367,6 @@ export default function Dashboard() {
             loading={loading}
             icon={UserCheck}
             color="blue"
-          />
-          <DashboardStatCard
-            title="Active Reports"
-            value={bmiCount}
-            loading={loading}
-            icon={BarChart3}
-            color="orange"
           />
         </section>
 
