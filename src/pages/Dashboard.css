@@ -251,25 +251,6 @@
   margin: 0;
 }
 
-.view-details-btn {
-  background: #f1f5f9;
-  border: none;
-  color: #64748b;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.view-details-btn:hover {
-  background: #e2e8f0;
-  color: var(--dash-primary);
-  transform: rotate(45deg);
-}
 
 .legend {
   display: flex;

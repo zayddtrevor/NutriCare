@@ -6,8 +6,7 @@ import {
   Activity,
   AlertTriangle,
   Smile,
-  ShieldAlert,
-  ArrowUpRight
+  ShieldAlert
 } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -123,9 +122,6 @@ const AnalyticsSection = () => {
               <div className="legend-item"><span className="dot students"></span> Students Logged</div>
               <div className="legend-item"><span className="dot meals"></span> Meals Served</div>
             </div>
-            <button className="view-details-btn" title="View Detailed Analytics">
-              <ArrowUpRight size={18} />
-            </button>
           </div>
         </div>
         <div className="chart-wrapper">
@@ -198,9 +194,6 @@ const NutritionSummary = () => {
     <div className="nutrition-summary-card fade-in-more-delayed">
       <div className="card-header">
         <h3>Nutrition Summary Snapshot</h3>
-        <button className="view-details-btn" title="View Detailed Report">
-          <ArrowUpRight size={18} />
-        </button>
       </div>
       <div className="nutrition-bars">
         {stats.map((stat, idx) => (
