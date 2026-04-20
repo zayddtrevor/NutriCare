@@ -3,11 +3,7 @@ import {
   GraduationCap,
   UserCheck,
   BarChart3,
-  Users,
-  Calendar,
-  TrendingUp,
-  Activity,
-  AlertTriangle
+  Calendar
 } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -102,7 +98,7 @@ const DashboardStatCard = ({ title, value, label, icon: Icon, color, loading }) 
   );
 };
 
-const AnalyticsSection = ({ presentCount }) => {
+const AnalyticsSection = () => {
   // Mock Data for Chart
   const data = [
     { name: 'Mon', students: 120, meals: 110 },
@@ -175,49 +171,6 @@ const AnalyticsSection = ({ presentCount }) => {
           </ResponsiveContainer>
         </div>
       </div>
-
-      {/* Quick Stats Card */}
-      <div className="analytics-card stats-list-card">
-        <div className="card-header">
-          <h3>Quick Stats</h3>
-        </div>
-        <div className="quick-stats-list">
-          <div className="quick-stat-item hover-effect">
-            <div className="qs-icon bg-green-light">
-              <UserCheck size={20} className="text-green" />
-            </div>
-            <div className="qs-info">
-              <span className="qs-label">Present Today</span>
-              <span className="qs-value">{presentCount || 0}</span>
-            </div>
-          </div>
-          <div className="quick-stat-item hover-effect">
-            <div className="qs-icon bg-red-light">
-              <Users size={20} className="text-red" />
-            </div>
-            <div className="qs-info">
-              <span className="qs-label">Absent Today</span>
-              <span className="qs-value">48</span>
-            </div>
-          </div>
-          <div className="quick-stat-item hover-effect">
-            <div className="qs-icon bg-purple-light">
-              <TrendingUp size={20} className="text-purple" />
-            </div>
-            <div className="qs-info">
-              <span className="qs-label">Most Active Grade</span>
-              <span className="qs-value">Grade 3</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="system-status-banner">
-          <div className="status-icon-bg">
-            <Activity size={16} />
-          </div>
-          <span>System is running smoothly.</span>
-        </div>
-      </div>
     </div>
   );
 };
@@ -257,39 +210,10 @@ const NutritionSummary = () => {
   );
 };
 
-const AlertsSection = () => {
-  const alerts = [
-    { type: "critical", message: "5 students flagged as Severely Wasted" },
-    { type: "warning", message: "Grade 3 has high absence rate today" },
-    { type: "info", message: "BMI records missing for 12 students" },
-  ];
-
-  return (
-    <div className="alerts-card fade-in-more-delayed">
-      <div className="card-header">
-        <h3>Alerts & Flags</h3>
-      </div>
-      <div className="alerts-list">
-        {alerts.map((alert, idx) => (
-          <div key={idx} className={`alert-item ${alert.type}`}>
-            <div className="alert-icon">
-              <AlertTriangle size={18} />
-            </div>
-            <div className="alert-content">
-              <p className="alert-message">{alert.message}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 export default function Dashboard() {
   const [studentCount, setStudentCount] = useState(0);
   const [teacherCount, setTeacherCount] = useState(0);
   const [bmiCount, setBmiCount] = useState(0);
-  const [attendanceCount, setAttendanceCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -324,17 +248,6 @@ export default function Dashboard() {
           setBmiCount(uniqueBmiCount);
         }
 
-        // Fetch attendance count for today
-        const todayKey = getPHDateString();
-        const { count: attCount, error: attError } =
-            await supabase
-            .from("attendance")
-            .select("*", { count: "exact", head: true })
-            .eq("attendance_date", todayKey);
-
-        if (!attError) setAttendanceCount(attCount || 0);
-        console.log("Dashboard Attendance Count:", attCount);
-
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -368,15 +281,21 @@ export default function Dashboard() {
             icon={UserCheck}
             color="blue"
           />
+          <DashboardStatCard
+            title="Active Reports"
+            value={bmiCount}
+            loading={loading}
+            icon={BarChart3}
+            color="orange"
+          />
         </section>
 
         {/* 3. Analytics Section */}
-        <AnalyticsSection presentCount={attendanceCount} />
+        <AnalyticsSection />
 
         {/* 4. Health & Alerts (Replaces Quick Action Panel) */}
         <section className="dashboard-bottom-grid">
           <NutritionSummary />
-          <AlertsSection />
         </section>
 
       </div>
