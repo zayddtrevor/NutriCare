@@ -2,7 +2,12 @@ import { useEffect, useState } from "react";
 import {
   GraduationCap,
   UserCheck,
-  Calendar
+  Calendar,
+  Activity,
+  AlertTriangle,
+  Smile,
+  ShieldAlert,
+  ArrowUpRight
 } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -113,9 +118,14 @@ const AnalyticsSection = () => {
       <div className="analytics-card chart-card">
         <div className="card-header">
           <h3>Weekly Overview</h3>
-          <div className="legend">
-            <div className="legend-item"><span className="dot students"></span> Students Logged</div>
-            <div className="legend-item"><span className="dot meals"></span> Meals Served</div>
+          <div className="header-actions">
+            <div className="legend">
+              <div className="legend-item"><span className="dot students"></span> Students Logged</div>
+              <div className="legend-item"><span className="dot meals"></span> Meals Served</div>
+            </div>
+            <button className="view-details-btn" title="View Detailed Analytics">
+              <ArrowUpRight size={18} />
+            </button>
           </div>
         </div>
         <div className="chart-wrapper">
@@ -177,29 +187,39 @@ const AnalyticsSection = () => {
 const NutritionSummary = () => {
   // Mock Data for Nutrition Summary
   const stats = [
-    { label: "Normal", value: 65, color: "#10b981" },
-    { label: "Wasted", value: 15, color: "#f59e0b" },
-    { label: "Severely Wasted", value: 5, color: "#ef4444" },
-    { label: "Overweight", value: 10, color: "#3b82f6" },
-    { label: "Obese", value: 5, color: "#8b5cf6" },
+    { label: "Normal", value: 65, color: "#10b981", icon: Smile },
+    { label: "Wasted", value: 15, color: "#f59e0b", icon: Activity },
+    { label: "Severely Wasted", value: 5, color: "#ef4444", icon: AlertTriangle },
+    { label: "Overweight", value: 10, color: "#3b82f6", icon: ShieldAlert },
+    { label: "Obese", value: 5, color: "#8b5cf6", icon: Activity },
   ];
 
   return (
     <div className="nutrition-summary-card fade-in-more-delayed">
       <div className="card-header">
         <h3>Nutrition Summary Snapshot</h3>
+        <button className="view-details-btn" title="View Detailed Report">
+          <ArrowUpRight size={18} />
+        </button>
       </div>
       <div className="nutrition-bars">
         {stats.map((stat, idx) => (
           <div key={idx} className="nutrition-bar-item">
             <div className="nb-label">
-              <span>{stat.label}</span>
+              <div className="nb-label-left">
+                <stat.icon size={14} color={stat.color} className="nb-icon" />
+                <span>{stat.label}</span>
+              </div>
               <span className="nb-value">{stat.value}%</span>
             </div>
             <div className="progress-bg">
               <div
                 className="progress-fill"
-                style={{ width: `${stat.value}%`, backgroundColor: stat.color }}
+                style={{
+                  width: `${stat.value}%`,
+                  backgroundColor: stat.color,
+                  boxShadow: `0 0 8px ${stat.color}44`
+                }}
               ></div>
             </div>
           </div>
