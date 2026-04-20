@@ -114,6 +114,14 @@
   gap: 32px; /* Increased gap */
 }
 
+.dashboard-stats-grid.centered {
+  justify-content: center;
+}
+
+.dashboard-stats-grid.centered .premium-stat-card {
+  flex: 0 1 450px;
+}
+
 .premium-stat-card {
   min-width: 340px;
   flex: 1;
@@ -195,9 +203,17 @@
   pointer-events: none;
 }
 
-/* --- 3. Analytics Section --- */
+/* --- 3. Content Sections --- */
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+  align-items: stretch;
+}
+
 .analytics-container {
   display: flex;
+  flex-direction: column;
   gap: 32px; /* Increased gap */
   align-items: stretch;
 }
@@ -255,12 +271,6 @@
   min-height: 320px;
 }
 
-/* --- 4. Dashboard Bottom Grid (New Section) --- */
-.dashboard-bottom-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 32px;
-}
 
 /* Nutrition Summary Card */
 .nutrition-summary-card {
@@ -345,6 +355,11 @@
     gap: 24px;
   }
 
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
   .analytics-container {
     flex-direction: column;
     gap: 24px;
@@ -353,11 +368,6 @@
   .chart-card {
     flex: auto;
     width: 100%;
-  }
-
-  .dashboard-bottom-grid {
-    grid-template-columns: 1fr;
-    gap: 24px;
   }
 }
 

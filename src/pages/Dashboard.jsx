@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   GraduationCap,
   UserCheck,
-  BarChart3,
   Calendar
 } from "lucide-react";
 import { format } from "date-fns";
@@ -213,7 +212,6 @@ const NutritionSummary = () => {
 export default function Dashboard() {
   const [studentCount, setStudentCount] = useState(0);
   const [teacherCount, setTeacherCount] = useState(0);
-  const [bmiCount, setBmiCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -236,18 +234,6 @@ export default function Dashboard() {
 
         if (!teachersError) setTeacherCount(teachersCount || 0);
 
-        // Fetch BMI records count (for "Active Reports") - Unique students with BMI records
-        const { data: bmiData, error: bmiError } =
-            await supabase
-            .from("bmi_records")
-            .select("student_id")
-            .range(0, 9999);
-
-        if (!bmiError && bmiData) {
-          const uniqueBmiCount = new Set(bmiData.map(r => r.student_id)).size;
-          setBmiCount(uniqueBmiCount);
-        }
-
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -266,7 +252,7 @@ export default function Dashboard() {
         <DashboardHeader />
 
         {/* 2. Top Stat Cards */}
-        <section className="dashboard-stats-grid">
+        <section className="dashboard-stats-grid centered">
           <DashboardStatCard
             title="Total Students"
             value={studentCount}
@@ -281,20 +267,11 @@ export default function Dashboard() {
             icon={UserCheck}
             color="blue"
           />
-          <DashboardStatCard
-            title="Active Reports"
-            value={bmiCount}
-            loading={loading}
-            icon={BarChart3}
-            color="orange"
-          />
         </section>
 
-        {/* 3. Analytics Section */}
-        <AnalyticsSection />
-
-        {/* 4. Health & Alerts (Replaces Quick Action Panel) */}
-        <section className="dashboard-bottom-grid">
+        {/* 3. Main Content Grid (Analytics & Nutrition) */}
+        <section className="dashboard-main-grid">
+          <AnalyticsSection />
           <NutritionSummary />
         </section>
 
